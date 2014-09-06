@@ -1,7 +1,7 @@
 hydra-java
 ==========
 
-Annotate your Java beans and serialize them as json-ld with hydra.
+Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[json-ld] with http://www.hydra-cg.com/spec/latest/core/[hydra].
 
 Status: Experimental
 
@@ -27,7 +27,9 @@ My interpretation of this famous http://roy.gbiv.com/untangled/2008/rest-apis-mu
 
 A publicly available media-type should give clients the means to interpret the response, 
 and relation names in the response must be recognizable based on standards.
-If a client is told to make a reservation for a movie ticket, how should it recognize how some-api prescribes to do that?
+
+In other words: If a client is told to make a reservation for a movie ticket, it should be able to recognize what 
+one-fancy-api requires to do that. How can we do that?
 
 == Solution
 
@@ -35,17 +37,17 @@ I see json-ld as a possible way to solve this problem without forcing people to 
 about my vendor-specific documentation, thus decoupling the client from my server types. Clients should be able to understand a
 response based on widely available, standardized, public information.
 
-I want to add json-ld information to json objects serialized from Java beans.
+Therefore I want to add json-ld information to json objects serialized from my Java beans.
 
 Java beans have no knowledge about the meaning of their bean properties and they do not know what they represent in the real world. 
 
 A popular vocabulary which describes things on the internet is http://schema.org. It is backed by all major search engines and 
 sufficient for basic needs. It can also point to other vocabularies with more precise definitions as needed, 
-e.g. by using http://schema.org/additionalType or by using enumerated values for properties such as the ones 
+e.g. by using http://schema.org/additionalType and point to something from  or by using enumerated values for properties such as the ones 
 from http://purl.org/goodrelations/.
 
 In the simplest possible case I want to design my json objects so that they can be understood by others based on schema.org.
-By simply calling my class Person and letting it have an attribute name, I want to get a publicly understandable
+By simply calling my class `Person` and letting it have an attribute `name`, I want to get a publicly understandable
 Json object, like this:
 
 [source, Java]
@@ -62,13 +64,25 @@ Json object, like this:
         }
 
         mapper.writeValue(w, new Person());
-        assertEquals("{\"@context\":{" +
-                "\"@vocab\":\"http://schema.org/\"" +
-                "}" +
-                ",\"@type\":\"Person\"," +
-                "\"name\":\"Dietrich Schulten\"}"
-                , w.toString());
     }
 ----
+
+The corresponding json-ld object:
+
+[source, Javascript]
+----
+{
+  "@context": {
+    "@vocab": "http://schema.org/"
+  },
+  "@type": "Person",
+  "name": "Dietrich Schulten"
+}
+----
+
+Note that I do not bind my clients to a server type `Person`. 
+Rather, client and server are talking about the thing `Person` as it is known and recognized by all major search engines.
+
+For a more expressive example consider the json-ld example of https://schema.org/MusicEvent, which shows how a ticket offer could look like.
 
 
