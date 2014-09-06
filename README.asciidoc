@@ -1,4 +1,72 @@
 hydra-java
 ==========
 
-Annotate your Java beans and serialize them as json-ld with hydra
+Annotate your Java beans and serialize them as json-ld with hydra.
+
+Status: Experimental
+
+== Problem
+
+I want to add json-ld information to json objects serialized from Java beans. 
+The meaning of json attributes, their possible values etc. is usually not obvious without referring to some information 
+coming from outside the resource itself. 
+
+One of the rules for a ReSTful API is:
+
+[quote, Roy Fielding]
+____
+A REST API should never have “typed” resources that are significant to the client. 
+Specification authors may use resource types for describing server implementation behind the interface, 
+but those types must be irrelevant and invisible to the client. 
+The only types that are significant to a client are the current representation’s media type and standardized relation names. 
+[Failure here implies that clients are assuming a resource structure due to out-of band information, 
+such as a domain-specific standard, which is the data-oriented equivalent to RPC's functional coupling].
+____
+
+My interpretation of this famous http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven[rant by Roy Fielding]:
+
+A publicly available media-type should give clients the means to interpret the response, 
+and relation names in the response must be recognizable based on standards.
+If a client is told to make a reservation for a movie ticket, how should it recognize how some-api prescribes to do that?
+
+== Solution
+
+I see json-ld as a possible way to solve this problem without forcing people to ask me
+about my vendor-specific documentation, thus decoupling the client from my server types. Clients should be able to understand a
+response based on widely available, standardized, public information.
+
+Java beans have no knowledge about the meaning of their bean properties and they do not know what they represent in the real world. 
+
+A popular vocabulary which describes things on the internet is http://schema.org. It is backed by all major search engines and 
+sufficient for basic needs. It can also point to other vocabularies with more precise definitions as needed, 
+e.g. by using http://schema.org/additionalType or by using enumerated values for properties such as the ones 
+from http://purl.org/goodrelations/.
+
+In the simplest possible case I want to design my json objects so that they can be understood by others based on schema.org.
+By simply calling my class Person and letting it have an attribute name, I want to get a publicly understandable
+Json object, like this:
+
+[source, Java]
+----
+    @Test
+    public void testDefaultVocabIsRendered() throws Exception {
+
+        class Person {
+            private String name = "Dietrich Schulten";
+
+            public String getName() {
+                return name;
+            }
+        }
+
+        mapper.writeValue(w, new Person());
+        assertEquals("{\"@context\":{" +
+                "\"@vocab\":\"http://schema.org/\"" +
+                "}" +
+                ",\"@type\":\"Person\"," +
+                "\"name\":\"Dietrich Schulten\"}"
+                , w.toString());
+    }
+----
+
+
