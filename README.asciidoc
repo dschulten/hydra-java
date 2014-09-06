@@ -23,19 +23,21 @@ such as a domain-specific standard, which is the data-oriented equivalent to RPC
 ____
 
 
+
 My interpretation of this famous http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven[rant by Roy Fielding]:
 
-A publicly available media-type should give clients the means to interpret the response, 
-and relation names in the response must be recognizable based on standards.
+A publicly available media-type should give clients all necessary means to interpret a server response, 
+and relation names in the response must be recognizable based on standards, so that the client can act upon the responses it receives 
+without knowing the details of a vendor-specific api.
 
-In other words: If a client is told to make a reservation for a movie ticket, it should be able to recognize what 
-one-fancy-api requires to do that. How can we do that?
+In other words: If a client is told to make a reservation for a concert ticket, it should be able to recognize what 
+one-fancy-api requires to do that. How can we do that, based on a media type and relation names?
 
 == Solution
 
-I see json-ld as a possible way to solve this problem without forcing people to ask me
-about my vendor-specific documentation, thus decoupling the client from my server types. Clients should be able to understand a
-response based on widely available, standardized, public information.
+I see json-ld (media type application/ld+json) as a possible way to solve this problem without forcing people to ask me
+about my vendor-specific documentation, thus decoupling the clients from my server types. 
+Clients should be able to understand a response based on widely available, standardized, public information.
 
 Therefore I want to add json-ld information to json objects serialized from my Java beans.
 
@@ -83,6 +85,16 @@ The corresponding json-ld object:
 Note that I do not bind my clients to a server type `Person`. 
 Rather, client and server are talking about the thing `Person` as it is known and recognized by all major search engines.
 
-For a more expressive example consider the json-ld example of https://schema.org/MusicEvent, which shows how a ticket offer could look like.
+For a more expressive example consider the json-ld example of https://schema.org/MusicEvent, which shows how a ticket offer 
+could look like.
 
+== First Steps
+
+It is currently possible to render a json-ld in the schema.org context from a Java bean. Some basic annotation-based customizations are also in place, notably:
+
+* expose an existing type as a type of schema.org (or other vocabularies)
+* expose an existing attribute under a property name from schema.org (or other vocabularies)
+* use package-level or type-level terms to refer to other vocabularies than schema.org
+
+Look into de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializerTest to see how it works :)
 
