@@ -23,6 +23,7 @@ The only types that are significant to a client are the current representationâ€
 such as a domain-specific standard, which is the data-oriented equivalent to RPC's functional coupling].
 ____
 
+
 My interpretation of this famous http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven[rant by Roy Fielding]:
 
 A publicly available media-type should give clients the means to interpret the response, 
