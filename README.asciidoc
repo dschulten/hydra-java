@@ -1,0 +1,4 @@
+hydra-java
+==========
+
+Annotate your Java beans and serialize them as json-ld with hydra
