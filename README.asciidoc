@@ -7,7 +7,6 @@ Status: Experimental
 
 == Problem
 
-I want to add json-ld information to json objects serialized from Java beans. 
 The meaning of json attributes, their possible values etc. is usually not obvious without referring to some information 
 coming from outside the resource itself. 
 
@@ -35,6 +34,8 @@ If a client is told to make a reservation for a movie ticket, how should it reco
 I see json-ld as a possible way to solve this problem without forcing people to ask me
 about my vendor-specific documentation, thus decoupling the client from my server types. Clients should be able to understand a
 response based on widely available, standardized, public information.
+
+I want to add json-ld information to json objects serialized from Java beans.
 
 Java beans have no knowledge about the meaning of their bean properties and they do not know what they represent in the real world. 
 
