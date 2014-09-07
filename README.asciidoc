@@ -56,8 +56,8 @@ So I want to add json-ld information to json objects serialized from my Java bea
 Java beans have no knowledge about the meaning of their bean properties and they do not know what they represent in the real world.
 
 In the simplest possible case I want to design my json objects so that they can be understood by others based on schema.org.
-By simply calling my class `Person` and letting it have an attribute `name`, I want to get a publicly understandable
-Json object, like this:
+By simply calling my json transfer class `Person` and letting it have an attribute `name`, I want to get a publicly understandable
+json object, like this:
 
 [source, Java]
 ----
