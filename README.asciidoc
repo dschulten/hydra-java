@@ -102,7 +102,7 @@ It is currently possible to render a json-ld in the schema.org context from a Ja
 * expose an existing attribute under a property name from schema.org (or other vocabularies)
 * use package-level or type-level terms to refer to other vocabularies than schema.org
 
-Look into https://github.com/dschulten/hydra-java/blob/master/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] to see how it works :)
+Look into https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/main/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializer.java[JacksonHydraSerializerTest] to see how it works :)
 
 == Acknowledgements
 
