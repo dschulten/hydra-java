@@ -1,15 +1,19 @@
+/*
+ * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ */
 package de.escalon.hypermedia.hydra.mapping;
 
 import java.lang.annotation.*;
 
 /**
  * The Expose annotation defines whether a field or class is exposed by the
- * serializer (or set by the deserializer). If a field or class is being exposed,
- * it is possible to define it's short name with the "as" parameter and it's
- * IRI (fragment) with the "value" parameter. If the value of "iri" contains
- * a colon, it is assumed to represent the full, absolute IRI, otherwise it
- * is interpreted as IRI fragment which is appended to the vocabulary's IRI.
- * The three parameters "required", "readonly" and "writeonly" are only used for fields.
+ * serializer (or set by the deserializer).
  * <p/>
  * Created by dschulten on 10.08.2014.
  */
@@ -18,13 +22,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Expose {
 
-//    /**
-//     * Alias for annotated field or type.
-//     *
-//     * @return alias
-//     */
-//    String as() default "";
-
     /**
      * Iri describing the attribute or type e.g. http://schema.org/name or http://schema.org/Person. Can also be
      * a compact iri like foaf:name or a term from the current vocab (e.g. just name if @vocab is schema.org).
@@ -32,7 +29,5 @@ public @interface Expose {
      * @return iri
      */
     String value();
-
-    String[] contexts() default {};
 
 }

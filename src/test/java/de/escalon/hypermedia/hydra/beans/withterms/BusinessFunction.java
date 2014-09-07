@@ -7,17 +7,21 @@
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-package de.escalon.hypermedia.hydra.mapping;
 
-import java.lang.annotation.*;
+package de.escalon.hypermedia.hydra.beans.withterms;
+
+import de.escalon.hypermedia.hydra.mapping.Expose;
 
 /**
- * Allows to define multiple <code>&#64;Term</code>s in a type or package.
+ * Sample business functions based on GoodRelations.
+ * Created by dschulten on 07.09.2014.
  */
-@Documented
-@Target({ElementType.PACKAGE, ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Terms {
-
-    Term[] value();
+@Expose("gr:BusinessFunction")
+enum BusinessFunction {
+    @Expose("gr:LeaseOut")
+    RENT,
+    @Expose("gr:Sell")
+    FOR_SALE,
+    @Expose("gr:Buy")
+    BUY
 }
