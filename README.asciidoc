@@ -14,7 +14,6 @@ Describe the type in some sort of json-schema, wadl, raml, swagger or similar an
 
 Or put up documentation pages to describe your extension relation types and make the documentation available by dereferencing http://example.com/api/rels#doodad.
 
-
 But one of the rules for a ReSTful API is:
 
 [quote, Roy Fielding]
@@ -43,14 +42,16 @@ about my vendor-specific documentation, thus decoupling the clients from my serv
 
 Clients should be able to understand a response based on widely available, standardized, public information.
 
-The json-ld mediatype allows to bring descriptions of things in the real world from public vocabularies into your json files. With json-ld there *is* a way to say that a json response describes a http://schema.org/MusicEvent[MusicEvent] which http://schema.org/offers[offers] a http://schema.org/Ticket[Ticket] without any vendor-specific documentation.
+The json-ld mediatype allows to bring descriptions of things in the real world from public vocabularies into your json files. With json-ld there *is* a way to say that a json response describes a http://schema.org/MusicEvent[MusicEvent] which http://schema.org/offers[offers] a http://schema.org/Ticket[Ticket] without any vendor-specific documentation, and it can also link to other resources.
 
 A popular vocabulary which describes things on the internet is http://schema.org. It is used by all major search engines for search engine optimization and sufficient for basic needs. It also integrates with other vocabularies, 
 e.g. by using http://schema.org/additionalType[additionalType] to point to http://purl.org/goodrelations/[GoodRelations] or by using external enumerated values as shown by http://schema.org/DeliveryMethod[DeliveryMethod].
 
-Also note that json-ld is http://manu.sporny.org/2014/json-ld-origins-2/[not about the Semantic Web at all].
+(For those of you about to say that the Semantic Web never took off, please note that json-ld is http://manu.sporny.org/2014/json-ld-origins-2/[not about the Semantic Web at all]).
 
-Therefore I want to add json-ld information to json objects serialized from my Java beans.
+http://www.hydra-cg.com/[Hydra] adds interaction to the mix. It describes exactly how to post a ticket reservation.
+
+So I want to add json-ld information to json objects serialized from my Java beans.
 
 Java beans have no knowledge about the meaning of their bean properties and they do not know what they represent in the real world.
 
