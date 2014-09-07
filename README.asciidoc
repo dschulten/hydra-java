@@ -76,7 +76,7 @@ json object, like this:
     }
 ----
 
-The corresponding json-ld object:
+The corresponding json-ld object, written by hydra-java:
 
 [source, Javascript]
 ----
