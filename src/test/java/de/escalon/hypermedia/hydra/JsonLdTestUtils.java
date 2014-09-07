@@ -13,7 +13,6 @@ import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,9 +38,8 @@ public class JsonLdTestUtils {
         return JsonUtils.toPrettyString(compact);
     }
 
-    @Test
-    public void testMovie() throws IOException, JsonLdError {
-        InputStream inputStream = this.getClass().getResourceAsStream("/Movie.json");
+    public static void main(String[] args) throws IOException, JsonLdError {
+        InputStream inputStream = JsonLdTestUtils.class.getResourceAsStream("/valueExpansion.jsonld");
         // Read the file into an Object (The type of this object will be a List, Map, String, Boolean,
         // Number or null depending on the root object in the file).
         Object jsonObject = JsonUtils.fromInputStream(inputStream);

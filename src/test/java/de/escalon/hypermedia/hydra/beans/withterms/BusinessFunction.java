@@ -16,7 +16,6 @@ import de.escalon.hypermedia.hydra.mapping.Expose;
  * Sample business functions based on GoodRelations.
  * Created by dschulten on 07.09.2014.
  */
-@Expose("gr:BusinessFunction")
 enum BusinessFunction {
     @Expose("gr:LeaseOut")
     RENT,

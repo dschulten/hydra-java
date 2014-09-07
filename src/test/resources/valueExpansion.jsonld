@@ -1,0 +1,16 @@
+{
+ "@context": {
+   "@vocab" : "http://schema.org/",
+   "gr": "http://purl.org/goodrelations/v1#",
+   "acquire" : {
+     "@id" : "availableDeliveryMethod",
+     "@type" : "@vocab"
+   },
+   "RENT": "gr:LeaseOut"
+  },
+  "@type": "Movie",
+  "name": "Pirates of the Carribean",
+  "offer": {
+    "acquire": "RENT"
+   }
+}

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.github.jsonldjava.core.JsonLdError;
+import de.escalon.hypermedia.hydra.JsonLdTestUtils;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.mapping.Vocab;
 import org.junit.Before;
@@ -124,7 +125,6 @@ public class JacksonHydraSerializerTest {
     @Test
     public void testAppliesPackageDefinedTerms() throws IOException, JsonLdError {
         mapper.writeValue(w, new de.escalon.hypermedia.hydra.beans.withterms.Offer());
-//        System.out.println(JsonLdTestUtils.applyContext(w.toString()));
         assertEquals("{\"@context\":{" +
                 "\"@vocab\":\"http://schema.org/\"," +
                 "\"gr\":\"http://purl.org/goodrelations/v1#\"," +
@@ -134,6 +134,12 @@ public class JacksonHydraSerializerTest {
                 "\"businessFunction\":\"RENT\"," +
                 "\"price\":1.99" +
                 "}", w.toString());
+        final String newline = System.lineSeparator();
+        assertEquals("{" + newline +
+                "  \"@type\" : \"http://purl.org/goodrelations/v1#Offering\"," + newline +
+                "  \"http://purl.org/goodrelations/v1#hasCurrencyValue\" : 1.99," + newline +
+                "  \"http://schema.org/businessFunction\" : \"RENT\"" + newline +
+                "}", JsonLdTestUtils.applyContext(w.toString()));
     }
 
     @Test
@@ -199,16 +205,16 @@ public class JacksonHydraSerializerTest {
 
     }
 
-//    class Movie {
-//        public String name = "Pirates oft the Caribbean: On Strander Tides (2011)";
-//        public String description = "Jack Sparrow and Barbossa embark on a quest to\n" +
-//                " find the elusive fountain of youth, only to discover that Blackbeard and\n" +
-//                " his daughter are after it too.";
-//
-//        public String model = "http://www.imdb.com/title/tt0325980/";
-//
-//        public Offer offers = new Offer();
-//    }
+    //    class Movie {
+    //        public String name = "Pirates oft the Caribbean: On Strander Tides (2011)";
+    //        public String description = "Jack Sparrow and Barbossa embark on a quest to\n" +
+    //                " find the elusive fountain of youth, only to discover that Blackbeard and\n" +
+    //                " his daughter are after it too.";
+    //
+    //        public String model = "http://www.imdb.com/title/tt0325980/";
+    //
+    //        public Offer offers = new Offer();
+    //    }
 
     class Offer {
         public String businessFunction = "http://purl.org/goodrelations/v1#LeaseOut";
