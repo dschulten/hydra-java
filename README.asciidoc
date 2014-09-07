@@ -8,11 +8,11 @@ Status: Experimental
 == Problem
 
 The meaning of json attributes in api responses, their possible values etc. is usually not obvious without referring to some 
-information coming from outside the resource itself. That is due to the nature of json. Two solutions immediately come to mind: 
+information coming from outside the resource itself. That is due to the nature of json. Two solutions immediately come to mind. Both are ways of vendor-specific documentation, some are machine-readable, some aren't. 
 
 Describe the type in some sort of json-schema, wadl, raml, swagger or similar and publish it together with the resource. People could even generate classes from this information, if they wish to. My api users coming from a wsdl background scream for something like that. 
 
-Or put up documentation pages to describe your extension relation types and make the documentation available by dereferencing http://example.com/api/rels#doodad.
+Or put up documentation pages to describe your ex:doodad extension relation types and make the documentation available by dereferencing http://example.com/api/rels#doodad.
 
 But one of the rules for a ReSTful API is:
 
@@ -33,7 +33,7 @@ and relation names for hyperlinks in the response must be recognizable based on 
 the responses it receives without knowing the details of a vendor-specific api.
 
 In other words: If a client is told to make a reservation for a concert ticket, it should be able to recognize what 
-one-fancy-api requires to achieve that without processing a vendor-specific documentation. How can we do that, purely based on a media type and relation names?
+one-fancy-api requires to achieve that without processing a vendor-specific documentation. How can we do that, purely based on a media type and relation names? Do we need hundreds of iana registered media types for all kinds of purposes?
 
 == Solution (evolving)
 
