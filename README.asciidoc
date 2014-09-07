@@ -7,10 +7,15 @@ Status: Experimental
 
 == Problem
 
-The meaning of json attributes, their possible values etc. is usually not obvious without referring to some information 
-coming from outside the resource itself. 
+The meaning of json attributes in api responses, their possible values etc. is usually not obvious without referring to some 
+information coming from outside the resource itself. That is due to the nature of json. Two solutions immediately come to mind: 
 
-One of the rules for a ReSTful API is:
+Describe the type in some sort of json-schema, wadl, raml, swagger or similar and publish it together with the resource. People could even generate classes from this information, if they wish to. My api users coming from a wsdl background scream for something like that. 
+
+Or put up documentation pages to describe your extension relation types and make the documentation available by dereferencing http://example.com/api/rels#doodad.
+
+
+But one of the rules for a ReSTful API is:
 
 [quote, Roy Fielding]
 ____
@@ -22,31 +27,32 @@ The only types that are significant to a client are the current representationâ€
 such as a domain-specific standard, which is the data-oriented equivalent to RPC's functional coupling].
 ____
 
-
-
 My interpretation of this famous http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven[rant by Roy Fielding]:
 
 A publicly available media-type should give clients all necessary means to interpret a server response, 
-and relation names in the response must be recognizable based on standards, so that the client can act upon the responses it receives 
-without knowing the details of a vendor-specific api.
+and relation names for hyperlinks in the response must be recognizable based on standards, so that the client can act upon 
+the responses it receives without knowing the details of a vendor-specific api.
 
 In other words: If a client is told to make a reservation for a concert ticket, it should be able to recognize what 
-one-fancy-api requires to do that. How can we do that, based on a media type and relation names?
+one-fancy-api requires to achieve that without processing a vendor-specific documentation. How can we do that, purely based on a media type and relation names?
 
-== Solution
+== Solution (evolving)
 
 I see json-ld (media type application/ld+json) as a possible way to solve this problem without forcing people to ask me
-about my vendor-specific documentation, thus decoupling the clients from my server types. 
+about my vendor-specific documentation, thus decoupling the clients from my server types.
+
 Clients should be able to understand a response based on widely available, standardized, public information.
+
+The json-ld mediatype allows to bring descriptions of things in the real world from public vocabularies into your json files. With json-ld there *is* a way to say that a json response describes a http://schema.org/MusicEvent[MusicEvent] which http://schema.org/offers[offers] a http://schema.org/Ticket[Ticket] without any vendor-specific documentation.
+
+A popular vocabulary which describes things on the internet is http://schema.org. It is used by all major search engines for search engine optimization and sufficient for basic needs. It also integrates with other vocabularies, 
+e.g. by using http://schema.org/additionalType[additionalType] to point to http://purl.org/goodrelations/[GoodRelations] or by using external enumerated values as shown by http://schema.org/DeliveryMethod[DeliveryMethod].
+
+Also note that json-ld is http://manu.sporny.org/2014/json-ld-origins-2/[not about the Semantic Web at all].
 
 Therefore I want to add json-ld information to json objects serialized from my Java beans.
 
-Java beans have no knowledge about the meaning of their bean properties and they do not know what they represent in the real world. 
-
-A popular vocabulary which describes things on the internet is http://schema.org. It is backed by all major search engines and 
-sufficient for basic needs. It can also point to other vocabularies with more precise definitions as needed, 
-e.g. by using http://schema.org/additionalType and point to something from  or by using enumerated values for properties such as the ones 
-from http://purl.org/goodrelations/.
+Java beans have no knowledge about the meaning of their bean properties and they do not know what they represent in the real world.
 
 In the simplest possible case I want to design my json objects so that they can be understood by others based on schema.org.
 By simply calling my class `Person` and letting it have an attribute `name`, I want to get a publicly understandable
@@ -85,12 +91,11 @@ The corresponding json-ld object:
 Note that I do not bind my clients to a server type `Person`. 
 Rather, client and server are talking about the thing `Person` as it is known and recognized by all major search engines.
 
-For a more expressive example consider the json-ld example of https://schema.org/MusicEvent, which shows how a ticket offer 
-could look like.
+For a more expressive example consider the json-ld example of https://schema.org/MusicEvent, which shows how a ticket offering could look like.
 
 == First Steps
 
-It is currently possible to render a json-ld in the schema.org context from a Java bean. Some basic annotation-based customizations are also in place, notably:
+It is currently possible to render a json-ld in the schema.org context from a Java bean with hydra-java. Some basic annotation-based customizations are also in place, notably:
 
 * expose an existing type as a type of schema.org (or other vocabularies)
 * expose an existing attribute under a property name from schema.org (or other vocabularies)
