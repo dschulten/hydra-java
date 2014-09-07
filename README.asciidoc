@@ -106,4 +106,4 @@ Look into https://github.com/dschulten/hydra-java/blob/master/src/test/java/de/e
 
 == Acknowledgements
 
-I would like to thank Mike Amundsen, Stu Charlton, Jon Moore, Mike Kelly, Markus Lanthaler, Gregg Kellog and Many Sporny for their inspiration and for valuable comments along the way. Also thanks to Oliver Gierke who has been accepting some of my pull requests to spring-hateoas.
+I would like to thank Mike Amundsen, Stu Charlton, Jon Moore, Jørn Wildt, Mike Kelly, Markus Lanthaler, Gregg Kellog and Manu Sporny for their inspiration and for valuable comments along the way. Also thanks to Oliver Gierke who has been accepting some of my pull requests to spring-hateoas.
