@@ -9,7 +9,6 @@
  */
 package de.escalon.hypermedia.hydra.serialize;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
@@ -145,7 +144,8 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             final PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
                 final Method method = propertyDescriptor.getReadMethod();
-                final Expose expose = method.getDeclaredAnnotation(Expose.class);
+
+                final Expose expose = method.getAnnotation(Expose.class);
                 if (expose != null) {
                     jgen.writeStringField(propertyDescriptor.getName(), expose.value());
                 }
@@ -175,7 +175,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             throw new IllegalStateException("found both @Terms and @Term in " +
                     annotatedElement.getClass().getName() + " " + name +", use either one or the other");
         }
-        Map<String, String> packageTermsMap = new HashMap<String, String>();
+        Map<String, String> packageTermsMap = new LinkedHashMap<String, String>();
         if (packageTerms != null) {
             final Term[] terms = packageTerms.value();
             for (Term term : terms) {

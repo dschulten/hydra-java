@@ -134,7 +134,7 @@ public class JacksonHydraSerializerTest {
                 "\"businessFunction\":\"RENT\"," +
                 "\"price\":1.99" +
                 "}", w.toString());
-        final String newline = System.lineSeparator();
+        final String newline = System.getProperty("line.separator");
         assertEquals("{" + newline +
                 "  \"@type\" : \"http://purl.org/goodrelations/v1#Offering\"," + newline +
                 "  \"http://purl.org/goodrelations/v1#hasCurrencyValue\" : 1.99," + newline +
