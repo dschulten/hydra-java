@@ -3,7 +3,7 @@
 
 Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[json-ld] with http://www.hydra-cg.com/spec/latest/core/[hydra].
 
-Status: Experimental
+Status: Testing
 
 == Problem
 
