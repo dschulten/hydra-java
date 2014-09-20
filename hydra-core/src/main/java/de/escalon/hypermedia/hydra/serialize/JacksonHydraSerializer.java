@@ -10,10 +10,11 @@
 package de.escalon.hypermedia.hydra.serialize;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
 import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
+import com.fasterxml.jackson.databind.util.NameTransformer;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.mapping.Term;
 import de.escalon.hypermedia.hydra.mapping.Terms;
@@ -27,7 +28,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class JacksonHydraSerializer extends BeanSerializerBase {
 
@@ -82,37 +84,63 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     @Override
     public void serialize(Object bean, JsonGenerator jgen,
                           SerializerProvider provider) throws IOException {
-        jgen.writeStartObject();
+        if (!isUnwrappingSerializer()) {
+            jgen.writeStartObject();
+        }
         serializeContext(bean, jgen, provider);
         serializeType(bean, jgen, provider);
         serializeFields(bean, jgen, provider);
-        jgen.writeEndObject();
+        if (!isUnwrappingSerializer()) {
+            jgen.writeEndObject();
+        }
     }
 
     private void serializeType(Object bean, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         // adds @type attribute, reflecting the simple name of the class or the exposed annotation on the class.
-        final Expose expose = getAnnotation(bean.getClass(), Expose.class);
+        final Expose classExpose = getAnnotation(bean.getClass(), Expose.class);
+        // TODO allow to search up the hierarchy for ResourceSupport mixins and cache find result?
+        final Class<?> mixin = provider.getConfig()
+                .findMixInClassFor(bean.getClass());
+        final Expose mixinExpose = getAnnotation(mixin, Expose.class);
         final String val;
-        if (expose == null) {
-            val = bean.getClass().getSimpleName();
+        if (mixinExpose != null) {
+            val = mixinExpose.value(); // mixin wins over class
+        } else if (classExpose != null) {
+            val = classExpose.value(); // expose is better than Java type
         } else {
-            val = expose.value();
+            val = bean.getClass()
+                    .getSimpleName();
         }
+
         jgen.writeStringField("@type", val);
     }
 
-    private void serializeContext(Object bean, JsonGenerator jgen, SerializerProvider serializerProvider) throws IOException {
+    private void serializeContext(Object bean, JsonGenerator jgen,
+                                  SerializerProvider serializerProvider) throws IOException {
         try {
+            // TODO use serializerProvider.getAttributes to hold a stack of contexts
+            // and check if we need to write a context for the current bean at all
+            // If it is in the same vocab: no context
+            // If the terms are already defined in the context: no context
+
+            SerializationConfig config = serializerProvider.getConfig();
+            final Class<?> mixInClass = config.findMixInClassFor(bean.getClass());
+
             // write vocab in context
-            final Vocab packageVocab = getAnnotation(bean.getClass().getPackage(), Vocab.class);
+            final Vocab packageVocab = getAnnotation(bean.getClass()
+                    .getPackage(), Vocab.class);
             final Vocab classVocab = getAnnotation(bean.getClass(), Vocab.class);
+
+            final Vocab mixinVocab = getAnnotation(mixInClass, Vocab.class);
 
             // begin context
             // default context: schema.org vocab or vocab package annotation
             jgen.writeObjectFieldStart("@context");
 
             String vocab;
-            if (classVocab != null) {
+            if (mixinVocab != null) {
+                vocab = mixinVocab.value(); // wins over class
+            } else if (classVocab != null) {
                 vocab = classVocab.value(); // wins over package
             } else if (packageVocab != null) {
                 vocab = packageVocab.value();
@@ -122,16 +150,27 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             jgen.writeStringField("@vocab", vocab);
 
             // define terms from package or type in context
-            Map<String, String> packageTermsMap = getTerms(bean.getClass().getPackage(), bean.getClass().getPackage().getName());
-            Map<String, String> classTermsMap = getTerms(bean.getClass(), bean.getClass().getName());
+            Map<String, String> packageTermsMap = getTerms(bean.getClass()
+                    .getPackage(), bean.getClass()
+                    .getPackage()
+                    .getName());
+            Map<String, String> classTermsMap = getTerms(bean.getClass(), bean.getClass()
+                    .getName());
+            Map<String, String> mixinTermsMap = getTerms(mixInClass, bean.getClass()
+                    .getName());
+
             // class terms override package terms
             packageTermsMap.putAll(classTermsMap);
+            // mixin terms override class terms
+            packageTermsMap.putAll(mixinTermsMap);
+
             for (Map.Entry<String, String> termEntry : packageTermsMap.entrySet()) {
                 jgen.writeStringField(termEntry.getKey(), termEntry.getValue());
             }
 
             // expose fields in context
-            final Field[] fields = bean.getClass().getDeclaredFields();
+            final Field[] fields = bean.getClass()
+                    .getDeclaredFields();
             for (Field field : fields) {
                 final Expose expose = field.getAnnotation(Expose.class);
                 if (expose != null) {
@@ -173,7 +212,8 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
 
         if (packageTerms != null && packageTerm != null) {
             throw new IllegalStateException("found both @Terms and @Term in " +
-                    annotatedElement.getClass().getName() + " " + name +", use either one or the other");
+                    annotatedElement.getClass()
+                            .getName() + " " + name + ", use either one or the other");
         }
         Map<String, String> packageTermsMap = new LinkedHashMap<String, String>();
         if (packageTerms != null) {
@@ -183,19 +223,41 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
                 final String as = term.as();
                 if (packageTermsMap.containsKey(as)) {
                     throw new IllegalStateException("duplicate definition of term '" + define + "' in " +
-                            annotatedElement.getClass().getName() +  " " + name);
+                            annotatedElement.getClass()
+                                    .getName() + " " + name);
                 }
                 packageTermsMap.put(define, as);
             }
         }
-        if(packageTerm != null) {
+        if (packageTerm != null) {
             packageTermsMap.put(packageTerm.define(), packageTerm.as());
         }
         return packageTermsMap;
     }
 
     private <T extends Annotation> T getAnnotation(AnnotatedElement annotated, Class<T> annotationClass) {
-        return annotated.getAnnotation(annotationClass);
+        T ret;
+        if (annotated == null) {
+            ret = null;
+        } else {
+            ret = annotated.getAnnotation(annotationClass);
+        }
+        return ret;
     }
 
+    @Override
+    public JsonSerializer<Object> unwrappingSerializer(NameTransformer unwrapper) {
+        return new UnwrappingJacksonHydraSerializer(this);
+    }
+
+    @Override
+    public void resolve(SerializerProvider provider) throws JsonMappingException {
+        super.resolve(provider);
+    }
+
+    @Override
+    public JsonSerializer<?> createContextual(SerializerProvider provider,
+                                              BeanProperty property) throws JsonMappingException {
+        return super.createContextual(provider, property);
+    }
 }

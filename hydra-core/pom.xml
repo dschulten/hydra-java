@@ -13,27 +13,27 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>de.escalon.hypermedia.hydra</groupId>
+        <groupId>de.escalon.hypermedia</groupId>
         <artifactId>hydra-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>de.escalon.hypermedia.hydra</groupId>
     <artifactId>hydra-core</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>hydra-core</name>
+    <name>${project.groupId}:${project.artifactId}</name>
 
     <dependencies>
         <dependency>
             <groupId>com.github.jsonld-java</groupId>
             <artifactId>jsonld-java</artifactId>
             <version>0.5.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <artifactId>junit-dep</artifactId>
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
