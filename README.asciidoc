@@ -95,7 +95,7 @@ Rather, client and server are talking about the thing `Person` as it is known an
 For a more expressive example consider the json-ld example of https://schema.org/MusicEvent, which shows how a ticket offering could look like.
 
 == First Steps
-It is currently possible to render responses from a [https://github.com/spring-projects/spring-hateoas]spring-hateoas service based on Spring MVC.
+It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC.
 The conversion of spring-hateoas Resource does the following:
 
 - renders response with `"@vocab" : "http://schema.org/"` by default, a different `@vocab` can be defined on a class or package using `@Vocab`.
