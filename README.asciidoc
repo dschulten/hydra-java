@@ -105,8 +105,8 @@ The conversion of spring-hateoas Resource does the following:
 - renders a spring-hateoas `List<Link>` in a `Resource<T>` in json-ld style
 - renders spring-hateoas Resources<T> as `hydra:Collection`
 
-Look into [https://github.com/dschulten/hydra-java/blob/master/hydra-spring/src/test/java/de/escalon/hypermedia/spring/HydraMessageConverterTest.java]HydraMessageConverterTest to see how you can set up the hydra message converter with Spring MVC.
-The tests in [https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java]JacksonHydraSerializerTest demonstrate the usage of @Vocab, @Expose and @Terms.
+Look into https://github.com/dschulten/hydra-java/blob/master/hydra-spring/src/test/java/de/escalon/hypermedia/spring/HydraMessageConverterTest.java[HydraMessageConverterTest] to see how you can set up the hydra message converter with Spring MVC.
+The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Terms`.
 
 == Maven Support
 The first Maven release to central is underway. These are the maven coordinates for hydra-spring, if you check out and build locally:
