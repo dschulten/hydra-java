@@ -57,6 +57,8 @@ public class HydraMessageConverterTest {
 
     public static final Logger LOG = LoggerFactory.getLogger(HydraMessageConverterTest.class);
 
+    public static final MediaType APPLICATION_JSONLD = MediaType.parseMediaType("application/ld+json");
+
     @Configuration
     @EnableWebMvc
     static class WebConfig extends WebMvcConfigurerAdapter {
@@ -88,7 +90,7 @@ public class HydraMessageConverterTest {
             objectMapper.registerModule(module);
             converter.setObjectMapper(objectMapper);
             converter.setSupportedMediaTypes(
-                    Arrays.asList(MediaType.parseMediaType("application/ld+json")));
+                    Arrays.asList(APPLICATION_JSONLD));
             return converter;
         }
     }
@@ -106,10 +108,10 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsResource() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events/1")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(content().contentType("application/ld+json"))
                 .andExpect(jsonPath("$.@type").value("Event"))
                 .andExpect(jsonPath("$.performer").value("Cornelia Bielefeldt"))
                 .andExpect(jsonPath("$.reviews.@id").value("http://localhost/reviews"))
@@ -121,10 +123,10 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsResourceSupport() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events/resourcesupport/1")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(content().contentType("application/ld+json"))
                 .andExpect(jsonPath("$.@type").value("Event"))
                 .andExpect(jsonPath("$.performer").value("Cornelia Bielefeldt"))
                 .andExpect(jsonPath("$.reviews.@id").value("http://localhost/reviews"))
@@ -136,7 +138,7 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsListOfResourceOfEvent() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events/list")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
                 .andExpect(jsonPath("$.[0].@type").value("Event"))
@@ -150,10 +152,10 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsResources() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(content().contentType("application/ld+json"))
                 .andExpect(jsonPath("$.@type").value("hydra:Collection"))
                 .andExpect(jsonPath("$.['hydra:member'][0].@type").value("Event"))
                 .andExpect(jsonPath("$.['hydra:member'][0].performer").value("Walk off the Earth"))
