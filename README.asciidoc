@@ -95,14 +95,18 @@ Rather, client and server are talking about the thing `Person` as it is known an
 For a more expressive example consider the json-ld example of https://schema.org/MusicEvent, which shows how a ticket offering could look like.
 
 == First Steps
+It is currently possible to render responses from a [https://github.com/spring-projects/spring-hateoas]spring-hateoas service based on Spring MVC.
+The conversion of spring-hateoas Resource does the following:
 
-It is currently possible to render a json-ld in the schema.org context from a Java bean with hydra-java. Some basic annotation-based customizations are also in place, notably:
+- renders response with `"@vocab" : "http://schema.org/"` by default, a different `@vocab` can be defined on a class or package using `@Vocab`.
+- renders `@type` based on the class name by default, a vocabulary class can be produced instead using `@Expose` on the type.
+- renders attributes as if they were properties in the default vocab. For manual mapping to properties in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocabulary property.
+- supports vocabularies in addition to the default vocabulary via terms in the `@context`. Use `@Term` in conjunction with `@Terms` on a class or package for this.
+- renders a spring-hateoas `List<Link>` in a `Resource<T>` in json-ld style
+- renders spring-hateoas Resources<T> as `hydra:Collection`
 
-* expose an existing type as a type of schema.org (or other vocabularies)
-* expose an existing attribute under a property name from schema.org (or other vocabularies)
-* use package-level or type-level terms to refer to other vocabularies than schema.org
-
-Look into https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/main/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializer.java[JacksonHydraSerializerTest] to see how it works :)
+Look into [https://github.com/dschulten/hydra-java/blob/master/hydra-spring/src/test/java/de/escalon/hypermedia/spring/HydraMessageConverterTest.java]HydraMessageConverterTest to see how you can set up the hydra message converter with Spring MVC.
+The tests in [https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java]JacksonHydraSerializerTest demonstrate the usage of @Vocab, @Expose and @Terms.
 
 == Acknowledgements
 
