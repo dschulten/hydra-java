@@ -108,6 +108,18 @@ The conversion of spring-hateoas Resource does the following:
 Look into [https://github.com/dschulten/hydra-java/blob/master/hydra-spring/src/test/java/de/escalon/hypermedia/spring/HydraMessageConverterTest.java]HydraMessageConverterTest to see how you can set up the hydra message converter with Spring MVC.
 The tests in [https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java]JacksonHydraSerializerTest demonstrate the usage of @Vocab, @Expose and @Terms.
 
+== Maven Support
+The first Maven release to central is underway. These are the maven coordinates for hydra-spring, if you check out and build locally:
+
+[source, XML]
+----
+<dependency>
+  <groupId>de.escalon.hypermedia</groupId>
+  <artifactId>hydra-spring</artifactId>
+  <version>${hydra-spring.version}</version>
+</dependency>
+----
+
 == Acknowledgements
 
 I would like to thank Mike Amundsen, Stu Charlton, Jon Moore, Jørn Wildt, Mike Kelly, Markus Lanthaler, Gregg Kellog and Manu Sporny for their inspiration and for valuable comments along the way. Also thanks to Oliver Gierke who has been accepting some of my pull requests to spring-hateoas.
