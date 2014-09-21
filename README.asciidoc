@@ -90,9 +90,9 @@ The corresponding json-ld object, written by hydra-java:
 ----
 
 Note that I do not bind my clients to a server type `Person`. 
-Rather, client and server are talking about the thing `Person` as it is known and recognized by all major search engines.
+Rather, client and server are talking about the thing http://schema.org/Person[Person] as it is known and recognized by all major search engines.
 
-For a more expressive example consider the json-ld example of https://schema.org/MusicEvent, which shows how a ticket offering could look like.
+For a more expressive example consider the json-ld example of http://schema.org/MusicEvent[MusicEvent], which shows how a ticket offering could look like.
 
 == First Steps
 It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC.
