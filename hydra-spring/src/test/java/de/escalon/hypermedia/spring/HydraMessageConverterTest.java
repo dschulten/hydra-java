@@ -10,11 +10,10 @@
 
 package de.escalon.hypermedia.spring;
 
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.EventController;
 import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson.JacksonHydraModule;
-import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson.ResourceSerializer;
+import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.EventController;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -37,9 +35,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-import org.springframework.web.servlet.config.annotation.*;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -47,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 /**
+ * Tests Spring mvc message converter for hydra.
  * Created by dschulten on 11.09.2014.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -85,8 +86,9 @@ public class HydraMessageConverterTest {
 
             SimpleModule module = new JacksonHydraModule();
             objectMapper.registerModule(module);
-            // TODO curie and relprovider?
             converter.setObjectMapper(objectMapper);
+            converter.setSupportedMediaTypes(
+                    Arrays.asList(MediaType.parseMediaType("application/ld+json")));
             return converter;
         }
     }
@@ -112,7 +114,8 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.performer").value("Cornelia Bielefeldt"))
                 .andExpect(jsonPath("$.reviews.@id").value("http://localhost/reviews"))
                 .andReturn();
-        LOG.debug(result.getResponse().getContentAsString());
+        LOG.debug(result.getResponse()
+                .getContentAsString());
     }
 
     @Test
@@ -126,7 +129,8 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.performer").value("Cornelia Bielefeldt"))
                 .andExpect(jsonPath("$.reviews.@id").value("http://localhost/reviews"))
                 .andReturn();
-        LOG.debug(result.getResponse().getContentAsString());
+        LOG.debug(result.getResponse()
+                .getContentAsString());
     }
 
     @Test
@@ -139,7 +143,8 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.[0].performer").value("Walk off the Earth"))
                 .andExpect(jsonPath("$.[0].reviews.@id").value("http://localhost/reviews/events/1"))
                 .andReturn();
-        LOG.debug(result.getResponse().getContentAsString());
+        LOG.debug(result.getResponse()
+                .getContentAsString());
     }
 
     @Test
@@ -154,6 +159,7 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.['hydra:member'][0].performer").value("Walk off the Earth"))
                 .andExpect(jsonPath("$.['hydra:member'][0].reviews.@id").value("http://localhost/reviews/events/1"))
                 .andReturn();
-        LOG.debug(result.getResponse().getContentAsString());
+        LOG.debug(result.getResponse()
+                .getContentAsString());
     }
 }

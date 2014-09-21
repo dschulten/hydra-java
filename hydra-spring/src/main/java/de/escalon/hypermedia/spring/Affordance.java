@@ -11,8 +11,6 @@
 package de.escalon.hypermedia.spring;
 
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.TemplateVariable;
-import org.springframework.hateoas.UriTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
@@ -20,7 +18,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -34,16 +31,11 @@ import java.util.Map;
 public class Affordance extends Link {
 
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
-//    private UriTemplate uriTemplate;
     private HttpMethod httpMethod;
     // TODO: ideally the Resource content can be used to describe the supported properties, their type etc.
-    // the offer resource would define which properties are editable and we could derive the template from it
-    // maybe affordance could hold the bean for which it is an affordance
+    // the event resource would define which properties are editable and we could derive the template from it
+    // maybe affordance could hold the bean for which it is an affordance?
 
-//    public Affordance(String uriTemplate) {
-//        this(uriTemplate, new String[0]);
-//    }
-//
     public Affordance(String uriTemplate, String... rels) {
         super(uriTemplate);
         Assert.noNullElements(rels, "null rels are not allowed");
@@ -51,20 +43,7 @@ public class Affordance extends Link {
             addRel(rel);
         }
     }
-//
-//    public Affordance(Link link) {
-//        this(link.getHref(), link.getRel()
-//                .isEmpty() ? new String[0] : new String[]{link.getRel()});
-//    }
-//
-//    public Affordance(UriTemplate uriTemplate, String... rels) {
-//        Assert.noNullElements(rels, "rels");
-//        for (String rel : rels) {
-//            addRel(rel);
-//        }
-//        this.uriTemplate = uriTemplate;
-//    }
-//
+
     private Affordance(String uriTemplate, MultiValueMap<String, String> linkParams, HttpMethod httpMethod) {
         super(uriTemplate);
         this.linkParams = linkParams;
@@ -103,7 +82,7 @@ public class Affordance extends Link {
      * the link.  There MUST NOT be more than one type parameter in a link-
      * value.
      *
-     * @param mediaType
+     * @param mediaType to set
      */
     public void setType(String mediaType) {
         if (mediaType != null)
@@ -121,7 +100,7 @@ public class Affordance extends Link {
      * value indicate that multiple languages are available from the
      * indicated resource.
      *
-     * @param hreflang
+     * @param hreflang to add
      */
     public void addHreflang(String hreflang) {
         Assert.hasLength(hreflang);
@@ -136,7 +115,7 @@ public class Affordance extends Link {
      * more than once in a given link-value; occurrences after the first
      * MUST be ignored by parsers.
      *
-     * @param title
+     * @param title to set
      */
     public void setTitle(String title) {
         if (title != null)
@@ -154,7 +133,7 @@ public class Affordance extends Link {
      * parsers.  If the parameter does not contain language information, its
      * language is indicated by the Content-Language header (when present).
      *
-     * @param titleStar
+     * @param titleStar to set
      */
     public void setTitleStar(String titleStar) {
         if (titleStar != null)
@@ -171,7 +150,7 @@ public class Affordance extends Link {
      * quoted if it contains a semicolon (";") or comma (","), and there
      * MUST NOT be more than one "media" parameter in a link-value.
      *
-     * @param mediaDesc
+     * @param mediaDesc to set
      */
     public void setMedia(String mediaDesc) {
         if (mediaDesc != null)
@@ -188,7 +167,7 @@ public class Affordance extends Link {
      * specification because it often confuses authors and readers; in most
      * cases, using a separate relation type is preferable.
      *
-     * @param rev
+     * @param rev to set
      */
     public void setRev(String rev) {
         if (rev != null)
@@ -207,7 +186,7 @@ public class Affordance extends Link {
      * Section 5.  Note that any base URI from the body's content is not
      * applied.
      *
-     * @param anchor
+     * @param anchor base uri to define
      */
     public void setAnchor(String anchor) {
         if (anchor != null)
@@ -283,7 +262,17 @@ public class Affordance extends Link {
                 .contains(Link.REL_SELF)) {
             linkParams.add("rel", Link.REL_SELF);
         }
-        return this;
+        return new Affordance(this.getHref(), linkParams, httpMethod);
+    }
+
+    @Override
+    public Affordance expand(Object... arguments) {
+        return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod);
+    }
+
+    @Override
+    public Affordance expand(Map<String, ? extends Object> arguments) {
+        return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod);
     }
 
     public List<String> getRels() {
