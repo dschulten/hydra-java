@@ -103,7 +103,7 @@ The conversion of spring-hateoas Resource does the following:
 - renders attributes as if they were properties in the default vocab. For manual mapping to properties in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocabulary property.
 - supports vocabularies in addition to the default vocabulary via terms in the `@context`. Use `@Term` in conjunction with `@Terms` on a class or package for this.
 - renders a spring-hateoas `List<Link>` in a `Resource<T>` in json-ld style
-- renders spring-hateoas Resources<T> as `hydra:Collection`
+- renders spring-hateoas `Resources<T>` as `hydra:Collection`
 
 Look into https://github.com/dschulten/hydra-java/blob/master/hydra-spring/src/test/java/de/escalon/hypermedia/spring/HydraMessageConverterTest.java[HydraMessageConverterTest] to see how you can set up the hydra message converter with Spring MVC.
 The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Terms`.
