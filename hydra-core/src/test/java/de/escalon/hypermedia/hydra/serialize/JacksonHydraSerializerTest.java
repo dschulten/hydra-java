@@ -18,17 +18,21 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.github.jsonldjava.core.JsonLdError;
+import com.jayway.jsonassert.JsonAssert;
 import de.escalon.hypermedia.hydra.JsonLdTestUtils;
 import de.escalon.hypermedia.hydra.mapping.Expose;
+import de.escalon.hypermedia.hydra.mapping.Term;
 import de.escalon.hypermedia.hydra.mapping.Vocab;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 
 
@@ -205,30 +209,32 @@ public class JacksonHydraSerializerTest {
 
     }
 
-    //    class Movie {
-    //        public String name = "Pirates oft the Caribbean: On Strander Tides (2011)";
-    //        public String description = "Jack Sparrow and Barbossa embark on a quest to\n" +
-    //                " find the elusive fountain of youth, only to discover that Blackbeard and\n" +
-    //                " his daughter are after it too.";
-    //
-    //        public String model = "http://www.imdb.com/title/tt0325980/";
-    //
-    //        public Offer offers = new Offer();
-    //    }
+    class Movie {
+        public String name = "Pirates of the Caribbean";
+        public String description = "Jack Sparrow and Barbossa embark on a quest.";
+        public String model = "http://www.imdb.com/title/tt0325980/";
+        public List<Offer> offers = Arrays.asList(new Offer());
+    }
 
+    @Term(define = "gr", as = "http://purl.org/goodrelations/v1#")
     class Offer {
-        public String businessFunction = "http://purl.org/goodrelations/v1#LeaseOut";
+        public BusinessFunction businessFunction = BusinessFunction.FOR_SALE;
         public UnitPriceSpecification priceSpecification = new UnitPriceSpecification();
-        public String availableDeliveryMethod = "http://purl.org/goodrelations/v1#DirectDownload";
+        public DeliveryMethod availableDeliveryMethod = DeliveryMethod.DOWNLOAD;
         public QuantitativeValue eligibleDuration = new QuantitativeValue();
     }
 
+    enum DeliveryMethod {
+        @Expose("gr:DeliveryModeDirectDownload")
+        DOWNLOAD
+    }
+
     enum BusinessFunction {
-        @Expose("http://purl.org/goodrelations/v1#LeaseOut")
+        @Expose("gr:LeaseOut")
         RENT,
-        @Expose("http://purl.org/goodrelations/v1#Sell")
+        @Expose("gr:Sell")
         FOR_SALE,
-        @Expose("http://purl.org/goodrelations/v1#Buy")
+        @Expose("gr:Buy")
         BUY
     }
 
@@ -244,41 +250,65 @@ public class JacksonHydraSerializerTest {
     }
 
     @Test
-    public void testSchemaOrgClassWithGoodrelationsExtensions() throws IOException {
+    public void testNestedSchemaOrgClassesWithGoodrelationsExtensions() throws IOException, JsonLdError {
+        final Movie movie = new Movie();
+        mapper.writeValue(w, movie);
+        final String json = w.toString();
+        System.out.println(json);
+        JsonAssert.with(json)
+                .assertThat("$.name", is(movie.name));
+        JsonAssert.with(json)
+                .assertThat("$.offers[0].availableDeliveryMethod", is(DeliveryMethod.DOWNLOAD.name()));
+        final String s = JsonLdTestUtils.applyContext(json);
+        System.out.println(s);
+
+    }
+
+
+    @Test
+    public void testSchemaOrgOfferWithGoodrelationsExtensions() throws IOException {
+        class Offer {
+            public String businessFunction = "http://purl.org/goodrelations/v1#LeaseOut";
+            public UnitPriceSpecification priceSpecification = new UnitPriceSpecification();
+            public String availableDeliveryMethod = "http://purl.org/goodrelations/v1#DirectDownload";
+            public QuantitativeValue eligibleDuration = new QuantitativeValue();
+        }
+
         mapper.writeValue(w, new Offer());
         assertEquals("{\"@context\":{" +
                 "\"@vocab\":\"http://schema.org/\"}," +
                 "\"@type\":\"Offer\"," +
                 "\"businessFunction\":\"http://purl.org/goodrelations/v1#LeaseOut\"," +
                 "\"priceSpecification\":{" +
-                "\"@context\":{\"@vocab\":\"http://schema.org/\"}," +
+//                "\"@context\":{\"@vocab\":\"http://schema.org/\"}," +
                 "\"@type\":\"UnitPriceSpecification\"," +
                 "\"price\":3.99," +
                 "\"priceCurrency\":\"USD\"," +
                 "\"datetime\":\"2012-12-31T23:59:59Z\"}," +
                 "\"availableDeliveryMethod\":\"http://purl.org/goodrelations/v1#DirectDownload\"," +
-                "\"eligibleDuration\":" +
-                "{\"@context\":{\"@vocab\":\"http://schema.org/\"}," +
+                "\"eligibleDuration\":{" +
+//                "{\"@context\":{\"@vocab\":\"http://schema.org/\"}," +
                 "\"@type\":\"QuantitativeValue\"," +
                 "\"value\":\"30\"," +
                 "\"unitCode\":\"DAY\"}}", w.toString());
     }
 
+
     @Test
-    @Ignore
     public void testDoesNotRepeatContextIfUnnecessary() throws IOException {
-        // TODO better way than using threadlocal to keep a stack of current @contexts?
         mapper.writeValue(w, new Offer());
-        assertEquals("{\"@context\":" +
-                "{\"@vocab\":\"http://schema.org/\"}," +
+        assertEquals("{\"@context\":{\"@vocab\":" +
+                "\"http://schema.org/\",\"gr\":\"http://purl.org/goodrelations/v1#\"}," +
                 "\"@type\":\"Offer\"," +
-                "\"businessFunction\":\"http://purl.org/goodrelations/v1#LeaseOut\"," +
+                //"\"businessFunction\":\"http://purl.org/goodrelations/v1#LeaseOut\"," +
+                "\"businessFunction\":\"FOR_SALE\"," +
                 "\"priceSpecification\":{" +
                 "\"@type\":\"UnitPriceSpecification\"," +
                 "\"price\":3.99," +
                 "\"priceCurrency\":\"USD\"," +
                 "\"datetime\":\"2012-12-31T23:59:59Z\"}," +
-                "\"availableDeliveryMethod\":\"http://purl.org/goodrelations/v1#DirectDownload\"," +
+//                "\"availableDeliveryMethod\":\"http://purl.org/goodrelations/v1#DirectDownload\"," +
+                "\"availableDeliveryMethod\":\"DOWNLOAD\"," +
                 "\"eligibleDuration\":{" +
                 "\"@type\":\"QuantitativeValue\"," +
                 "\"value\":\"30\"," +
