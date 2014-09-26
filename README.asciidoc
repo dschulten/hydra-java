@@ -101,7 +101,7 @@ Look into https://github.com/dschulten/hydra-java/blob/master/hydra-spring/src/t
 The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Terms`.
 
 == Features of hydra-spring
-The conversion of spring-hateoas Resource does the following:
+The conversion of a spring-hateoas Resource does the following:
 
 - renders a spring-hateoas `List<Link>` in a `Resource<T>` in json-ld style
 - renders spring-hateoas `Resources<T>` as `hydra:Collection`
