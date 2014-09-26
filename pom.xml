@@ -145,7 +145,17 @@
                         <useReleaseProfile>false</useReleaseProfile>
                         <releaseProfiles>release</releaseProfiles>
                         <goals>deploy</goals>
+                        <providerImplementations>
+                            <git>jgit</git>
+                        </providerImplementations>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.scm</groupId>
+                            <artifactId>maven-scm-provider-jgit</artifactId>
+                            <version>1.9.2</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
 
             </plugins>
