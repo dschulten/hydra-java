@@ -109,14 +109,14 @@ Look into https://github.com/dschulten/hydra-java/blob/master/hydra-spring/src/t
 The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Terms`.
 
 == Maven Support
-The first Maven release to central is underway. These are the maven coordinates for hydra-spring, if you check out and build locally:
+These are the maven coordinates for hydra-spring:
 
 [source, XML]
 ----
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>${hydra-spring.version}</version>
+  <version>0.1.0</version>
 </dependency>
 ----
 
