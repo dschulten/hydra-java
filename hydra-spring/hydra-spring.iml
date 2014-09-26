@@ -12,10 +12,11 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: de.escalon.hypermedia:hydra-core:0.1-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="hydra-core" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.4.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.4.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.4.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.1" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.hateoas:spring-hateoas:0.16.0.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-aop:3.2.9.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: aopalliance:aopalliance:1.0" level="project" />
@@ -33,7 +34,6 @@
     <orderEntry type="library" name="Maven: org.springframework:spring-test:3.2.9.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-mock:1.2.6" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.11" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: ch.qos.logback:logback-classic:1.1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: ch.qos.logback:logback-core:1.1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:jcl-over-slf4j:1.7.7" level="project" />
