@@ -129,20 +129,23 @@ public class JacksonHydraSerializerTest {
     @Test
     public void testAppliesPackageDefinedTerms() throws IOException, JsonLdError {
         mapper.writeValue(w, new de.escalon.hypermedia.hydra.beans.withterms.Offer());
-        assertEquals("{\"@context\":{" +
-                "\"@vocab\":\"http://schema.org/\"," +
+        assertEquals("{\"@context\":{\"@vocab\":\"http://schema.org/\"," +
                 "\"gr\":\"http://purl.org/goodrelations/v1#\"," +
                 "\"dc\":\"http://purl.org/dc/elements/1.1/\"," +
+                "\"businessFunction\":{" +
+                "\"@type\":\"@vocab\"}," +
+                "\"RENT\":\"gr:LeaseOut\"," +
                 "\"price\":\"gr:hasCurrencyValue\"}," +
                 "\"@type\":\"gr:Offering\"," +
                 "\"businessFunction\":\"RENT\"," +
-                "\"price\":1.99" +
-                "}", w.toString());
+                "\"price\":1.99}", w.toString());
         final String newline = System.getProperty("line.separator");
         assertEquals("{" + newline +
                 "  \"@type\" : \"http://purl.org/goodrelations/v1#Offering\"," + newline +
                 "  \"http://purl.org/goodrelations/v1#hasCurrencyValue\" : 1.99," + newline +
-                "  \"http://schema.org/businessFunction\" : \"RENT\"" + newline +
+                "  \"http://schema.org/businessFunction\" : {" + newline +
+                "    \"@id\" : \"http://purl.org/goodrelations/v1#LeaseOut\"" + newline +
+                "  }" + newline +
                 "}", JsonLdTestUtils.applyContext(w.toString()));
     }
 
@@ -218,7 +221,7 @@ public class JacksonHydraSerializerTest {
 
     @Term(define = "gr", as = "http://purl.org/goodrelations/v1#")
     class Offer {
-        public BusinessFunction businessFunction = BusinessFunction.FOR_SALE;
+        public BusinessFunction businessFunction = BusinessFunction.RENT;
         public UnitPriceSpecification priceSpecification = new UnitPriceSpecification();
         public DeliveryMethod availableDeliveryMethod = DeliveryMethod.DOWNLOAD;
         public QuantitativeValue eligibleDuration = new QuantitativeValue();
@@ -280,14 +283,12 @@ public class JacksonHydraSerializerTest {
                 "\"@type\":\"Offer\"," +
                 "\"businessFunction\":\"http://purl.org/goodrelations/v1#LeaseOut\"," +
                 "\"priceSpecification\":{" +
-//                "\"@context\":{\"@vocab\":\"http://schema.org/\"}," +
                 "\"@type\":\"UnitPriceSpecification\"," +
                 "\"price\":3.99," +
                 "\"priceCurrency\":\"USD\"," +
                 "\"datetime\":\"2012-12-31T23:59:59Z\"}," +
                 "\"availableDeliveryMethod\":\"http://purl.org/goodrelations/v1#DirectDownload\"," +
                 "\"eligibleDuration\":{" +
-//                "{\"@context\":{\"@vocab\":\"http://schema.org/\"}," +
                 "\"@type\":\"QuantitativeValue\"," +
                 "\"value\":\"30\"," +
                 "\"unitCode\":\"DAY\"}}", w.toString());
@@ -297,22 +298,22 @@ public class JacksonHydraSerializerTest {
     @Test
     public void testDoesNotRepeatContextIfUnnecessary() throws IOException {
         mapper.writeValue(w, new Offer());
-        assertEquals("{\"@context\":{\"@vocab\":" +
-                "\"http://schema.org/\",\"gr\":\"http://purl.org/goodrelations/v1#\"}," +
+        assertEquals("{\"@context\":" +
+                "{\"@vocab\":\"http://schema.org/\"," +
+                "\"gr\":\"http://purl.org/goodrelations/v1#\"," +
+                "\"businessFunction\":{\"@type\":\"@vocab\"}," +
+                "\"RENT\":\"gr:LeaseOut\"," +
+                "\"availableDeliveryMethod\":{\"@type\":\"@vocab\"}," +
+                "\"DOWNLOAD\":\"gr:DeliveryModeDirectDownload\"}," +
                 "\"@type\":\"Offer\"," +
-                //"\"businessFunction\":\"http://purl.org/goodrelations/v1#LeaseOut\"," +
-                "\"businessFunction\":\"FOR_SALE\"," +
-                "\"priceSpecification\":{" +
-                "\"@type\":\"UnitPriceSpecification\"," +
+                "\"businessFunction\":\"RENT\"," +
+                "\"priceSpecification\":{\"@type\":\"UnitPriceSpecification\"," +
                 "\"price\":3.99," +
                 "\"priceCurrency\":\"USD\"," +
                 "\"datetime\":\"2012-12-31T23:59:59Z\"}," +
-//                "\"availableDeliveryMethod\":\"http://purl.org/goodrelations/v1#DirectDownload\"," +
                 "\"availableDeliveryMethod\":\"DOWNLOAD\"," +
-                "\"eligibleDuration\":{" +
-                "\"@type\":\"QuantitativeValue\"," +
-                "\"value\":\"30\"," +
-                "\"unitCode\":\"DAY\"}}", w.toString());
+                "\"eligibleDuration\":{\"@type\":\"QuantitativeValue\",\"value\":\"30\",\"unitCode\":\"DAY\"}}",
+                w.toString());
     }
 
 }
