@@ -111,11 +111,13 @@ The conversion of a spring-hateoas Resource does the following:
 - renders spring-hateoas `Resources<T>` as `hydra:Collection`
 - renders response with `"@vocab" : "http://schema.org/"` by default, a different `@vocab` can be defined on a class or package using `@Vocab`.
 - supports vocabularies in addition to the default vocabulary via terms in the `@context`. Use `@Term` in conjunction with `@Terms` on a class or package for this.
-- renders `@type` based on the class name by default, a vocabulary class can be produced instead using `@Expose` on the type.
-- renders attributes assuming that the attribute name is a property in the default vocab defined by `@vocab`. In other words, it renders an `offers` member as `"offers"` on a json-ld object with a context defining `"@vocab" : "http://schema.org"`, so that you end up with `"http://schema.org/offers"` as linked data name for your "offers" member. To map a custom attribute name such as `"foo"` to an existing property in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocabulary property.
+- renders `@type` based on the Java class name by default, a vocabulary class can be produced instead using `@Expose` on the Java class.
+- renders attributes assuming that the attribute name is a property in the default vocab defined by `@vocab`. In other words, it renders an `offers` member as `"offers"` on a json-ld object with a context defining `"@vocab" : "http://schema.org"`, so that you end up with `"http://schema.org/offers"` as linked data name for your `offers` member. To map a custom attribute name such as `foo` to an existing property in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocab property you set as value of  `@Expose`.
 - renders Java enums assuming that an enum value name is an enumerated value defined by the default vocab. In json-ld it is not only possible to have attribute names, but also attribute values that have linked data names. The idiom to express that is `"@type" : "@vocab"`. An example of this is http://schema.org/OnSitePickup[OnSitePickup], which is an enum value for the property http://schema.org/availableDeliveryMethod[availableDeliveryMethod]. If your enum value is ON_SITE_PICKUP, it will be rendered as ON_SITE_PICKUP and hydra-java will add the necessary definition to the context which makes it clear that ON_SITE_PICKUP is actually `http://schema.org/OnSitePickup`. If your Java enum values have a different name, use `@Expose` on the enum value to get a correct representation in the context. Note that you can also expose an enum value from a different vocabulary such as GoodRelations, see below.
 
-Assuming a Java enum whose enum values are exposed as values from GoodRelations and which appears on an Offer object with GoodRelations term:
+As a short demonstration consider the following example for  `@Expose` and `@Term`.
+
+The example shows a Java enum named `BusinessValue` whose enum values are exposed as values from GoodRelations. The enum appears on an Offer object with a GoodRelations term:
 
 [source, Java]
 ----
@@ -135,7 +137,7 @@ Assuming a Java enum whose enum values are exposed as values from GoodRelations 
     }
 ----
 
-The json-ld output says that the `businessFunction` property contains values defined by a vocabulary and maps the Java enum value `RENT` to its linked data name `"gr:LeaseOut"`.
+The json-ld output written by hydra-java makes the GoodRelations url known under the shorthand `gr`, says that the `businessFunction` property contains values defined by a vocabulary and maps the Java enum value `RENT` to its linked data name `"gr:LeaseOut"`.
 
 [source, Javascript]
 ----
@@ -147,18 +149,7 @@ The json-ld output says that the `businessFunction` property contains values def
       "RENT": "gr:LeaseOut",
     },
     "@type": "Offer",
-    "businessFunction": "RENT",
-    "priceSpecification": {
-      "@type": "UnitPriceSpecification",
-      "price": 3.99,
-      "priceCurrency": "USD",
-      "datetime": "2012-12-31T23:59:59Z"
-    },
-    "eligibleDuration": {
-      "@type": "QuantitativeValue",
-      "value": "30",
-      "unitCode": "DAY"
-    }
+    "businessFunction": "RENT"
 }
 ----
 
