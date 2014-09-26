@@ -95,6 +95,8 @@ Note that I do not bind my clients to a server type `Person`.
 Rather, client and server are talking about the thing http://schema.org/Person[Person] as it is known and recognized by all major search engines.
 
 For a more expressive example consider the json-ld example of http://schema.org/MusicEvent[MusicEvent], which shows how a ticket offering could look like.
+	
+In a more complex scenario I want to use my own attribute names and object design and still be able to use schema.org or other vocabs to describe their meaning. In json-ld I can. See below for a listing of vocabularies. If you are unsure which vocab to use, ask on the hydra mailing list.
 
 == First Steps
 It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC.
@@ -173,6 +175,12 @@ These are the maven coordinates for hydra-spring:
 </dependency>
 ----
 
+== Vocabularies
+What if schema.org is not sufficient? On
+http://lov.okfn.org/dataset/lov/[Linked Open Vocabularies] you can search for terms in other vocabularies. Another option is to http://www.w3.org/wiki/WebSchemas/SchemaDotOrgProposals[propose an addition to schema.org].
+
+
+	
 == Acknowledgements
 
 I would like to thank Mike Amundsen, Stu Charlton, Jon Moore, Jørn Wildt, Mike Kelly, Markus Lanthaler, Gregg Kellog and Manu Sporny for their inspiration and for valuable comments along the way. Also thanks to Oliver Gierke who has been accepting some of my pull requests to spring-hateoas.
