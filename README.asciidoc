@@ -4,6 +4,7 @@
 Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[json-ld] with http://www.hydra-cg.com/spec/latest/core/[hydra].
 
 Status: Testing
+Latest release: 0.1.0
 
 == Problem
 
