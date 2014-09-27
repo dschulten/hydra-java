@@ -39,7 +39,7 @@ one-fancy-api requires to achieve that without processing a vendor-specific docu
 
 == Solution (evolving)
 
-I see json-ld (media type application/ld+json) as a possible way to solve this problem without forcing people to ask me
+I see http://www.w3.org/TR/json-ld/[json-ld] (media type application/ld+json) as a possible way to solve this problem without forcing people to ask me
 about my vendor-specific documentation, thus decoupling the clients from my server types.
 
 Clients should be able to understand a response based on widely available, standardized, public information.
