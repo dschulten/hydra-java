@@ -117,7 +117,7 @@ The conversion of a spring-hateoas Resource does the following:
 
 As a short demonstration consider the following example for  `@Expose` and `@Term`.
 
-The example shows a Java enum named `BusinessValue` whose enum values are exposed as values from GoodRelations. The enum appears on an Offer object with a GoodRelations term:
+The example shows a Java enum named `BusinessFunctionˋ  whose enum values are exposed as values from GoodRelations. The enum appears on an Offer object with a GoodRelations term:
 
 [source, Java]
 ----
@@ -178,3 +178,4 @@ If you are unsure which vocab to use, ask on the http://lists.w3.org/Archives/Pu
 == Acknowledgements
 
 I would like to thank Mike Amundsen, Stu Charlton, Jon Moore, Jørn Wildt, Mike Kelly, Markus Lanthaler, Gregg Kellog and Manu Sporny for their inspiration and for valuable comments along the way. Also thanks to Oliver Gierke who has been accepting some of my pull requests to spring-hateoas.
+
