@@ -273,10 +273,11 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         final PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
         for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
             final Method method = propertyDescriptor.getReadMethod();
-
-            final Expose expose = method.getAnnotation(Expose.class);
-            if (expose != null) {
-                termsMap.put(propertyDescriptor.getName(), expose.value());
+            if (method != null) {
+                final Expose expose = method.getAnnotation(Expose.class);
+                if (expose != null) {
+                    termsMap.put(propertyDescriptor.getName(), expose.value());
+                }
             }
         }
         return termsMap;

@@ -11,13 +11,17 @@
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
 import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 /**
  * Sample controller for reviews.
@@ -31,9 +35,33 @@ public class ReviewController {
     List<List<Review>> reviews = Arrays.asList(Arrays.asList(new Review("Five peeps, one guitar")),
             Arrays.asList(new Review("Great actress, special atmosphere")));
 
-    @RequestMapping("/events/{eventId}")
+    @RequestMapping(value = "/events/{eventId}", method = RequestMethod.GET)
     @ResponseBody
     public Resources<Review> getReviews(@PathVariable int eventId) {
-        return new Resources<Review>(reviews.get(eventId));
+        final Resources<Review> reviewResources = new Resources<Review>(reviews.get(eventId));
+
+        return reviewResources;
+    }
+
+    @RequestMapping(value = "/events/{eventId}", method = RequestMethod.POST)
+    public
+    @ResponseBody
+    ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestBody Review review) {
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(ControllerLinkBuilder.linkTo(methodOn(this.getClass())
+                .getReviews(eventId))
+                .toUri());
+        return new ResponseEntity(headers, HttpStatus.CREATED);
+    }
+
+    @RequestMapping(value = "/events/{eventId}", method = RequestMethod.POST, params = {"review", "rating"})
+    public
+    @ResponseBody
+    ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestParam String review, @RequestParam int rating) {
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(ControllerLinkBuilder.linkTo(methodOn(this.getClass())
+                .getReviews(eventId))
+                .toUri());
+        return new ResponseEntity(headers, HttpStatus.CREATED);
     }
 }

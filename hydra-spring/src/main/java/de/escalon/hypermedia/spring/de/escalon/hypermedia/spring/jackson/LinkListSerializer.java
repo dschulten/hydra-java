@@ -46,8 +46,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 String linkFieldName = IanaRels.isIanaRel(rel) ? IANA_REL_PREFIX + rel : rel;
                 jgen.writeFieldName(linkFieldName);
                 jgen.writeStartObject();
+                // TODO handle templated links as IriTemplate
                 jgen.writeStringField("@id", link.getHref());
-                jgen.writeStringField("@type", "@id");
                 jgen.writeEndObject();
             }
         }

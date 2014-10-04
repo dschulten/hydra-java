@@ -11,25 +11,8 @@
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
 /**
- * Sample Event.
- * Created by dschulten on 11.09.2014.
+ * Created by dschulten on 03.10.2014.
  */
-public class Event {
-    public int id;
-    public String performer;
-    public String name;
-    public String location;
-    public EventStatusType eventStatus;
-
-    public Event(int id, String performer, String name, String location, EventStatusType eventStatus) {
-        this.id = id;
-        this.performer = performer;
-        this.name = name;
-        this.location = location;
-        this.eventStatus = eventStatus;
-    }
-
-    public void setEventStatus(EventStatusType eventStatus) {
-        this.eventStatus = eventStatus;
-    }
+public enum EventStatusType {
+    EVENT_CANCELLED, EVENT_POSTPONED, EVENT_SCHEDULED, EVENT_RESCHEDULED
 }

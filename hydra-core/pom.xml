@@ -20,36 +20,30 @@
     <artifactId>hydra-core</artifactId>
     <packaging>jar</packaging>
 
-    <name>${project.groupId}:${project.artifactId}</name>
+    <name>${project.groupId}:${project.artifactId}:${project.version}</name>
 
     <dependencies>
         <dependency>
-            <groupId>com.github.jsonld-java</groupId>
-            <artifactId>jsonld-java</artifactId>
-            <version>0.5.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit-dep</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.4.1</version>
+        </dependency>
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>com.github.jsonld-java</groupId>
+            <artifactId>jsonld-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit-dep</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path-assert</artifactId>
-            <version>0.9.1</version>
-            <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
-        </dependency>
+
     </dependencies>
 </project>

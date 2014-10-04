@@ -10,6 +10,9 @@
 
 package de.escalon.hypermedia.spring;
 
+import de.escalon.hypermedia.spring.action.ActionDescriptor;
+import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.EventStatusType;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
@@ -17,12 +20,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public class AffordanceBuilderTest {
 
@@ -43,8 +47,13 @@ public class AffordanceBuilderTest {
     public static class DummyController {
 
         @RequestMapping("/things")
-        public ResponseEntity createThing(Thing thing) {
+        public ResponseEntity createThing(@RequestBody Thing thing) {
             return new ResponseEntity(HttpStatus.CREATED);
+        }
+
+        @RequestMapping(value = "/things/{id}", method = RequestMethod.PUT)
+        public ResponseEntity updateThing(@PathVariable int id, @RequestParam EventStatusType eventStatus) {
+            return new ResponseEntity(HttpStatus.OK);
         }
 
     }
@@ -129,6 +138,25 @@ public class AffordanceBuilderTest {
         assertEquals("Link: <http://example.com/things>; rel=\"next\"; param1=\"foo\"; param1=\"bar\"; param2=\"baz\"",
                 affordance.toLinkHeader());
     }
+
+    @Test
+    public void testWithActionDescriptor() {
+        final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
+                .updateThing(1, EventStatusType.EVENT_CANCELLED))
+                .build("event");
+        assertEquals("Link: <http://example.com/things/1>; rel=\"event\"",
+                affordance.toLinkHeader());
+        final ActionDescriptor actionDescriptor = affordance.getActionDescriptor();
+        assertThat((EventStatusType[]) actionDescriptor.getParameterValue("eventStatus")
+                        .getPossibleValues(actionDescriptor),
+                Matchers.arrayContainingInAnyOrder(
+                        EventStatusType.EVENT_CANCELLED,
+                        EventStatusType.EVENT_POSTPONED,
+                        EventStatusType.EVENT_RESCHEDULED,
+                        EventStatusType.EVENT_SCHEDULED));
+        assertEquals("UpdateThingAction", actionDescriptor.getActionName());
+    }
+
 
     @Test
     public void testBuild() throws Exception {

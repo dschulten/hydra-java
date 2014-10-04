@@ -10,16 +10,13 @@
 
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
-import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.UriTemplate;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,8 +32,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping("/events")
 public class EventController {
 
-    final List<Event> events = Arrays.asList(new Event(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden"),
-            new Event(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn"));
+    final List<Event> events = Arrays.asList(new Event(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden", EventStatusType.EVENT_SCHEDULED),
+            new Event(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn", EventStatusType.EVENT_SCHEDULED));
 
     final List<EventResource> eventResources = Arrays.asList(new EventResource(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden"),
             new EventResource(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn"));
@@ -52,7 +49,7 @@ public class EventController {
                     .withSelfRel());
             eventResource.add(linkTo(methodOn(ReviewController.class)
                     .getReviews(event.id))
-                    .withRel("reviews"));
+                    .withRel("review"));
             eventResources.add(eventResource);
         }
 
@@ -72,28 +69,42 @@ public class EventController {
                     .withSelfRel());
             eventResource.add(linkTo(methodOn(ReviewController.class)
                     .getReviews(event.id))
-                    .withRel("reviews"));
+                    .withRel("review"));
             eventResources.add(eventResource);
         }
         return eventResources;
     }
 
-    @RequestMapping("/{index}")
+    @RequestMapping(value="/{eventId}", method=RequestMethod.GET)
     public
     @ResponseBody
-    Resource<Event> getEvent(@PathVariable int index) {
-        Resource<Event> resource = new Resource(events.get(index));
-        resource.add(linkTo(ReviewController.class).withRel("reviews"));
+    Resource<Event> getEvent(@PathVariable int eventId) {
+        Resource<Event> resource = new Resource(events.get(eventId));
+        resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
 
-    @RequestMapping("/resourcesupport/{index}")
+    @RequestMapping("/resourcesupport/{eventId}")
     public
     @ResponseBody
-    EventResource getResourceSupportEvent(@PathVariable int index) {
-        EventResource resource = eventResources.get(index);
-        resource.add(linkTo(ReviewController.class).withRel("reviews"));
+    EventResource getResourceSupportEvent(@PathVariable int eventId) {
+        EventResource resource = eventResources.get(eventId);
+        resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
 
+    @RequestMapping(value ="/{eventId}", method= RequestMethod.PUT)
+    public ResponseEntity<Void> updateEvent(@PathVariable int eventId, @RequestBody Event event) {
+        events.set(eventId, event);
+        return new ResponseEntity<Void>(HttpStatus.OK);
+        // TODO apply entity-headers and obey Content-*
+    }
+
+    @RequestMapping(value ="/{eventId}/status", method= RequestMethod.PUT)
+    public ResponseEntity<Void> updateEventStatus(@PathVariable int eventId, @RequestParam EventStatusType eventStatus) {
+        final Event event = events.get(eventId);
+        event.setEventStatus(eventStatus);
+        return new ResponseEntity<Void>(HttpStatus.OK);
+        // TODO apply entity-headers and obey Content-*
+    }
 }
