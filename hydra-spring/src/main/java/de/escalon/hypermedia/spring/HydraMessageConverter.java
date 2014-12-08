@@ -10,6 +10,7 @@
 
 package de.escalon.hypermedia.spring;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson.JacksonHydraModule;
@@ -23,15 +24,15 @@ import java.util.Arrays;
  */
 public class HydraMessageConverter extends MappingJackson2HttpMessageConverter {
 
-    public static final MediaType APPLICATION_JSONLD = MediaType.parseMediaType("application/ld+json");
 
     public HydraMessageConverter() {
         ObjectMapper objectMapper = new ObjectMapper();
-
+        // see https://github.com/json-ld/json-ld.org/issues/76
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         SimpleModule module = new JacksonHydraModule();
         objectMapper.registerModule(module);
         this.setObjectMapper(objectMapper);
         this.setSupportedMediaTypes(
-                Arrays.asList(APPLICATION_JSONLD));
+                Arrays.asList(HypermediaTypes.APPLICATION_JSONLD));
     }
 }

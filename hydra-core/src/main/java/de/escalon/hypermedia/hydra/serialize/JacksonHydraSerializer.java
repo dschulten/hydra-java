@@ -27,9 +27,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashMap;
@@ -222,7 +220,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     }
 
     private Map<String, Object> getTerms(Object bean,
-                                         Class<?> mixInClass) throws IntrospectionException, IllegalAccessException, NoSuchFieldException {
+                                         Class<?> mixInClass) throws IntrospectionException, IllegalAccessException, NoSuchFieldException, InvocationTargetException {
         // define terms from package or type in context
         final Class<?> beanClass = bean.getClass();
         Map<String, Object> termsMap = getAnnotatedTerms(beanClass.getPackage(), beanClass.getPackage()
@@ -240,28 +238,14 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         final Field[] fields = beanClass
                 .getDeclaredFields();
         for (Field field : fields) {
-            final Expose fieldExpose = field.getAnnotation(Expose.class);
-            if (Enum.class.isAssignableFrom(field.getType())) {
-                Map<String, String> map = new LinkedHashMap<String, String>();
-                termsMap.put(field.getName(), map);
-                if (fieldExpose != null) {
-                    map.put(AT_ID, fieldExpose.value());
-                }
-                map.put(AT_TYPE, AT_VOCAB);
-                final Enum value = (Enum)field.get(bean);
-                final Expose enumValueExpose = getAnnotation(value.getClass().getField(value.name()), Expose.class);
-                // TODO redefine actual enum value to exposed on enum value definition
-                if (enumValueExpose != null) {
-                    termsMap.put(value.toString(), enumValueExpose.value());
+            if (Modifier.isPublic(field.getModifiers())) {
+                final Expose expose = field.getAnnotation(Expose.class);
+                if (Enum.class.isAssignableFrom(field.getType())) {
+                    addEnumTerms(termsMap, expose, field.getName(), (Enum) field.get(bean));
                 } else {
-                    // might use upperToCamelCase if nothing is exposed
-                    final String camelCaseEnumValue = WordUtils.capitalizeFully(value.toString(), new char[]{'_'})
-                            .replaceAll("_", "");
-                    termsMap.put(value.toString(), camelCaseEnumValue);
-                }
-            } else {
-                if (fieldExpose != null) {
-                    termsMap.put(field.getName(), fieldExpose.value());
+                    if (expose != null) {
+                        termsMap.put(field.getName(), expose.value());
+                    }
                 }
             }
         }
@@ -275,12 +259,39 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             final Method method = propertyDescriptor.getReadMethod();
             if (method != null) {
                 final Expose expose = method.getAnnotation(Expose.class);
-                if (expose != null) {
-                    termsMap.put(propertyDescriptor.getName(), expose.value());
+                if (Enum.class.isAssignableFrom(method.getReturnType())) {
+                    addEnumTerms(termsMap, expose, propertyDescriptor.getName(), (Enum)method.invoke(bean));
+                } else {
+                    if (expose != null) {
+                        termsMap.put(propertyDescriptor.getName(), expose.value());
+                    }
                 }
             }
         }
         return termsMap;
+    }
+
+    private void addEnumTerms(Map<String, Object> termsMap, Expose expose, String name,
+                              Enum value) throws NoSuchFieldException {
+        if (value!=null) {
+            Map<String, String> map = new LinkedHashMap<String, String>();
+            if (expose != null) {
+                map.put(AT_ID, expose.value());
+            }
+            map.put(AT_TYPE, AT_VOCAB);
+            termsMap.put(name, map);
+            final Expose enumValueExpose = getAnnotation(value.getClass()
+                    .getField(value.name()), Expose.class);
+
+            if (enumValueExpose != null) {
+                termsMap.put(value.toString(), enumValueExpose.value());
+            } else {
+                // might use upperToCamelCase if nothing is exposed
+                final String camelCaseEnumValue = WordUtils.capitalizeFully(value.toString(), new char[]{'_'})
+                        .replaceAll("_", "");
+                termsMap.put(value.toString(), camelCaseEnumValue);
+            }
+        }
     }
 
     /**

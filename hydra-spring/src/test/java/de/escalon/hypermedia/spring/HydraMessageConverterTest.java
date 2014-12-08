@@ -10,10 +10,13 @@
 
 package de.escalon.hypermedia.spring;
 
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson.JacksonHydraModule;
 import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.EventController;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.hateoas.ResourceSupport;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.ContextConfiguration;
@@ -38,8 +42,9 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver;
 
-import java.util.Arrays;
-import java.util.List;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.*;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -80,16 +85,7 @@ public class HydraMessageConverterTest {
         }
 
         private HttpMessageConverter<Object> hydraMessageConverter() {
-            final MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            SimpleModule module = new JacksonHydraModule();
-            objectMapper.registerModule(module);
-            converter.setObjectMapper(objectMapper);
-            converter.setSupportedMediaTypes(
-                    Arrays.asList(HydraMessageConverter.APPLICATION_JSONLD));
-            return converter;
-//            return new HydraMessageConverter();
+            return new HydraMessageConverter();
         }
     }
 
@@ -106,7 +102,7 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsResource() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events/1")
-                .accept(HydraMessageConverter.APPLICATION_JSONLD))
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
                 .andExpect(content().contentType("application/ld+json"))
@@ -121,7 +117,7 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsResourceSupport() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events/resourcesupport/1")
-                .accept(HydraMessageConverter.APPLICATION_JSONLD))
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
                 .andExpect(content().contentType("application/ld+json"))
@@ -136,7 +132,7 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsListOfResourceOfEvent() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events/list")
-                .accept(HydraMessageConverter.APPLICATION_JSONLD))
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
                 .andExpect(jsonPath("$.[0].@type").value("Event"))
@@ -150,7 +146,7 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsResources() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
-                .accept(HydraMessageConverter.APPLICATION_JSONLD))
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
                 .andExpect(content().contentType("application/ld+json"))
@@ -158,8 +154,55 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.['hydra:member'][0].@type").value("Event"))
                 .andExpect(jsonPath("$.['hydra:member'][0].performer").value("Walk off the Earth"))
                 .andExpect(jsonPath("$.['hydra:member'][0].review.@id").value("http://localhost/reviews/events/1"))
+                .andExpect(jsonPath("$.['hydra:member'][1].@type").value("Event"))
+                .andExpect(jsonPath("$.['hydra:member'][1].performer").value("Cornelia Bielefeldt"))
+                .andExpect(jsonPath("$.['hydra:member'][1].review.@id").value("http://localhost/reviews/events/2"))
                 .andReturn();
         LOG.debug(result.getResponse()
                 .getContentAsString());
     }
+
+    @Test
+    public void convertsTemplatedLinkAsIriTemplate() throws Exception {
+        final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
+                .andExpect(MockMvcResultMatchers.status()
+                        .isOk())
+                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(jsonPath("$.eventByName.@type").value("hydra:IriTemplate"))
+                .andExpect(jsonPath("$.eventByName.['hydra:template']").value("http://localhost/events{?eventName}"))
+                .andExpect(jsonPath("$.eventByName.['hydra:mapping'][0].['hydra:variable']").value("eventName"))
+                .andExpect(jsonPath("$.eventByName.['hydra:mapping'][0].['hydra:property']").value("http://schema.org/name"))
+                .andExpect(jsonPath("$.eventById.@type").value("hydra:IriTemplate"))
+                .andExpect(jsonPath("$.eventById.['hydra:template']").value("http://localhost/events/{eventId}"))
+                .andExpect(jsonPath("$.eventById.['hydra:mapping'][0].['hydra:variable']").value("eventId"))
+
+                .andReturn();
+        LOG.debug(result.getResponse()
+                .getContentAsString());
+    }
+
+    @Test
+    public void convertsAffordanceWithRequestBody() throws Exception {
+        final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(content().contentType("application/ld+json"))
+
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:method']")
+                        .value("PUT"))
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:expects'].['hydra:subClassOf']")
+                        .value("Event"))
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:method']")
+                        .value("DELETE"))
+
+//                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].['hydra:expects'].['hydra:supportedProperty'][0].@type")
+//                        .value(Matchers.containsInAnyOrder("hydra:SupportedProperty", "PropertyValueSpecification")))
+
+                .andReturn();
+        LOG.debug(result.getResponse()
+                .getContentAsString());
+    }
+
+
 }

@@ -94,6 +94,10 @@
             <groupId>junit</groupId>
             <artifactId>junit-dep</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>annotations</artifactId>
+        </dependency>
 
 
     </dependencies>

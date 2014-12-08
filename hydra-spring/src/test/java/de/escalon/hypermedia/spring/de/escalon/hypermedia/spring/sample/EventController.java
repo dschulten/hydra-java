@@ -10,14 +10,20 @@
 
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
+import de.escalon.hypermedia.hydra.mapping.Expose;
+import de.escalon.hypermedia.spring.Affordance;
+import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +32,8 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 /**
+ * Sample controller demonstrating the use of AffordanceBuilder and hydra-core annotations such as @Expose on
+ * request parameters.
  * Created by dschulten on 11.09.2014.
  */
 @Controller
@@ -41,8 +49,9 @@ public class EventController {
     @RequestMapping
     public
     @ResponseBody
-    Resources<Resource<Event>> getEvents() {
-        List<Resource<Event>> eventResources = new ArrayList<Resource<Event>>();
+    Resources<Resource<Event>> getResourcesOfResourceOfEvent() {
+        List<Resource<Event>> eventResourcesList = new ArrayList<Resource<Event>>();
+        // each resource has links
         for (Event event : events) {
             Resource<Event> eventResource = new Resource<Event>(event);
             eventResource.add(linkTo(this.getClass()).slash(event.id)
@@ -50,19 +59,37 @@ public class EventController {
             eventResource.add(linkTo(methodOn(ReviewController.class)
                     .getReviews(event.id))
                     .withRel("review"));
-            eventResources.add(eventResource);
+            eventResource.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
+                    .updateEventWithRequestBody(eventResource.getContent().id, eventResource.getContent()))
+                    .withSelfRel());
+            eventResource.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
+                    .deleteEvent(eventResource.getContent().id))
+                    .withSelfRel());
+            eventResourcesList.add(eventResource);
         }
 
-        return new Resources(eventResources,
-                new Link(linkTo(this.getClass()).toString() + "{/eventId}", "event"));
+        // the resources have templated links to methods
+        // specify method by reflection
+        final Method getEventMethod = ReflectionUtils.findMethod(this.getClass(), "getEvent", String.class);
+        final Affordance eventByNameAffordance = AffordanceBuilder.linkTo(getEventMethod, new Object[0])
+                .withRel("eventByName");
+
+        // specify method by sample invocation
+        final Affordance eventByIdAffordance = AffordanceBuilder.linkTo(methodOn(this.getClass())
+                .getEvent((Integer) null)) // passing null will result in a template variable
+                .withRel("eventById");
+
+        return new Resources<Resource<Event>>(eventResourcesList,
+                eventByIdAffordance,
+                eventByNameAffordance);
     }
 
 
     @RequestMapping("/list")
     public
     @ResponseBody
-    List<Resource<Event>> getEventsList() {
-        List<Resource<Event>> eventResources = new ArrayList<Resource<Event>>();
+    List<Resource<Event>> getListOfResourceOfEvent() {
+        List<Resource<Event>> eventResourcesList = new ArrayList<Resource<Event>>();
         for (Event event : events) {
             Resource<Event> eventResource = new Resource<Event>(event);
             eventResource.add(linkTo(this.getClass()).slash(event.id)
@@ -70,18 +97,34 @@ public class EventController {
             eventResource.add(linkTo(methodOn(ReviewController.class)
                     .getReviews(event.id))
                     .withRel("review"));
-            eventResources.add(eventResource);
+            eventResourcesList.add(eventResource);
         }
-        return eventResources;
+        return eventResourcesList;
     }
 
-    @RequestMapping(value="/{eventId}", method=RequestMethod.GET)
+    @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Resource<Event> getEvent(@PathVariable int eventId) {
-        Resource<Event> resource = new Resource(events.get(eventId));
+    Resource<Event> getEvent(@PathVariable Integer eventId) {
+        Resource<Event> resource = new Resource<Event>(events.get(eventId));
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
+    }
+
+    @RequestMapping(method = RequestMethod.GET, params = {"eventName"})
+    public
+    @ResponseBody
+    Resource<Event> getEvent(@RequestParam @Expose("http://schema.org/name") String eventName) {
+        Resource<Event> ret = null;
+        for (Event event : events) {
+            if (event.name.startsWith(eventName)) {
+                Resource<Event> resource = new Resource<Event>(event);
+                resource.add(linkTo(ReviewController.class).withRel("review"));
+                ret = resource;
+                break;
+            }
+        }
+        return ret;
     }
 
     @RequestMapping("/resourcesupport/{eventId}")
@@ -93,18 +136,16 @@ public class EventController {
         return resource;
     }
 
-    @RequestMapping(value ="/{eventId}", method= RequestMethod.PUT)
-    public ResponseEntity<Void> updateEvent(@PathVariable int eventId, @RequestBody Event event) {
-        events.set(eventId, event);
+    @RequestMapping(value = "/{eventId}", method = RequestMethod.PUT)
+    public ResponseEntity<Void> updateEventWithRequestBody(@PathVariable int eventId, @RequestBody Event event) {
+        events.set(eventId - 1, event);
         return new ResponseEntity<Void>(HttpStatus.OK);
-        // TODO apply entity-headers and obey Content-*
     }
 
-    @RequestMapping(value ="/{eventId}/status", method= RequestMethod.PUT)
-    public ResponseEntity<Void> updateEventStatus(@PathVariable int eventId, @RequestParam EventStatusType eventStatus) {
-        final Event event = events.get(eventId);
-        event.setEventStatus(eventStatus);
+    @RequestMapping(value = "/{eventId}", method = RequestMethod.DELETE)
+    public ResponseEntity<Void> deleteEvent(@PathVariable int eventId) {
+        events.remove(eventId - 1);
         return new ResponseEntity<Void>(HttpStatus.OK);
-        // TODO apply entity-headers and obey Content-*
     }
+
 }

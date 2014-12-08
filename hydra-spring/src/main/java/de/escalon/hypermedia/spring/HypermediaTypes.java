@@ -8,27 +8,20 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.action;
+package de.escalon.hypermedia.spring;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.springframework.http.MediaType;
 
 /**
- * Allows to assign a semantic type such as a hydra Operation or an http://schema.org/Action
- * subtype to a method.
- * Created by dschulten on 03.10.2014.
+ * Created by dschulten on 12.11.2014.
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Action {
+public final class HypermediaTypes {
 
-    /**
-     * The type of the action.
-     *
-     * @return
-     */
-    String value();
+    private HypermediaTypes() {
+        // prevent instantiation
+    }
+
+    public static final String APPLICATION_JSONLD_STR = "application/ld+json";
+    public static final MediaType APPLICATION_JSONLD = MediaType.parseMediaType(APPLICATION_JSONLD_STR);
 
 }

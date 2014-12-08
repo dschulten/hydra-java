@@ -29,6 +29,8 @@ public class EnumSerializer extends StdScalarSerializer<Enum<?>> {
     @Override
     public void serialize(Enum<?> value, JsonGenerator jgen,
                           SerializerProvider provider) throws IOException, JsonGenerationException {
-
+        if (value != null) {
+            jgen.writeString(value.name());
+        }
     }
 }

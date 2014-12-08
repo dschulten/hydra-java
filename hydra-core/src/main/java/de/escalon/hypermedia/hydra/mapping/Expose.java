@@ -12,19 +12,19 @@ package de.escalon.hypermedia.hydra.mapping;
 import java.lang.annotation.*;
 
 /**
- * The Expose annotation defines whether a field or class is exposed by the
- * serializer (or set by the deserializer).
+ * The Expose annotation allows to make the annotated item known under an alias which is meaningful in a vocabulary.
  * <p/>
  * Created by dschulten on 10.08.2014.
  */
 @Documented
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Expose {
 
     /**
-     * Iri describing the attribute or type e.g. http://schema.org/name or http://schema.org/Person. Can also be
-     * a compact iri like foaf:name or a term from the current vocab (e.g. just name if @vocab is schema.org).
+     * Iri describing the attribute, type or method parameter e.g. http://schema.org/name or http://schema.org/Person.
+     * Can also be a compact iri like foaf:name or a term from the current vocab
+     * (e.g. just name if @vocab is schema.org).
      *
      * @return iri
      */

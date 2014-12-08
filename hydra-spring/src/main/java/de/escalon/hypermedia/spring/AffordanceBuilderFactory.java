@@ -13,22 +13,18 @@ package de.escalon.hypermedia.spring;
 import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.spring.action.ActionDescriptor;
 import de.escalon.hypermedia.spring.action.ActionInputParameter;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.MethodLinkBuilderFactory;
-import org.springframework.hateoas.UriTemplate;
 import org.springframework.hateoas.core.AnnotationMappingDiscoverer;
 import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.hateoas.core.MappingDiscoverer;
 import org.springframework.hateoas.core.MethodParameters;
 import org.springframework.hateoas.mvc.UriComponentsContributor;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.util.UriComponents;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.lang.annotation.Annotation;
@@ -37,32 +33,76 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
+ * Factory for {@link AffordanceBuilder}s. Normally one should use the static methods of AffordanceBuilder to get an
+ * AffordanceBuilder.
  * Created by dschulten on 03.10.2014.
  */
 public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<AffordanceBuilder> {
 
-    private static final MappingDiscoverer DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
+    private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
 
     private List<UriComponentsContributor> uriComponentsContributors = new ArrayList<UriComponentsContributor>();
 
     @Override
     public AffordanceBuilder linkTo(Method method, Object... parameters) {
-        return AffordanceBuilder.linkTo(method, parameters);
+        return linkTo(method.getDeclaringClass(), method, parameters);
     }
 
     @Override
     public AffordanceBuilder linkTo(Class<?> type, Method method, Object... parameters) {
-        return AffordanceBuilder.linkTo(type, method, parameters);
+
+        String pathMapping = MAPPING_DISCOVERER.getMapping(type, method);
+
+        final List<String> params = getRequestParamNames(method);
+        String query = StringUtils.join(params, ',');
+        String mapping = StringUtils.isBlank(query) ? pathMapping : pathMapping + "{?" + query + "}";
+
+        PartialUriTemplate partialUriTemplate = new PartialUriTemplate(AffordanceBuilder.getBuilder()
+                .build()
+                .toString() + mapping);
+
+        Map<String, Object> values = new HashMap<String, Object>();
+
+        Iterator<String> names = partialUriTemplate.getVariableNames()
+                .iterator();
+        // there may be more or less mapping variables than arguments
+        for (Object parameter : parameters) {
+            if (!names.hasNext()) {
+                break;
+            }
+            values.put(names.next(), parameter);
+        }
+
+        ActionDescriptor actionDescriptor = getActionDescriptor(method, values, parameters);
+
+        return new AffordanceBuilder(partialUriTemplate.expand(values), actionDescriptor);
     }
 
     @Override
     public AffordanceBuilder linkTo(Class<?> target) {
-        return AffordanceBuilder.linkTo(target);
+        return linkTo(target, new Object[0]);
     }
 
     @Override
-    public AffordanceBuilder linkTo(Class<?> target, Object... parameters) {
-        return AffordanceBuilder.linkTo(target, parameters);
+    public AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
+        Assert.notNull(controller);
+
+        AffordanceBuilder builder = new AffordanceBuilder();
+        String mapping = MAPPING_DISCOVERER.getMapping(controller);
+
+        PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
+
+        Map<String, Object> values = new HashMap<String, Object>();
+        Iterator<String> names = partialUriTemplate.getVariableNames()
+                .iterator();
+        // there may be more or less mapping variables than arguments
+        for (Object parameter : parameters) {
+            if (!names.hasNext()) {
+                break;
+            }
+            values.put(names.next(), parameter);
+        }
+        return builder.slash(partialUriTemplate.expand(values));
     }
 
     @Override
@@ -72,75 +112,101 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         DummyInvocationUtils.LastInvocationAware invocations = (DummyInvocationUtils.LastInvocationAware) invocationValue;
 
         DummyInvocationUtils.MethodInvocation invocation = invocations.getLastInvocation();
-        Iterator<Object> classMappingParameters = invocations.getObjectParameters();
         Method invokedMethod = invocation.getMethod();
 
-        String mapping = DISCOVERER.getMapping(invokedMethod);
-        UriComponentsBuilder builder = AffordanceBuilder.getBuilder()
-                .path(mapping);
+        String pathMapping = MAPPING_DISCOVERER.getMapping(invokedMethod);
 
-        UriTemplate template = new UriTemplate(mapping);
+        List<String> params = getRequestParamNames(invokedMethod);
+        String query = StringUtils.join(params, ',');
+        String mapping = StringUtils.isBlank(query) ? pathMapping : pathMapping + "{?" + query + "}";
+
+        PartialUriTemplate partialUriTemplate = new PartialUriTemplate(AffordanceBuilder.getBuilder()
+                .build()
+                .toString() + mapping);
+
+        Iterator<Object> classMappingParameters = invocations.getObjectParameters();
+
         Map<String, Object> values = new HashMap<String, Object>();
-
-        Iterator<String> names = template.getVariableNames()
+        Iterator<String> names = partialUriTemplate.getVariableNames()
                 .iterator();
         while (classMappingParameters.hasNext()) {
             values.put(names.next(), classMappingParameters.next());
         }
-        RequestMethod requestMethod = getRequestMethod(invokedMethod);
 
-        final Action action = getAnnotation(invokedMethod, Action.class);
-        String actionName;
-        if (action != null) {
-            actionName = action.value() + "Action";
-        } else {
-            actionName = WordUtils.capitalize(invokedMethod.getName()) + "Action";
+        for (Object argument : invocation.getArguments()) {
+            if (names.hasNext()) {
+                values.put(names.next(), argument);
+            }
         }
 
-        ActionDescriptor actionDescriptor = new ActionDescriptor(actionName, requestMethod);
+        ActionDescriptor actionDescriptor = getActionDescriptor(
+                invocation.getMethod(), values, invocation.getArguments());
+
+
+        // TODO make contributor configurable, find out what it does
+//        final UriComponentsBuilder enhancedUriComponents = applyUriComponentsContributor(builder, invocation);
+
+        return new AffordanceBuilder(partialUriTemplate.expand(values), actionDescriptor);
+
+    }
+
+    private List<String> getRequestParamNames(Method invokedMethod) {
+        MethodParameters parameters = new MethodParameters(invokedMethod);
+        final List<MethodParameter> requestParams = parameters.getParametersWith(RequestParam.class);
+        List<String> params = new ArrayList<String>(requestParams.size());
+        for (MethodParameter requestParam : requestParams) {
+            params.add(requestParam.getParameterName());
+        }
+        return params;
+    }
+
+    private ActionDescriptor getActionDescriptor(Method invokedMethod,
+                                                 Map<String, Object> values, Object[] arguments) {
+        RequestMethod httpMethod = getHttpMethod(invokedMethod);
+
+        ActionDescriptor actionDescriptor = new ActionDescriptor(invokedMethod.getName(), httpMethod);
+        final Action actionAnnotation = getAnnotation(invokedMethod, Action.class);
+        if (actionAnnotation != null) {
+            actionDescriptor.setSemanticActionType(actionAnnotation.value());
+        }
+        Map<String, ActionInputParameter> requestBodyMap = getActionInputParameters(RequestBody.class, invokedMethod,
+                arguments);
+
+        for (ActionInputParameter value : requestBodyMap.values()) {
+            actionDescriptor.setRequestBody(value);
+        }
 
         // the action descriptor needs to know the param type, value and name
-        Map<String, ActionInputParameter> requestParamMap = getActionInputParameters(invocation, RequestParam.class);
-
+        Map<String, ActionInputParameter> requestParamMap = getActionInputParameters(RequestParam.class, invokedMethod,
+                arguments);
         for (Map.Entry<String, ActionInputParameter> entry : requestParamMap.entrySet()) {
             ActionInputParameter value = entry.getValue();
             if (value != null) {
                 final String key = entry.getKey();
                 actionDescriptor.addRequestParam(key, value);
-                values.put(key, value.getCallValueFormatted());
+                if (!value.isRequestBody()) {
+                    values.put(key, value.getCallValueFormatted());
+                }
             }
         }
 
-        Map<String, ActionInputParameter> pathVariableMap = getActionInputParameters(invocation, PathVariable.class);
+        Map<String, ActionInputParameter> pathVariableMap = getActionInputParameters(PathVariable.class, invokedMethod,
+                arguments);
         for (Map.Entry<String, ActionInputParameter> entry : pathVariableMap.entrySet()) {
-            ActionInputParameter value = entry.getValue();
-            if (value != null) {
+            ActionInputParameter actionInputParameter = entry.getValue();
+            if (actionInputParameter != null) {
                 final String key = entry.getKey();
-                actionDescriptor.addPathVariable(key, value);
-                values.put(key, value.getCallValueFormatted());
+                actionDescriptor.addPathVariable(key, actionInputParameter);
+                if (!actionInputParameter.isRequestBody()) {
+                    values.put(key, actionInputParameter.getCallValueFormatted());
+                }
             }
         }
-
-        // TODO make contributor configurable, find out what it does
-        UriComponents components = applyUriComponentsContributor(builder, invocation).buildAndExpand(values);
-        UriComponentsBuilder linkBuilder = UriComponentsBuilder.fromUriString(components.toUriString());
-
-        UriComponents uri = linkBuilder.build();
-        UriComponentsBuilder actionUriBuilder = UriComponentsBuilder.newInstance();
-        actionUriBuilder.scheme(uri.getScheme())
-                .userInfo(uri.getUserInfo())
-                .host(uri.getHost())
-                .port(uri.getPort())
-                .path(uri.getPath());
-
-        actionDescriptor.setActionLink(actionUriBuilder.build());
-        // TODO hold uri in Affordance, not in ActionDescriptor?
-
-        return new AffordanceBuilder(actionUriBuilder, actionDescriptor);
-
+        return actionDescriptor;
     }
 
     // TODO reuse same code from  JacksonHydraSerializer
+    @Nullable
     private <T extends Annotation> T getAnnotation(AnnotatedElement annotated, Class<T> annotationClass) {
         T ret;
         if (annotated == null) {
@@ -151,7 +217,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return ret;
     }
 
-    private static RequestMethod getRequestMethod(Method method) {
+    private static RequestMethod getHttpMethod(Method method) {
         RequestMapping methodRequestMapping = AnnotationUtils.findAnnotation(method, RequestMapping.class);
         RequestMethod requestMethod;
         if (methodRequestMapping != null) {
@@ -168,24 +234,31 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     }
 
     /**
-     * Returns {@link ActionInputParameter}s contained in the recorded {@link org.springframework.hateoas.core.DummyInvocationUtils.MethodInvocation}.
+     * Returns {@link ActionInputParameter}s contained in the method link.
      *
-     * @param invocation must not be {@literal null}.
+     * @param annotation to inspect
+     * @param method     must not be {@literal null}.
+     * @param arguments  to the method link
      * @return maps parameter names to parameter info
      */
-    private static Map<String, ActionInputParameter> getActionInputParameters(
-            DummyInvocationUtils.MethodInvocation invocation,
-            Class<? extends Annotation> annotation) {
+    private static Map<String, ActionInputParameter> getActionInputParameters(Class<? extends Annotation> annotation,
+                                                                              Method method, Object... arguments
+    ) {
 
-        Assert.notNull(invocation, "MethodInvocation must not be null!");
+        Assert.notNull(method, "MethodInvocation must not be null!");
 
-        MethodParameters parameters = new MethodParameters(invocation.getMethod());
-        Object[] arguments = invocation.getArguments();
+        MethodParameters parameters = new MethodParameters(method);
         Map<String, ActionInputParameter> result = new HashMap<String, ActionInputParameter>();
 
         for (MethodParameter parameter : parameters.getParametersWith(annotation)) {
-            result.put(parameter.getParameterName(),
-                    new ActionInputParameter(parameter, arguments[parameter.getParameterIndex()]));
+            final int parameterIndex = parameter.getParameterIndex();
+            final Object argument;
+            if (parameterIndex < arguments.length) {
+                argument = arguments[parameterIndex];
+            } else {
+                argument = null;
+            }
+            result.put(parameter.getParameterName(), new ActionInputParameter(parameter, argument));
         }
 
         return result;
@@ -196,7 +269,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
      *
      * @param builder    will never be {@literal null}.
      * @param invocation will never be {@literal null}.
-     * @return
+     * @return UriComponentsBuilder instance
      */
     protected UriComponentsBuilder applyUriComponentsContributor(UriComponentsBuilder builder,
                                                                  DummyInvocationUtils.MethodInvocation invocation) {

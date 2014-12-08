@@ -1,0 +1,92 @@
+/*
+ * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ */
+
+package de.escalon.hypermedia.spring;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
+
+/**
+ * Created by dschulten on 04.12.2014.
+ */
+public class UriTemplateComponents {
+
+    // TODO unify with PartialUriTemplate and remove that class?
+    // TODO also support scheme, host etc.
+
+    private String path;
+    private String queryHead;
+    private String queryTail;
+    private String fragmentIdentifier;
+
+    /**
+     * Represents components of a Uri Template with variables.
+     * @param path may be relative or absolute, and may contain {xxx} or {/xxx} style variables
+     * @param queryHead start of query containing expanded key-value pairs (no variables), beginning with ?, may be empty or null
+     * @param queryTail comma-separated list of unexpanded query keys, may be empty
+     * @param fragmentIdentifier, beginning with #, may contain a fragment variable, may also be empty
+     */
+    public UriTemplateComponents(String path, String queryHead, String queryTail, String fragmentIdentifier) {
+        Assert.notNull(path);
+        Assert.notNull(queryHead);
+        Assert.notNull(queryTail);
+        Assert.notNull(fragmentIdentifier);
+        this.path = path;
+        this.queryHead = queryHead;
+        this.queryTail = queryTail;
+        this.fragmentIdentifier = fragmentIdentifier;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public String getQueryHead() {
+        return queryHead;
+    }
+
+    public String getQueryTail() {
+        return queryTail;
+    }
+
+    public String getQuery() {
+        StringBuilder query = new StringBuilder();
+        if (queryTail.length() > 0) {
+            if (queryHead.length() == 0) {
+                query.append("{?")
+                        .append(queryTail)
+                        .append("}");
+            } else if (queryHead.length() > 0) {
+                query.append(queryHead)
+                        .append("{&")
+                        .append(queryTail)
+                        .append("}");
+            }
+        } else {
+            query.append(queryHead);
+        }
+        return query.toString();
+    }
+
+
+    public String getFragmentIdentifier() {
+        return fragmentIdentifier;
+    }
+
+    public String toString() {
+        return path + StringUtils.defaultString(getQuery()) + StringUtils.defaultString(fragmentIdentifier);
+    }
+
+    public boolean hasVariables() {
+        return path.contains("{") || StringUtils.isNotEmpty(queryTail) || fragmentIdentifier.contains("{");
+    }
+
+
+}

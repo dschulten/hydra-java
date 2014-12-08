@@ -21,6 +21,8 @@ public enum Type {
 	FROM_JAVA(null),
 	/** input type text */
 	TEXT("text"),
+//    /** input type checkbox */
+//    CHECKBOX("checkbox"),
 	/** input type hidden */
 	HIDDEN("hidden"),
 	/** input type password */

@@ -15,11 +15,11 @@ package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
  * Created by dschulten on 11.09.2014.
  */
 public class Event {
-    public int id;
-    public String performer;
-    public String name;
-    public String location;
-    public EventStatusType eventStatus;
+    public final int id;
+    public final String performer;
+    public final String name;
+    public final String location;
+    private EventStatusType eventStatus;
 
     public Event(int id, String performer, String name, String location, EventStatusType eventStatus) {
         this.id = id;

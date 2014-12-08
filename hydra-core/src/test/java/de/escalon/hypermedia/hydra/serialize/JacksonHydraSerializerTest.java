@@ -10,10 +10,13 @@
 
 package de.escalon.hypermedia.hydra.serialize;
 
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
@@ -27,10 +30,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -46,6 +49,8 @@ public class JacksonHydraSerializerTest {
     @Before
     public void setUp() {
         mapper = new ObjectMapper();
+        // see https://github.com/json-ld/json-ld.org/issues/76
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         mapper.registerModule(new SimpleModule() {
 
@@ -223,8 +228,16 @@ public class JacksonHydraSerializerTest {
     class Offer {
         public BusinessFunction businessFunction = BusinessFunction.RENT;
         public UnitPriceSpecification priceSpecification = new UnitPriceSpecification();
-        public DeliveryMethod availableDeliveryMethod = DeliveryMethod.DOWNLOAD;
+        private DeliveryMethod availableDeliveryMethod = DeliveryMethod.DOWNLOAD;
         public QuantitativeValue eligibleDuration = new QuantitativeValue();
+
+        public DeliveryMethod getAvailableDeliveryMethod() {
+            return availableDeliveryMethod;
+        }
+
+        public void setAvailableDeliveryMethod(DeliveryMethod availableDeliveryMethod) {
+            this.availableDeliveryMethod = availableDeliveryMethod;
+        }
     }
 
     enum DeliveryMethod {
@@ -268,26 +281,51 @@ public class JacksonHydraSerializerTest {
     }
 
 
+
+
     @Test
     public void testSchemaOrgOfferWithGoodrelationsExtensions() throws IOException {
-        class Offer {
-            public String businessFunction = "http://purl.org/goodrelations/v1#LeaseOut";
-            public UnitPriceSpecification priceSpecification = new UnitPriceSpecification();
-            public String availableDeliveryMethod = "http://purl.org/goodrelations/v1#DirectDownload";
-            public QuantitativeValue eligibleDuration = new QuantitativeValue();
-        }
 
         mapper.writeValue(w, new Offer());
         assertEquals("{\"@context\":{" +
-                "\"@vocab\":\"http://schema.org/\"}," +
+                "\"@vocab\":\"http://schema.org/\"," +
+                "\"gr\":\"http://purl.org/goodrelations/v1#\"," +
+                "\"businessFunction\":{\"@type\":\"@vocab\"}," +
+                "\"RENT\":\"gr:LeaseOut\"," +
+                "\"availableDeliveryMethod\":{\"@type\":\"@vocab\"}," +
+                "\"DOWNLOAD\":\"gr:DeliveryModeDirectDownload\"}," +
                 "\"@type\":\"Offer\"," +
-                "\"businessFunction\":\"http://purl.org/goodrelations/v1#LeaseOut\"," +
+                "\"businessFunction\":\"RENT\"," +
                 "\"priceSpecification\":{" +
                 "\"@type\":\"UnitPriceSpecification\"," +
                 "\"price\":3.99," +
                 "\"priceCurrency\":\"USD\"," +
                 "\"datetime\":\"2012-12-31T23:59:59Z\"}," +
-                "\"availableDeliveryMethod\":\"http://purl.org/goodrelations/v1#DirectDownload\"," +
+                "\"availableDeliveryMethod\":\"DOWNLOAD\"," +
+                "\"eligibleDuration\":{" +
+                "\"@type\":\"QuantitativeValue\"," +
+                "\"value\":\"30\"," +
+                "\"unitCode\":\"DAY\"}}", w.toString());
+    }
+
+    @Test
+    public void testSchemaOrgOfferWithNullEnum() throws IOException {
+
+        final Offer offer = new Offer();
+        offer.setAvailableDeliveryMethod(null);
+        mapper.writeValue(w, offer);
+        assertEquals("{\"@context\":{" +
+                "\"@vocab\":\"http://schema.org/\"," +
+                "\"gr\":\"http://purl.org/goodrelations/v1#\"," +
+                "\"businessFunction\":{\"@type\":\"@vocab\"}," +
+                "\"RENT\":\"gr:LeaseOut\"}," +
+                "\"@type\":\"Offer\"," +
+                "\"businessFunction\":\"RENT\"," +
+                "\"priceSpecification\":{" +
+                "\"@type\":\"UnitPriceSpecification\"," +
+                "\"price\":3.99," +
+                "\"priceCurrency\":\"USD\"," +
+                "\"datetime\":\"2012-12-31T23:59:59Z\"}," +
                 "\"eligibleDuration\":{" +
                 "\"@type\":\"QuantitativeValue\"," +
                 "\"value\":\"30\"," +
@@ -315,5 +353,6 @@ public class JacksonHydraSerializerTest {
                 "\"eligibleDuration\":{\"@type\":\"QuantitativeValue\",\"value\":\"30\",\"unitCode\":\"DAY\"}}",
                 w.toString());
     }
+
 
 }

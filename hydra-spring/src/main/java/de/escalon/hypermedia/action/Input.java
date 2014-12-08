@@ -28,8 +28,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 public @interface Input {
 
-	int ANY = -1;
-
 	/** Input type. With the default type FROM_JAVA the type will be number or text, depending on the parameter type. */
 	Type value() default Type.FROM_JAVA;
 
@@ -37,12 +35,10 @@ public @interface Input {
 
 	int min() default Integer.MIN_VALUE;
 
-	int step() default 0;
+    int minLength() default Integer.MIN_VALUE;
 
-	/**
-	 * Specifies how many items are allowed if the annotated parameter is a Collection. The value {@link Input#ANY} means,
-	 * there are no restrictions.
-	 */
-	int upTo() default 3;
+    int maxLength() default Integer.MAX_VALUE;
+
+	int step() default 0;
 
 }

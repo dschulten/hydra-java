@@ -13,37 +13,41 @@ package de.escalon.hypermedia.spring;
 import de.escalon.hypermedia.spring.action.ActionDescriptor;
 import org.springframework.hateoas.Identifiable;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.LinkBuilder;
 import org.springframework.hateoas.core.AnnotationMappingDiscoverer;
 import org.springframework.hateoas.core.DummyInvocationUtils;
-import org.springframework.hateoas.core.LinkBuilderSupport;
 import org.springframework.hateoas.core.MappingDiscoverer;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.springframework.web.util.UriComponentsBuilder.fromUri;
+import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
 
 /**
  * Builder for hypermedia affordances, usable as rfc-5988 web links and optionally holding information about request body requirements.
  * Created by dschulten on 07.09.2014.
  */
-public class AffordanceBuilder extends LinkBuilderSupport<AffordanceBuilder> {
+public class AffordanceBuilder implements LinkBuilder {
 
     private static final MappingDiscoverer DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
     private static final AffordanceBuilderFactory FACTORY = new AffordanceBuilderFactory();
+
+    private UriTemplateComponents uriTemplateComponents;
     private final ActionDescriptor actionDescriptor;
 
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
@@ -60,7 +64,7 @@ public class AffordanceBuilder extends LinkBuilderSupport<AffordanceBuilder> {
 
     /**
      * Creates a new {@link AffordanceBuilder} with a base of the mapping annotated to the given controller class. The
-     * additional parameters are used to fill up potentially available path variables in the class scop request mapping.
+     * additional parameters are used to fill up potentially available path variables in the class scope request mapping.
      *
      * @param controller the class to discover the annotation on, must not be {@literal null}.
      * @param parameters additional parameters to bind to the URI template declared in the annotation, must not be
@@ -68,61 +72,42 @@ public class AffordanceBuilder extends LinkBuilderSupport<AffordanceBuilder> {
      * @return
      */
     public static AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
-
-        Assert.notNull(controller);
-
-        AffordanceBuilder builder = new AffordanceBuilder(getBuilder());
-        String mapping = DISCOVERER.getMapping(controller);
-
-        UriComponents uriComponents = UriComponentsBuilder.fromUriString(mapping == null ? "/" : mapping)
-                .build();
-        UriComponents expandedComponents = uriComponents.expand(parameters);
-
-        return builder.slash(expandedComponents);
+        return FACTORY.linkTo(controller, parameters);
     }
 
     /*
      * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Method, Object...)
      */
     public static AffordanceBuilder linkTo(Method method, Object... parameters) {
-        return linkTo(method.getDeclaringClass(), method);
+        return linkTo(method.getDeclaringClass(), method, parameters);
     }
 
     /*
      * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Class<?>, Method, Object...)
      */
     public static AffordanceBuilder linkTo(Class<?> controller, Method method, Object... parameters) {
-
-        Assert.notNull(controller, "Controller type must not be null!");
-        Assert.notNull(method, "Method must not be null!");
-
-        UriTemplate template = new UriTemplate(DISCOVERER.getMapping(controller, method));
-        URI uri = template.expand(parameters);
-
-        return new AffordanceBuilder(getBuilder()).slash(uri);
+        return FACTORY.linkTo(controller, method, parameters);
     }
 
 
     /**
-     * Creates a new {@link AffordanceBuilder} using the given {@link UriComponentsBuilder}.
-     *
-     * @param builder must not be {@literal null}.
+     * Creates a new {@link AffordanceBuilder}.
      */
-    AffordanceBuilder(UriComponentsBuilder builder) {
-        super(builder);
-        this.actionDescriptor = null;
+    AffordanceBuilder() {
+        this(new PartialUriTemplate(getBuilder().build().toString()).expand(Collections.<String, Object>emptyMap()),
+                /* ActionDescriptor */ null);
+
     }
 
     /**
-     * Creates a new {@link AffordanceBuilder} using the given {@link UriComponentsBuilder}.
+     * Creates a new {@link AffordanceBuilder} using the given {@link ActionDescriptor}.
      *
-     * @param builder          must not be {@literal null}
      * @param actionDescriptor must not be {@literal null}
      */
-    public AffordanceBuilder(UriComponentsBuilder builder, ActionDescriptor actionDescriptor) {
-        super(builder);
-        Assert.notNull(actionDescriptor);
+    public AffordanceBuilder(UriTemplateComponents uriTemplateComponents, ActionDescriptor actionDescriptor) {
+        this.uriTemplateComponents = uriTemplateComponents;
         this.actionDescriptor = actionDescriptor;
+
     }
 
     public static AffordanceBuilder linkTo(Object methodInvocation) {
@@ -136,7 +121,12 @@ public class AffordanceBuilder extends LinkBuilderSupport<AffordanceBuilder> {
 
     public Affordance build(String... rels) {
         Assert.notEmpty(rels);
-        final Affordance affordance = new Affordance(this.toString(), actionDescriptor, rels);
+        final Affordance affordance;
+        affordance = new Affordance(this.toString(), actionDescriptor, rels);
+        // TODO httpMethod duplicate in Affordance and ActionDescriptor, actionLink as well
+        // TODO delegate to ActionDescriptor in Affordance
+        // TODO affordance rel can be self, toString different
+        // TODO Affordance.toString of templated method should not be a Link, or use new Link format by mnot
         for (Map.Entry<String, List<String>> linkParamEntry : linkParams.entrySet()) {
             final List<String> values = linkParamEntry.getValue();
             for (String value : values) {
@@ -183,15 +173,15 @@ public class AffordanceBuilder extends LinkBuilderSupport<AffordanceBuilder> {
         return this;
     }
 
-    @Override
-    protected AffordanceBuilder getThis() {
-        return this;
-    }
-
-    @Override
-    protected AffordanceBuilder createNewInstance(UriComponentsBuilder builder) {
-        return new AffordanceBuilder(builder);
-    }
+//    @Override
+//    protected AffordanceBuilder getThis() {
+//        return this;
+//    }
+//
+//    @Override
+//    protected AffordanceBuilder createNewInstance(UriComponentsBuilder builder) {
+//        return new AffordanceBuilder(builder);
+//    }
 //    TODO/**
 //     * Creates the {@link Affordance} built by the current builder instance with the default self rel.
 //     *
@@ -205,17 +195,68 @@ public class AffordanceBuilder extends LinkBuilderSupport<AffordanceBuilder> {
 
     @Override
     public AffordanceBuilder slash(Object object) {
-        return super.slash(object);
+
+        if (object == null) {
+            return this;
+        }
+
+        if (object instanceof Identifiable) {
+            return slash((Identifiable<?>) object);
+        }
+
+        String urlPart = object.toString();
+
+        // make sure one cannot delete the fragment
+        if (urlPart.endsWith("#")) {
+            urlPart = urlPart.substring(0, urlPart.length() - 1);
+        }
+
+        if (!StringUtils.hasText(urlPart)) {
+            return this;
+        }
+
+        final UriTemplateComponents urlPartComponents = new PartialUriTemplate(urlPart).expand(Collections.<String, Object>emptyMap());
+        final UriTemplateComponents affordanceComponents = uriTemplateComponents;
+
+        final String path = affordanceComponents.getPath() + urlPartComponents.getPath();
+        final String queryHead = affordanceComponents.getQueryHead() +
+                (StringUtils.hasText(urlPartComponents.getQueryHead()) ?
+                        "&" + urlPartComponents.getQueryHead().substring(1) :
+                        "");
+        final String queryTail = affordanceComponents.getQueryTail() +
+                (StringUtils.hasText(urlPartComponents.getQueryTail()) ?
+                        "," + urlPartComponents.getQueryTail() :
+                        "");
+        final String fragmentIdentifier = StringUtils.hasText(urlPartComponents.getFragmentIdentifier()) ?
+                urlPartComponents.getFragmentIdentifier() :
+                affordanceComponents.getFragmentIdentifier();
+
+        final UriTemplateComponents mergedUriComponents =
+                new UriTemplateComponents(path, queryHead, queryTail, fragmentIdentifier);
+
+        return new AffordanceBuilder(mergedUriComponents, actionDescriptor);
+
     }
 
     @Override
-    public AffordanceBuilder slash(Identifiable<?> identifyable) {
-        return super.slash(identifyable);
+    public AffordanceBuilder slash(Identifiable<?> identifiable) {
+        if (identifiable == null) {
+            return this;
+        }
+
+        return slash(identifiable.getId());
     }
 
     @Override
     public URI toUri() {
-        return super.toUri();
+        final String actionLink = uriTemplateComponents.toString();
+        if (actionLink == null || actionLink.contains("{")) {
+            throw new IllegalStateException("cannot convert template to URI");
+        }
+        return UriComponentsBuilder.fromUriString(actionLink
+                .toString())
+                .build()
+                .toUri();
     }
 
     @Override
@@ -230,7 +271,7 @@ public class AffordanceBuilder extends LinkBuilderSupport<AffordanceBuilder> {
 
     @Override
     public String toString() {
-        return super.toString();
+        return uriTemplateComponents.toString();
     }
 
     /**

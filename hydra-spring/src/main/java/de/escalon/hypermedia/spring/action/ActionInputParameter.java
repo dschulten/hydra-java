@@ -10,15 +10,23 @@
 
 package de.escalon.hypermedia.spring.action;
 
+import de.escalon.hypermedia.DataType;
 import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.Options;
 import de.escalon.hypermedia.action.Select;
 import de.escalon.hypermedia.action.Type;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.Property;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.format.support.DefaultFormattingConversionService;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ValueConstants;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -28,13 +36,20 @@ import java.util.*;
  */
 public class ActionInputParameter {
 
+    public static final String MIN = "min";
+    public static final String MAX = "max";
+    public static final String STEP = "step";
+    public static final String MIN_LENGTH = "minLength";
+    public static final String MAX_LENGTH = "maxLength";
     private final TypeDescriptor typeDescriptor;
+    private final RequestBody requestBody;
+    private final RequestParam requestParam;
+    private final PathVariable pathVariable;
     private MethodParameter methodParameter;
     private Object value;
     private Boolean arrayOrCollection = null;
     private Input inputAnnotation;
-    private Map<String, Object> inputConditions = new HashMap<String, Object>();
-    private int upToCollectionItems = 3;
+    private Map<String, Object> inputConstraints = new HashMap<String, Object>();
 
     private ConversionService conversionService = new DefaultFormattingConversionService();
 
@@ -42,13 +57,19 @@ public class ActionInputParameter {
     public ActionInputParameter(MethodParameter methodParameter, Object value, ConversionService conversionService) {
         this.methodParameter = methodParameter;
         this.value = value;
-        this.inputAnnotation = methodParameter.getParameterAnnotation(Input.class);
-        if (inputAnnotation != null) {
-            putInputCondition("min", Integer.MIN_VALUE, inputAnnotation.min());
-            putInputCondition("max", Integer.MAX_VALUE, inputAnnotation.max());
-            putInputCondition("step", 0, inputAnnotation.step());
-            this.upToCollectionItems = inputAnnotation.upTo();
+        this.requestBody = methodParameter.getParameterAnnotation(RequestBody.class);
+        if (requestBody != null) {
+            this.inputAnnotation = methodParameter.getParameterAnnotation(Input.class);
+            if (inputAnnotation != null) {
+                putInputConstraint(MIN, Integer.MIN_VALUE, inputAnnotation.min());
+                putInputConstraint(MAX, Integer.MAX_VALUE, inputAnnotation.max());
+                putInputConstraint(MIN_LENGTH, Integer.MIN_VALUE, inputAnnotation.minLength());
+                putInputConstraint(MAX_LENGTH, Integer.MAX_VALUE, inputAnnotation.maxLength());
+                putInputConstraint(STEP, 0, inputAnnotation.step());
+            }
         }
+        this.requestParam = methodParameter.getParameterAnnotation(RequestParam.class);
+        this.pathVariable = methodParameter.getParameterAnnotation(PathVariable.class);
         this.conversionService = conversionService;
         this.typeDescriptor = TypeDescriptor.nested(methodParameter, 0);
     }
@@ -57,15 +78,10 @@ public class ActionInputParameter {
         this(methodParameter, value, new DefaultFormattingConversionService());
     }
 
-    public int getUpToCollectionItems() {
-        return upToCollectionItems;
-    }
-
-    private void putInputCondition(String key, int defaultValue, int value) {
+    private void putInputConstraint(String key, int defaultValue, int value) {
         if (value != defaultValue) {
-            inputConditions.put(key, value);
+            inputConstraints.put(key, value);
         }
-
     }
 
     /**
@@ -92,11 +108,15 @@ public class ActionInputParameter {
         return ret;
     }
 
-    public Type getInputFieldType() {
+    /**
+     * Gets parameter type for input field according to {@link Type} annotation.
+     *
+     * @return the type
+     */
+    public Type getHtmlInputFieldType() {
         final Type ret;
         if (inputAnnotation == null || inputAnnotation.value() == Type.FROM_JAVA) {
-            Class<?> parameterType = getParameterType();
-            if (Number.class.isAssignableFrom(parameterType)) {
+            if (isNumber()) {
                 ret = Type.NUMBER;
             } else {
                 ret = Type.TEXT;
@@ -107,10 +127,27 @@ public class ActionInputParameter {
         return ret;
     }
 
-    public boolean hasInputConditions() {
-        return !inputConditions.isEmpty();
+
+
+    public boolean isRequestBody() {
+        return requestBody != null;
     }
 
+    private boolean isRequestParam() {
+        return requestParam != null;
+    }
+
+    private boolean isPathVariable() {
+        return requestParam != null;
+    }
+
+    public boolean hasInputConstraints() {
+        return !inputConstraints.isEmpty();
+    }
+
+    public <T extends Annotation> T getAnnotation(Class<T> annotation) {
+        return methodParameter.getParameterAnnotation(annotation);
+    }
 
     public Object[] getPossibleValues(ActionDescriptor actionDescriptor) {
         // TODO: other sources of possible values, e.g. max, min, step
@@ -134,7 +171,88 @@ public class ActionInputParameter {
                     Options instance = options.newInstance();
                     List<Object> from = new ArrayList<Object>();
                     for (String paramName : select.args()) {
-                        ActionInputParameter parameterValue = actionDescriptor.getParameterValue(paramName);
+                        ActionInputParameter parameterValue = actionDescriptor.getActionInputParameter(paramName);
+                        if (parameterValue != null) {
+                            from.add(parameterValue.getCallValue());
+                        }
+                    }
+
+                    Object[] args = from.toArray();
+                    possibleValues = instance.get(select.value(), args);
+                } else {
+                    possibleValues = new Object[0];
+                }
+            }
+            return possibleValues;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public Object[] getPossibleValues(Field field, ActionDescriptor actionDescriptor) {
+        // TODO: other sources of possible values, e.g. max, min, step
+        try {
+            Class<?> parameterType = getParameterType();
+            Object[] possibleValues;
+            Class<?> nested;
+            if (Enum[].class.isAssignableFrom(parameterType)) {
+                possibleValues = parameterType.getComponentType()
+                        .getEnumConstants();
+            } else if (Enum.class.isAssignableFrom(parameterType)) {
+                possibleValues = parameterType.getEnumConstants();
+            } else if (Collection.class.isAssignableFrom(parameterType)
+                    && Enum.class.isAssignableFrom(nested = TypeDescriptor.nested(field, 1)
+                    .getType())) {
+                possibleValues = nested.getEnumConstants();
+            } else {
+                Select select = field.getAnnotation(Select.class);
+                if (select != null) {
+                    Class<? extends Options> options = select.options();
+                    Options instance = options.newInstance();
+                    List<Object> from = new ArrayList<Object>();
+                    for (String paramName : select.args()) {
+                        ActionInputParameter parameterValue = actionDescriptor.getActionInputParameter(paramName);
+                        if (parameterValue != null) {
+                            from.add(parameterValue.getCallValue());
+                        }
+                    }
+
+                    Object[] args = from.toArray();
+                    possibleValues = instance.get(select.value(), args);
+                } else {
+                    possibleValues = new Object[0];
+                }
+            }
+            return possibleValues;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Object[] getPossibleValues(Property property, ActionDescriptor actionDescriptor) {
+        // TODO: other sources of possible values, e.g. max, min, step
+        try {
+            Class<?> parameterType = property.getType();
+            Object[] possibleValues;
+            Class<?> nested;
+            if (Enum[].class.isAssignableFrom(parameterType)) {
+                possibleValues = parameterType.getComponentType()
+                        .getEnumConstants();
+            } else if (Enum.class.isAssignableFrom(parameterType)) {
+                possibleValues = parameterType.getEnumConstants();
+            } else if (Collection.class.isAssignableFrom(parameterType)
+                    && Enum.class.isAssignableFrom(nested = TypeDescriptor.nested(property, 1)
+                    .getType())) {
+                possibleValues = nested.getEnumConstants();
+            } else {
+                Select select = property.getReadMethod().getAnnotatedReturnType().getAnnotation(Select.class);
+                if (select != null) {
+                    Class<? extends Options> options = select.options();
+                    Options instance = options.newInstance();
+                    List<Object> from = new ArrayList<Object>();
+                    for (String paramName : select.args()) {
+                        ActionInputParameter parameterValue = actionDescriptor.getActionInputParameter(paramName);
                         if (parameterValue != null) {
                             from.add(parameterValue.getCallValue());
                         }
@@ -155,9 +273,46 @@ public class ActionInputParameter {
     public boolean isArrayOrCollection() {
         if (arrayOrCollection == null) {
             Class<?> parameterType = getParameterType();
-            arrayOrCollection = (parameterType.isArray() || Collection.class.isAssignableFrom(parameterType));
+            arrayOrCollection = DataType.isArrayOrCollection(parameterType);
         }
         return arrayOrCollection;
+    }
+
+    public boolean isBoolean() {
+        return DataType.isBoolean(getParameterType());
+    }
+    public boolean isNumber() {
+        return DataType.isNumber(getParameterType());
+    }
+
+
+
+
+    public boolean isRequired() {
+        boolean ret;
+        if (isRequestBody()) {
+            ret = requestBody.required();
+        } else if (isRequestParam()) {
+            ret = ValueConstants.DEFAULT_NONE != requestParam.defaultValue() || requestParam.required();
+        } else {
+            ret = true;
+        }
+        return ret;
+    }
+
+    /**
+     * Determines default value of request param, if available.
+     *
+     * @return value or null
+     */
+    public String getDefaultValue() {
+        String ret;
+        if (isRequestParam()) {
+            ret = ValueConstants.DEFAULT_NONE != requestParam.defaultValue() ? requestParam.defaultValue() : null;
+        } else {
+            ret = null;
+        }
+        return ret;
     }
 
     public Object[] getCallValues() {
@@ -179,12 +334,24 @@ public class ActionInputParameter {
         return callValues;
     }
 
+    public String getParameterName() {
+        return methodParameter.getParameterName();
+    }
+
     Class<?> getParameterType() {
         return methodParameter.getParameterType();
     }
 
-    public Map<String, Object> getInputConditions() {
-        return inputConditions;
+    public java.lang.reflect.Type getGenericParameterType() {
+        return methodParameter.getGenericParameterType();
+    }
+
+    public Class<?> getNestedParameterType() {
+        return methodParameter.getNestedParameterType();
+    }
+
+    public Map<String, Object> getInputConstraints() {
+        return inputConstraints;
     }
 
 }

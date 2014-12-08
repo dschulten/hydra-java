@@ -11,6 +11,7 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.spring.action.ActionDescriptor;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpMethod;
 import org.springframework.util.Assert;
@@ -28,28 +29,22 @@ import java.util.Map;
  * and expected request body.
  * <p/>
  * Created by dschulten on 07.09.2014.
+ * @see <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a>
  */
 public class Affordance extends Link {
 
     private final ActionDescriptor actionDescriptor;
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
     private HttpMethod httpMethod;
-    // TODO: ideally the Resource content can be used to describe the supported properties, their type etc.
-    // the event resource would define which properties are editable and we could derive the template from it
-    // maybe affordance could hold the bean for which it is an affordance?
+    private UriTemplateComponents uriTemplateComponents;
 
     public Affordance(String uriTemplate, String... rels) {
-        super(uriTemplate);
-        Assert.noNullElements(rels, "null rels are not allowed");
-        for (String rel : rels) {
-            addRel(rel);
-        }
-        this.actionDescriptor = null;
+        this(uriTemplate, null, rels);
     }
 
     public Affordance(String uriTemplate, ActionDescriptor actionDescriptor, String... rels) {
         super(uriTemplate);
-        Assert.notNull(actionDescriptor);
+        this.uriTemplateComponents = new PartialUriTemplate(uriTemplate).unexpandedComponents();
         Assert.noNullElements(rels, "null rels are not allowed");
         for (String rel : rels) {
             addRel(rel);
@@ -227,19 +222,30 @@ public class Affordance extends Link {
         }
     }
 
-    public String toLinkHeader() {
-        // TODO do not render templated as linkHeader, have flag isWebLink() which tells if the link can be rendered
-        // as link header, throw exception otherwise
-        String linkHeader = "Link: <" + getHref() + ">; ";
-        StringBuilder sb = new StringBuilder();
+    /**
+     * Gets header name of the affordance, either Link or Link-Header.
+     * @return
+     */
+    public String getHeaderName() {
+        String headerName;
+        if(uriTemplateComponents.hasVariables()) {
+            headerName = "Link-Template";
+        } else {
+            headerName = "Link";
+        }
+        return headerName;
+    }
+
+    public String asHeader() {
+        StringBuilder result = new StringBuilder();
         for (Map.Entry<String, List<String>> linkParamEntry : linkParams.entrySet()) {
-            if (sb.length() != 0) {
-                sb.append("; ");
+            if (result.length() != 0) {
+                result.append("; ");
             }
             if ("rel".equals(linkParamEntry.getKey())) {
-                sb.append(linkParamEntry.getKey())
+                result.append(linkParamEntry.getKey())
                         .append("=");
-                sb.append("\"")
+                result.append("\"")
                         .append(StringUtils.collectionToDelimitedString(linkParamEntry.getValue(), " "))
                         .append("\"");
             } else {
@@ -254,18 +260,21 @@ public class Affordance extends Link {
                             .append(value)
                             .append("\"");
                 }
-                sb.append(linkParams);
+                result.append(linkParams);
 
             }
 
         }
-        return sb.insert(0, linkHeader)
+
+        String linkHeader = "<" + getHref() + ">; ";
+
+        return result.insert(0, linkHeader)
                 .toString();
     }
 
     @Override
     public String toString() {
-        return toLinkHeader();
+        return getHeaderName() + ": " + asHeader();
     }
 
     @Override
