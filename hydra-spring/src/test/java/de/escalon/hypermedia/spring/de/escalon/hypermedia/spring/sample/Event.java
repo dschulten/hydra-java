@@ -10,6 +10,8 @@
 
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
+import org.springframework.hateoas.Resource;
+
 /**
  * Sample Event.
  * Created by dschulten on 11.09.2014.
@@ -17,19 +19,24 @@ package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 public class Event {
     public final int id;
     public final String performer;
-    public final String name;
     public final String location;
     private EventStatusType eventStatus;
+    private final Resource<CreativeWork> workPerformed;
 
-    public Event(int id, String performer, String name, String location, EventStatusType eventStatus) {
+    public Event(int id, String performer, CreativeWork workPerformed, String location, EventStatusType eventStatus) {
         this.id = id;
         this.performer = performer;
-        this.name = name;
+        this.workPerformed = new Resource<CreativeWork>(workPerformed);
         this.location = location;
         this.eventStatus = eventStatus;
     }
 
+
     public void setEventStatus(EventStatusType eventStatus) {
         this.eventStatus = eventStatus;
+    }
+
+    public Resource<CreativeWork> getWorkPerformed() {
+        return workPerformed;
     }
 }

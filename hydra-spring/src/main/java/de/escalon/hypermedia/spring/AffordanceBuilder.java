@@ -22,21 +22,19 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.util.*;
-
-import static org.springframework.web.util.UriComponentsBuilder.fromUri;
-import static org.springframework.web.util.UriComponentsBuilder.fromUriString;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Builder for hypermedia affordances, usable as rfc-5988 web links and optionally holding information about request body requirements.
@@ -48,7 +46,7 @@ public class AffordanceBuilder implements LinkBuilder {
     private static final AffordanceBuilderFactory FACTORY = new AffordanceBuilderFactory();
 
     private UriTemplateComponents uriTemplateComponents;
-    private final ActionDescriptor actionDescriptor;
+    private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
 
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
 
@@ -91,23 +89,30 @@ public class AffordanceBuilder implements LinkBuilder {
 
 
     /**
-     * Creates a new {@link AffordanceBuilder}.
+     * Creates a new {@link AffordanceBuilder} pointing to this server, but without ActionDescriptor.
      */
     AffordanceBuilder() {
         this(new PartialUriTemplate(getBuilder().build().toString()).expand(Collections.<String, Object>emptyMap()),
-                /* ActionDescriptor */ null);
+                Collections.<ActionDescriptor>emptyList());
 
     }
 
     /**
      * Creates a new {@link AffordanceBuilder} using the given {@link ActionDescriptor}.
      *
-     * @param actionDescriptor must not be {@literal null}
+     * @param uriTemplateComponents must not be {@literal null}
+     * @param actionDescriptors     must not be {@literal null}
      */
-    public AffordanceBuilder(UriTemplateComponents uriTemplateComponents, ActionDescriptor actionDescriptor) {
-        this.uriTemplateComponents = uriTemplateComponents;
-        this.actionDescriptor = actionDescriptor;
+    public AffordanceBuilder(UriTemplateComponents uriTemplateComponents, List<ActionDescriptor> actionDescriptors) {
 
+        Assert.notNull(uriTemplateComponents);
+        Assert.notNull(actionDescriptors);
+
+        this.uriTemplateComponents = uriTemplateComponents;
+
+        for (ActionDescriptor actionDescriptor : actionDescriptors) {
+            this.actionDescriptors.add(actionDescriptor);
+        }
     }
 
     public static AffordanceBuilder linkTo(Object methodInvocation) {
@@ -122,17 +127,14 @@ public class AffordanceBuilder implements LinkBuilder {
     public Affordance build(String... rels) {
         Assert.notEmpty(rels);
         final Affordance affordance;
-        affordance = new Affordance(this.toString(), actionDescriptor, rels);
-        // TODO httpMethod duplicate in Affordance and ActionDescriptor, actionLink as well
-        // TODO delegate to ActionDescriptor in Affordance
-        // TODO affordance rel can be self, toString different
-        // TODO Affordance.toString of templated method should not be a Link, or use new Link format by mnot
+        affordance = new Affordance(this.toString(), rels);
         for (Map.Entry<String, List<String>> linkParamEntry : linkParams.entrySet()) {
             final List<String> values = linkParamEntry.getValue();
             for (String value : values) {
                 affordance.addLinkParam(linkParamEntry.getKey(), value);
             }
         }
+        affordance.setActionDescriptors(actionDescriptors);
         return affordance;
     }
 
@@ -173,25 +175,6 @@ public class AffordanceBuilder implements LinkBuilder {
         return this;
     }
 
-//    @Override
-//    protected AffordanceBuilder getThis() {
-//        return this;
-//    }
-//
-//    @Override
-//    protected AffordanceBuilder createNewInstance(UriComponentsBuilder builder) {
-//        return new AffordanceBuilder(builder);
-//    }
-//    TODO/**
-//     * Creates the {@link Affordance} built by the current builder instance with the default self rel.
-//     *
-//     * @return link
-//     */
-//    public Affordance withSelfRel() {
-//        final Link link = AffordanceBuilder.withSelfRel();
-//        return new Affordance(link.getHref(), link.getRel());
-//    }
-
 
     @Override
     public AffordanceBuilder slash(Object object) {
@@ -218,7 +201,9 @@ public class AffordanceBuilder implements LinkBuilder {
         final UriTemplateComponents urlPartComponents = new PartialUriTemplate(urlPart).expand(Collections.<String, Object>emptyMap());
         final UriTemplateComponents affordanceComponents = uriTemplateComponents;
 
-        final String path = affordanceComponents.getPath() + urlPartComponents.getPath();
+        final String path = !affordanceComponents.getBaseUri().endsWith("/") && !urlPartComponents.getBaseUri().startsWith("/") ?
+                affordanceComponents.getBaseUri() + "/" + urlPartComponents.getBaseUri() :
+                affordanceComponents.getBaseUri() + urlPartComponents.getBaseUri();
         final String queryHead = affordanceComponents.getQueryHead() +
                 (StringUtils.hasText(urlPartComponents.getQueryHead()) ?
                         "&" + urlPartComponents.getQueryHead().substring(1) :
@@ -234,7 +219,7 @@ public class AffordanceBuilder implements LinkBuilder {
         final UriTemplateComponents mergedUriComponents =
                 new UriTemplateComponents(path, queryHead, queryTail, fragmentIdentifier);
 
-        return new AffordanceBuilder(mergedUriComponents, actionDescriptor);
+        return new AffordanceBuilder(mergedUriComponents, actionDescriptors);
 
     }
 
@@ -336,5 +321,13 @@ public class AffordanceBuilder implements LinkBuilder {
         Assert.state(servletRequest != null, "Could not find current HttpServletRequest");
         return servletRequest;
     }
+
+    public AffordanceBuilder and(AffordanceBuilder affordanceBuilder) {
+        for (ActionDescriptor actionDescriptor : affordanceBuilder.actionDescriptors) {
+            this.actionDescriptors.add(actionDescriptor);
+        }
+        return this;
+    }
+
 
 }

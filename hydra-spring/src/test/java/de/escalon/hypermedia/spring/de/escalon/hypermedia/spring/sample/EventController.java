@@ -12,11 +12,8 @@ package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.spring.Affordance;
-import de.escalon.hypermedia.spring.AffordanceBuilder;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -28,8 +25,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
+import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
+
 
 /**
  * Sample controller demonstrating the use of AffordanceBuilder and hydra-core annotations such as @Expose on
@@ -40,9 +38,6 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 @RequestMapping("/events")
 public class EventController {
 
-    final List<Event> events = Arrays.asList(new Event(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden", EventStatusType.EVENT_SCHEDULED),
-            new Event(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn", EventStatusType.EVENT_SCHEDULED));
-
     final List<EventResource> eventResources = Arrays.asList(new EventResource(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden"),
             new EventResource(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn"));
 
@@ -52,30 +47,27 @@ public class EventController {
     Resources<Resource<Event>> getResourcesOfResourceOfEvent() {
         List<Resource<Event>> eventResourcesList = new ArrayList<Resource<Event>>();
         // each resource has links
-        for (Event event : events) {
+        for (Event event : getEvents()) {
             Resource<Event> eventResource = new Resource<Event>(event);
-            eventResource.add(linkTo(this.getClass()).slash(event.id)
-                    .withSelfRel());
-            eventResource.add(linkTo(methodOn(ReviewController.class)
-                    .getReviews(event.id))
-                    .withRel("review"));
-            eventResource.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
+            eventResource.add(linkTo(methodOn(this.getClass())
                     .updateEventWithRequestBody(eventResource.getContent().id, eventResource.getContent()))
+                    .and(linkTo(methodOn(this.getClass())
+                            .deleteEvent(eventResource.getContent().id)))
                     .withSelfRel());
-            eventResource.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
-                    .deleteEvent(eventResource.getContent().id))
-                    .withSelfRel());
+            event.getWorkPerformed().add(linkTo(methodOn(ReviewController.class)
+                    .addReview(event.id, (Review) new Review(null, new Rating(null))))
+                    .withRel("review"));
             eventResourcesList.add(eventResource);
         }
 
         // the resources have templated links to methods
         // specify method by reflection
         final Method getEventMethod = ReflectionUtils.findMethod(this.getClass(), "getEvent", String.class);
-        final Affordance eventByNameAffordance = AffordanceBuilder.linkTo(getEventMethod, new Object[0])
+        final Affordance eventByNameAffordance = linkTo(getEventMethod, new Object[0])
                 .withRel("eventByName");
 
         // specify method by sample invocation
-        final Affordance eventByIdAffordance = AffordanceBuilder.linkTo(methodOn(this.getClass())
+        final Affordance eventByIdAffordance = linkTo(methodOn(this.getClass())
                 .getEvent((Integer) null)) // passing null will result in a template variable
                 .withRel("eventById");
 
@@ -90,7 +82,7 @@ public class EventController {
     @ResponseBody
     List<Resource<Event>> getListOfResourceOfEvent() {
         List<Resource<Event>> eventResourcesList = new ArrayList<Resource<Event>>();
-        for (Event event : events) {
+        for (Event event : getEvents()) {
             Resource<Event> eventResource = new Resource<Event>(event);
             eventResource.add(linkTo(this.getClass()).slash(event.id)
                     .withSelfRel());
@@ -106,7 +98,7 @@ public class EventController {
     public
     @ResponseBody
     Resource<Event> getEvent(@PathVariable Integer eventId) {
-        Resource<Event> resource = new Resource<Event>(events.get(eventId));
+        Resource<Event> resource = new Resource<Event>(getEvents().get(eventId));
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
@@ -116,8 +108,8 @@ public class EventController {
     @ResponseBody
     Resource<Event> getEvent(@RequestParam @Expose("http://schema.org/name") String eventName) {
         Resource<Event> ret = null;
-        for (Event event : events) {
-            if (event.name.startsWith(eventName)) {
+        for (Event event : getEvents()) {
+            if (event.getWorkPerformed().getContent().name.startsWith(eventName)) {
                 Resource<Event> resource = new Resource<Event>(event);
                 resource.add(linkTo(ReviewController.class).withRel("review"));
                 ret = resource;
@@ -138,14 +130,20 @@ public class EventController {
 
     @RequestMapping(value = "/{eventId}", method = RequestMethod.PUT)
     public ResponseEntity<Void> updateEventWithRequestBody(@PathVariable int eventId, @RequestBody Event event) {
-        events.set(eventId - 1, event);
+        getEvents().set(eventId - 1, event);
         return new ResponseEntity<Void>(HttpStatus.OK);
     }
 
     @RequestMapping(value = "/{eventId}", method = RequestMethod.DELETE)
     public ResponseEntity<Void> deleteEvent(@PathVariable int eventId) {
-        events.remove(eventId - 1);
+        getEvents().remove(eventId - 1);
         return new ResponseEntity<Void>(HttpStatus.OK);
+    }
+
+
+    private List<Event> getEvents() {
+        return Arrays.asList(new Event(1, "Walk off the Earth", new CreativeWork("Gang of Rhythm Tour"), "Wiesbaden", EventStatusType.EVENT_SCHEDULED),
+                new Event(2, "Cornelia Bielefeldt", new CreativeWork("Mein letzter Film"), "Heilbronn", EventStatusType.EVENT_SCHEDULED));
     }
 
 }

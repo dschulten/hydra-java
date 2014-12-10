@@ -11,7 +11,6 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.spring.action.ActionDescriptor;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpMethod;
 import org.springframework.util.Assert;
@@ -19,6 +18,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,54 +29,50 @@ import java.util.Map;
  * and expected request body.
  * <p/>
  * Created by dschulten on 07.09.2014.
+ *
  * @see <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a>
  */
 public class Affordance extends Link {
 
-    private final ActionDescriptor actionDescriptor;
+    private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
     private HttpMethod httpMethod;
     private UriTemplateComponents uriTemplateComponents;
 
     public Affordance(String uriTemplate, String... rels) {
-        this(uriTemplate, null, rels);
-    }
-
-    public Affordance(String uriTemplate, ActionDescriptor actionDescriptor, String... rels) {
         super(uriTemplate);
         this.uriTemplateComponents = new PartialUriTemplate(uriTemplate).unexpandedComponents();
         Assert.noNullElements(rels, "null rels are not allowed");
         for (String rel : rels) {
             addRel(rel);
         }
-        this.actionDescriptor = actionDescriptor;
+
     }
 
     private Affordance(String uriTemplate, MultiValueMap<String, String> linkParams, HttpMethod httpMethod,
-                       ActionDescriptor actionDescriptor) {
+                       List<ActionDescriptor> actionDescriptors) {
         super(uriTemplate);
         this.linkParams = linkParams;
         this.httpMethod = httpMethod;
-        this.actionDescriptor = actionDescriptor;
+        this.actionDescriptors = actionDescriptors;
     }
 
 
     public Affordance(String href) {
         super(href);
-        this.actionDescriptor = null;
     }
 
-    public HttpMethod getHttpMethod() {
-        return httpMethod;
+    public List<ActionDescriptor> getActionDescriptors() {
+        return Collections.unmodifiableList(actionDescriptors);
     }
 
-    public void setHttpMethod(HttpMethod httpMethod) {
-        this.httpMethod = httpMethod;
-    }
+//    /**
+//     * Adds action descriptor.
+//     */
+//    public void addActionDescriptor(ActionDescriptor actionDescriptor) {
+//        this.actionDescriptors.add(actionDescriptor);
+//    }
 
-    public ActionDescriptor getActionDescriptor() {
-        return actionDescriptor;
-    }
     /**
      * The relation type of the link.
      *
@@ -224,11 +220,12 @@ public class Affordance extends Link {
 
     /**
      * Gets header name of the affordance, either Link or Link-Header.
-     * @return
+     *
+     * @return header name
      */
     public String getHeaderName() {
         String headerName;
-        if(uriTemplateComponents.hasVariables()) {
+        if (uriTemplateComponents.hasVariables()) {
             headerName = "Link-Template";
         } else {
             headerName = "Link";
@@ -280,7 +277,7 @@ public class Affordance extends Link {
     @Override
     public Affordance withRel(String rel) {
         linkParams.set("rel", rel);
-        return new Affordance(this.getHref(), linkParams, httpMethod, actionDescriptor);
+        return new Affordance(this.getHref(), linkParams, httpMethod, actionDescriptors);
     }
 
     @Override
@@ -289,22 +286,22 @@ public class Affordance extends Link {
                 .contains(Link.REL_SELF)) {
             linkParams.add("rel", Link.REL_SELF);
         }
-        return new Affordance(this.getHref(), linkParams, httpMethod, actionDescriptor);
+        return new Affordance(this.getHref(), linkParams, httpMethod, actionDescriptors);
     }
 
     @Override
     public Affordance expand(Object... arguments) {
-        return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod, actionDescriptor);
+        return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod, actionDescriptors);
     }
 
     @Override
     public Affordance expand(Map<String, ? extends Object> arguments) {
-        return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod, actionDescriptor);
+        return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod, actionDescriptors);
     }
 
     public List<String> getRels() {
         final List<String> rels = linkParams.get("rel");
-        return rels == null ? Collections.<String>emptyList() : rels;
+        return rels == null ? Collections.<String>emptyList() : Collections.unmodifiableList(rels);
     }
 
     @Override
@@ -313,4 +310,7 @@ public class Affordance extends Link {
     }
 
 
+    public void setActionDescriptors(List<ActionDescriptor> actionDescriptors) {
+        this.actionDescriptors = actionDescriptors;
+    }
 }

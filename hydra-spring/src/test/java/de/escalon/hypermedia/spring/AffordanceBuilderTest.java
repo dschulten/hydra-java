@@ -154,7 +154,7 @@ public class AffordanceBuilderTest {
                 .build("eventStatus");
         assertEquals("Link-Template: <http://example.com/things/1/eventStatus{?eventStatus}>; rel=\"eventStatus\"",
                 affordance.toString());
-        final ActionDescriptor actionDescriptor = affordance.getActionDescriptor();
+        final ActionDescriptor actionDescriptor = affordance.getActionDescriptors().get(0);
         assertThat((EventStatusType[]) actionDescriptor.getActionInputParameter("eventStatus")
                         .getPossibleValues(actionDescriptor),
                 Matchers.arrayContainingInAnyOrder(
@@ -172,11 +172,10 @@ public class AffordanceBuilderTest {
                 .build("event");
         assertEquals("Link: <http://example.com/things/1>; rel=\"event\"",
                 affordance.toString());
-        final ActionDescriptor actionDescriptor = affordance.getActionDescriptor();
+        final ActionDescriptor actionDescriptor = affordance.getActionDescriptors().get(0);
         final ActionInputParameter thingParameter = actionDescriptor.getRequestBody();
         assertEquals("Thing", ((Class)thingParameter.getGenericParameterType()).getSimpleName());
         assertThat(thingParameter.isRequestBody(), is(true));
-        // TODO use rel as action name, remove action name from ActionDescriptor
         assertEquals("updateThing", actionDescriptor.getActionName());
     }
 

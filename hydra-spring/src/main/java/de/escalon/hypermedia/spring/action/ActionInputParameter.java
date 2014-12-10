@@ -53,27 +53,37 @@ public class ActionInputParameter {
 
     private ConversionService conversionService = new DefaultFormattingConversionService();
 
-
+    /**
+     * @param methodParameter
+     * @param value
+     * @param conversionService
+     */
     public ActionInputParameter(MethodParameter methodParameter, Object value, ConversionService conversionService) {
         this.methodParameter = methodParameter;
         this.value = value;
         this.requestBody = methodParameter.getParameterAnnotation(RequestBody.class);
-        if (requestBody != null) {
-            this.inputAnnotation = methodParameter.getParameterAnnotation(Input.class);
-            if (inputAnnotation != null) {
-                putInputConstraint(MIN, Integer.MIN_VALUE, inputAnnotation.min());
-                putInputConstraint(MAX, Integer.MAX_VALUE, inputAnnotation.max());
-                putInputConstraint(MIN_LENGTH, Integer.MIN_VALUE, inputAnnotation.minLength());
-                putInputConstraint(MAX_LENGTH, Integer.MAX_VALUE, inputAnnotation.maxLength());
-                putInputConstraint(STEP, 0, inputAnnotation.step());
-            }
+//        if (requestBody != null) {
+        this.inputAnnotation = methodParameter.getParameterAnnotation(Input.class);
+        if (inputAnnotation != null) {
+            putInputConstraint(MIN, Integer.MIN_VALUE, inputAnnotation.min());
+            putInputConstraint(MAX, Integer.MAX_VALUE, inputAnnotation.max());
+            putInputConstraint(MIN_LENGTH, Integer.MIN_VALUE, inputAnnotation.minLength());
+            putInputConstraint(MAX_LENGTH, Integer.MAX_VALUE, inputAnnotation.maxLength());
+            putInputConstraint(STEP, 0, inputAnnotation.step());
         }
+//        }
         this.requestParam = methodParameter.getParameterAnnotation(RequestParam.class);
         this.pathVariable = methodParameter.getParameterAnnotation(PathVariable.class);
         this.conversionService = conversionService;
         this.typeDescriptor = TypeDescriptor.nested(methodParameter, 0);
     }
 
+    /**
+     * Creates new ActionInputParameter with default formatting conversion service.
+     *
+     * @param methodParameter holding metadata about the parameter
+     * @param value           during sample method invocation
+     */
     public ActionInputParameter(MethodParameter methodParameter, Object value) {
         this(methodParameter, value, new DefaultFormattingConversionService());
     }
@@ -126,7 +136,6 @@ public class ActionInputParameter {
         }
         return ret;
     }
-
 
 
     public boolean isRequestBody() {
@@ -232,6 +241,7 @@ public class ActionInputParameter {
 
     public Object[] getPossibleValues(Property property, ActionDescriptor actionDescriptor) {
         // TODO: other sources of possible values, e.g. max, min, step
+        // TODO remove code duplication of getPossibleValues
         try {
             Class<?> parameterType = property.getType();
             Object[] possibleValues;
@@ -246,7 +256,8 @@ public class ActionInputParameter {
                     .getType())) {
                 possibleValues = nested.getEnumConstants();
             } else {
-                Select select = property.getReadMethod().getAnnotatedReturnType().getAnnotation(Select.class);
+                Annotation[][] parameterAnnotations = property.getWriteMethod().getParameterAnnotations();
+                Select select = getSelectAnnotationFromFirstParam(parameterAnnotations[0]);
                 if (select != null) {
                     Class<? extends Options> options = select.options();
                     Options instance = options.newInstance();
@@ -270,6 +281,18 @@ public class ActionInputParameter {
         }
     }
 
+    private Select getSelectAnnotationFromFirstParam(Annotation[] parameterAnnotation) {
+        Select select = null;
+        Annotation[] annotationsOnParameter = parameterAnnotation;
+        for (Annotation annotation : annotationsOnParameter) {
+            if (annotation.getClass() == Select.class) {
+                select = (Select) annotation;
+                break;
+            }
+        }
+        return select;
+    }
+
     public boolean isArrayOrCollection() {
         if (arrayOrCollection == null) {
             Class<?> parameterType = getParameterType();
@@ -281,11 +304,10 @@ public class ActionInputParameter {
     public boolean isBoolean() {
         return DataType.isBoolean(getParameterType());
     }
+
     public boolean isNumber() {
         return DataType.isNumber(getParameterType());
     }
-
-
 
 
     public boolean isRequired() {

@@ -11,6 +11,7 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.action.Action;
+import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.spring.action.ActionDescriptor;
 import de.escalon.hypermedia.spring.action.ActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
@@ -40,8 +41,6 @@ import java.util.*;
 public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<AffordanceBuilder> {
 
     private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
-
-    private List<UriComponentsContributor> uriComponentsContributors = new ArrayList<UriComponentsContributor>();
 
     @Override
     public AffordanceBuilder linkTo(Method method, Object... parameters) {
@@ -75,7 +74,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
         ActionDescriptor actionDescriptor = getActionDescriptor(method, values, parameters);
 
-        return new AffordanceBuilder(partialUriTemplate.expand(values), actionDescriptor);
+        return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
     }
 
     @Override
@@ -87,7 +86,6 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     public AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
         Assert.notNull(controller);
 
-        AffordanceBuilder builder = new AffordanceBuilder();
         String mapping = MAPPING_DISCOVERER.getMapping(controller);
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
@@ -102,7 +100,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             }
             values.put(names.next(), parameter);
         }
-        return builder.slash(partialUriTemplate.expand(values));
+        return new AffordanceBuilder().slash(partialUriTemplate.expand(values));
     }
 
     @Override
@@ -143,10 +141,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 invocation.getMethod(), values, invocation.getArguments());
 
 
-        // TODO make contributor configurable, find out what it does
-//        final UriComponentsBuilder enhancedUriComponents = applyUriComponentsContributor(builder, invocation);
-
-        return new AffordanceBuilder(partialUriTemplate.expand(values), actionDescriptor);
+        return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
 
     }
 
@@ -165,7 +160,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         RequestMethod httpMethod = getHttpMethod(invokedMethod);
 
         ActionDescriptor actionDescriptor = new ActionDescriptor(invokedMethod.getName(), httpMethod);
-        final Action actionAnnotation = getAnnotation(invokedMethod, Action.class);
+        final Action actionAnnotation = AnnotationUtils.getAnnotation(invokedMethod, Action.class);
         if (actionAnnotation != null) {
             actionDescriptor.setSemanticActionType(actionAnnotation.value());
         }
@@ -203,18 +198,6 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             }
         }
         return actionDescriptor;
-    }
-
-    // TODO reuse same code from  JacksonHydraSerializer
-    @Nullable
-    private <T extends Annotation> T getAnnotation(AnnotatedElement annotated, Class<T> annotationClass) {
-        T ret;
-        if (annotated == null) {
-            ret = null;
-        } else {
-            ret = annotated.getAnnotation(annotationClass);
-        }
-        return ret;
     }
 
     private static RequestMethod getHttpMethod(Method method) {
@@ -264,29 +247,4 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return result;
     }
 
-    /**
-     * Applies the configured {@link UriComponentsContributor}s to the given {@link UriComponentsBuilder}.
-     *
-     * @param builder    will never be {@literal null}.
-     * @param invocation will never be {@literal null}.
-     * @return UriComponentsBuilder instance
-     */
-    protected UriComponentsBuilder applyUriComponentsContributor(UriComponentsBuilder builder,
-                                                                 DummyInvocationUtils.MethodInvocation invocation) {
-
-        MethodParameters parameters = new MethodParameters(invocation.getMethod());
-        Iterator<Object> parameterValues = Arrays.asList(invocation.getArguments())
-                .iterator();
-
-        for (MethodParameter parameter : parameters.getParameters()) {
-            Object parameterValue = parameterValues.next();
-            for (UriComponentsContributor contributor : uriComponentsContributors) {
-                if (contributor.supportsParameter(parameter)) {
-                    contributor.enhance(builder, parameter, parameterValue);
-                }
-            }
-        }
-
-        return builder;
-    }
 }

@@ -166,7 +166,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
                 // begin context
                 // default context: schema.org vocab or vocab package annotation
                 jgen.writeObjectFieldStart("@context");
-                // TODO do not repeat vocab if already defined in current context
+                // do not repeat vocab if already defined in current context
                 if (currentVocab == null || !vocab.equals(currentVocab)) {
                     jgen.writeStringField(AT_VOCAB, vocab);
                 }
@@ -326,7 +326,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         return annotatedTermsMap;
     }
 
-    private <T extends Annotation> T getAnnotation(AnnotatedElement annotated, Class<T> annotationClass) {
+    private static <T extends Annotation> T getAnnotation(AnnotatedElement annotated, Class<T> annotationClass) {
         T ret;
         if (annotated == null) {
             ret = null;

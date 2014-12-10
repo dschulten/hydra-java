@@ -10,25 +10,21 @@
 
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
+import de.escalon.hypermedia.action.Input;
+
 /**
- * Sample Review.
- * Created by dschulten on 16.09.2014.
+ * Created by dschulten on 09.12.2014.
  */
-public class Review {
+public class Rating {
+    public final String bestRating = "5";
+    public final String worstRating = "1";
+    private String ratingValue;
 
-    private String reviewBody;
-    private Rating reviewRating;
-
-    public Review(String reviewBody, Rating reviewRating) {
-        this.reviewBody = reviewBody;
+    public Rating(String worstRating) {
+        this.ratingValue = ratingValue;
     }
 
-    @SuppressWarnings("unused")
-    public String getReviewBody() {
-        return reviewBody;
-    }
-
-    public void setReviewRating(Rating rating) {
-        this.reviewRating = rating;
+    public void setRatingValue(@Input(min = 1, max = 5, step = 1) String ratingValue) {
+        this.ratingValue = ratingValue;
     }
 }

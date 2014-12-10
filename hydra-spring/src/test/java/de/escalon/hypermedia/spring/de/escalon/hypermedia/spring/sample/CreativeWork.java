@@ -11,24 +11,15 @@
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
 /**
- * Sample Review.
- * Created by dschulten on 16.09.2014.
+ * Created by dschulten on 08.12.2014.
  */
-public class Review {
+public class CreativeWork {
 
-    private String reviewBody;
-    private Rating reviewRating;
+    public final String name;
 
-    public Review(String reviewBody, Rating reviewRating) {
-        this.reviewBody = reviewBody;
+    public CreativeWork(String name) {
+        this.name = name;
     }
 
-    @SuppressWarnings("unused")
-    public String getReviewBody() {
-        return reviewBody;
-    }
 
-    public void setReviewRating(Rating rating) {
-        this.reviewRating = rating;
-    }
 }

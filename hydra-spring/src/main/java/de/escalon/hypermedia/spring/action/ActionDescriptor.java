@@ -26,7 +26,6 @@ import java.util.Map;
  */
 public class ActionDescriptor {
 
-//    private final UriTemplateComponents uriTemplateComponents;
     private RequestMethod httpMethod;
     private String actionName;
 
@@ -42,7 +41,6 @@ public class ActionDescriptor {
      * @param httpMethod used during submit
      */
     public ActionDescriptor(String actionName, RequestMethod httpMethod) {
-//        this.uriTemplateComponents = uriTemplateComponents;
         this.httpMethod = httpMethod;
         this.actionName = actionName;
     }
@@ -55,18 +53,6 @@ public class ActionDescriptor {
     public RequestMethod getHttpMethod() {
         return httpMethod;
     }
-
-//    public String getActionLink() {
-//        return uriTemplateComponents.toString();
-//    }
-
-//    public UriTemplateComponents getUriTemplateComponents() {
-//        return uriTemplateComponents;
-//    }
-
-//	public String getRelativeActionLink() {
-//		return actionLink.getPath();
-//	}
 
     public Collection<String> getPathVariableNames() {
         return pathVariables.keySet();
@@ -123,19 +109,4 @@ public class ActionDescriptor {
     public void setSemanticActionType(String semanticActionType) {
         this.semanticActionType = semanticActionType;
     }
-
-
-//    /**
-//     * Creates new ActionDescriptor, but with given uri template components.
-//     * @param templateComponents to apply
-//     * @return new instance
-//     */
-//    public ActionDescriptor withUriTemplateComponents(UriTemplateComponents templateComponents) {
-//        ActionDescriptor actionDescriptor = new ActionDescriptor(/*templateComponents, */actionName, httpMethod);
-//        actionDescriptor.semanticActionType = semanticActionType;
-//        actionDescriptor.requestBody = requestBody;
-//        actionDescriptor.pathVariables = pathVariables;
-//        actionDescriptor.requestParams = requestParams;
-//        return actionDescriptor;
-//    }
 }

@@ -18,34 +18,31 @@ import org.springframework.util.Assert;
  */
 public class UriTemplateComponents {
 
-    // TODO unify with PartialUriTemplate and remove that class?
-    // TODO also support scheme, host etc.
-
-    private String path;
+    private String baseUri;
     private String queryHead;
     private String queryTail;
     private String fragmentIdentifier;
 
     /**
      * Represents components of a Uri Template with variables.
-     * @param path may be relative or absolute, and may contain {xxx} or {/xxx} style variables
+     * @param baseUri may be relative or absolute, and may contain {xxx} or {/xxx} style variables
      * @param queryHead start of query containing expanded key-value pairs (no variables), beginning with ?, may be empty or null
      * @param queryTail comma-separated list of unexpanded query keys, may be empty
      * @param fragmentIdentifier, beginning with #, may contain a fragment variable, may also be empty
      */
-    public UriTemplateComponents(String path, String queryHead, String queryTail, String fragmentIdentifier) {
-        Assert.notNull(path);
+    public UriTemplateComponents(String baseUri, String queryHead, String queryTail, String fragmentIdentifier) {
+        Assert.notNull(baseUri);
         Assert.notNull(queryHead);
         Assert.notNull(queryTail);
         Assert.notNull(fragmentIdentifier);
-        this.path = path;
+        this.baseUri = baseUri;
         this.queryHead = queryHead;
         this.queryTail = queryTail;
         this.fragmentIdentifier = fragmentIdentifier;
     }
 
-    public String getPath() {
-        return path;
+    public String getBaseUri() {
+        return baseUri;
     }
 
     public String getQueryHead() {
@@ -81,11 +78,11 @@ public class UriTemplateComponents {
     }
 
     public String toString() {
-        return path + StringUtils.defaultString(getQuery()) + StringUtils.defaultString(fragmentIdentifier);
+        return baseUri + StringUtils.defaultString(getQuery()) + StringUtils.defaultString(fragmentIdentifier);
     }
 
     public boolean hasVariables() {
-        return path.contains("{") || StringUtils.isNotEmpty(queryTail) || fragmentIdentifier.contains("{");
+        return baseUri.contains("{") || StringUtils.isNotEmpty(queryTail) || fragmentIdentifier.contains("{");
     }
 
 

@@ -119,7 +119,7 @@ public class PartialUriTemplate {
                 } else if (part.startsWith("#")) {
                     fragmentIdentifier.append(part);
                 } else {
-                    baseUrl.append(part); // TODO urlEncode urlComponents necessary?
+                    baseUrl.append(part);
                 }
             } else {
                 for (Integer variableInPart : variablesInPart) {
@@ -131,7 +131,7 @@ public class PartialUriTemplate {
                             case REQUEST_PARAM_CONTINUED:
                                 // query vars without value always go last (query tail)
                                 if (queryTail.length() > 0) {
-                                    queryTail.append(",");
+                                    queryTail.append(',');
                                 }
                                 queryTail.append(variable.getName());
                                 break;
@@ -146,27 +146,30 @@ public class PartialUriTemplate {
                             case REQUEST_PARAM:
                             case REQUEST_PARAM_CONTINUED:
                                 if (queryHead.length() == 0) {
-                                    queryHead.append("?");
+                                    queryHead.append('?');
                                 } else {
-                                    queryHead.append("&");
+                                    queryHead.append('&');
                                 }
                                 queryHead.append(variable.getName())
-                                        .append("=")
+                                        .append('=')
                                         .append(urlEncode(value.toString()));
                                 break;
                             case SEGMENT:
-                                baseUrl.append("/");
+                                baseUrl.append('/');
                                 // fall through
                             case PATH_VARIABLE:
                                 if (queryHead.length() != 0) {
                                     // level 1 variable in query
                                     queryHead.append(urlEncode(value.toString()));
                                 } else {
+                                    if(baseUrl.length() > 0 && baseUrl.charAt(baseUrl.length() - 1) != '/') {
+                                        baseUrl.append('/');
+                                    }
                                     baseUrl.append(urlEncode(value.toString()));
                                 }
                                 break;
                             case FRAGMENT:
-                                fragmentIdentifier.append("#");
+                                fragmentIdentifier.append('#');
                                 fragmentIdentifier.append(urlEncode(value.toString()));
                                 break;
                         }
