@@ -143,10 +143,10 @@ The json-ld output written by hydra-java makes the GoodRelations url known under
 ----
 {
     "@context": {
-      "@vocab": "http://schema.org/"
+      "@vocab": "http://schema.org/",
       "gr": "http://purl.org/goodrelations/v1#",
       "businessFunction": {"@type": "@vocab"},
-      "RENT": "gr:LeaseOut",
+      "RENT": "gr:LeaseOut"
     },
     "@type": "Offer",
     "businessFunction": "RENT"
