@@ -261,7 +261,7 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
    }
 ----
 
-=== Specifying Property Value Requirements (from 0.2.0)
+=== Specifying Property Value Requirements (from V. 0.2.0)
 
 Now let us tell the client a range of possible values for a property. We want to allow clients to add reviews for the work performed at an event. For this, we add a `Resource<CreativeWork>` to the `Event`, so that we can define an affordance on the creative work which allows clients to send reviews.
 
