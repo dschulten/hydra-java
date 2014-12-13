@@ -11,6 +11,7 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.EventController;
+import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.ReviewController;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +37,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExc
 
 import java.util.List;
 
+import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
+import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -54,6 +57,12 @@ public class HydraMessageConverterTest {
     @Configuration
     @EnableWebMvc
     static class WebConfig extends WebMvcConfigurerAdapter {
+
+
+        @Bean
+        public ReviewController reviewController() {
+            return new ReviewController();
+        }
 
         @Bean
         public EventController eventController() {
@@ -158,19 +167,49 @@ public class HydraMessageConverterTest {
     }
 
     @Test
-    public void convertsTemplatedLinkAsIriTemplate() throws Exception {
+    public void convertsLinkToPost() throws Exception {
+        MvcResult result = null;
+        result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
+                .andExpect(MockMvcResultMatchers.status()
+                        .isOk())
+                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.@id").value("http://localhost/reviews/events/1"))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0].['hydra:method']").value("POST"))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0].['hydra:expects'].['hydra:supportedProperty'].[0].['hydra:property']").value("ratingValue"))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0].['hydra:expects'].['hydra:supportedProperty'].[0].['minValue']").value(1))
+                .andReturn();
+        System.out.println(result.getResponse()
+                .getContentAsString());
+        LOG.debug(result.getResponse()
+                .getContentAsString());
+    }
+
+    @Test
+    public void convertsTemplatedLinkToSampleInvocationAsIriTemplate() throws Exception {
+        final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/reviews/events/1")
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
+                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(jsonPath("$.['hydra:search'].@type").value("hydra:IriTemplate"))
+                .andExpect(jsonPath("$.['hydra:search'].['hydra:template']").value("http://localhost/events/{eventId}"))
+                .andExpect(jsonPath("$.['hydra:search'].['hydra:mapping'][0].['hydra:variable']").value("eventId"))
+                .andExpect(jsonPath("$.['hydra:search'].['hydra:mapping'][0].['hydra:property']").value("eventId"))
+                .andReturn();
+        LOG.debug(result.getResponse()
+                .getContentAsString());
+    }
+
+    @Test
+    public void convertsTemplatedLinkToMethodAsIriTemplate() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-//                .andExpect(content().contentType("application/ld+json"))
-//                .andExpect(jsonPath("$.eventByName.@type").value("hydra:IriTemplate"))
-//                .andExpect(jsonPath("$.eventByName.['hydra:template']").value("http://localhost/events{?eventName}"))
-//                .andExpect(jsonPath("$.eventByName.['hydra:mapping'][0].['hydra:variable']").value("eventName"))
-//                .andExpect(jsonPath("$.eventByName.['hydra:mapping'][0].['hydra:property']").value("http://schema.org/name"))
-//                .andExpect(jsonPath("$.eventById.@type").value("hydra:IriTemplate"))
-//                .andExpect(jsonPath("$.eventById.['hydra:template']").value("http://localhost/events/{eventId}"))
-//                .andExpect(jsonPath("$.eventById.['hydra:mapping'][0].['hydra:variable']").value("eventId"))
+                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(jsonPath("$.['hydra:search'].@type").value("hydra:IriTemplate"))
+                .andExpect(jsonPath("$.['hydra:search'].['hydra:template']").value("http://localhost/events{?eventName}"))
+                .andExpect(jsonPath("$.['hydra:search'].['hydra:mapping'][0].['hydra:variable']").value("eventName"))
+                .andExpect(jsonPath("$.['hydra:search'].['hydra:mapping'][0].['hydra:property']").value("http://schema.org/name"))
 
                 .andReturn();
         LOG.debug(result.getResponse()
@@ -181,14 +220,17 @@ public class HydraMessageConverterTest {
     public void convertsAffordanceWithRequestBody() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.status()
+                        .isOk())
                 .andExpect(content().contentType("application/ld+json"))
 
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:method']")
-                        .value("PUT"))
-                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:expects'].['hydra:subClassOf']")
-                        .value("Event"))
+                        .value("GET"))
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:method']")
+                        .value("PUT"))
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:expects'].['hydra:subClassOf']")
+                        .value("Event"))
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[2]['hydra:method']")
                         .value("DELETE"))
 
 //                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].['hydra:expects'].['hydra:supportedProperty'][0].@type")

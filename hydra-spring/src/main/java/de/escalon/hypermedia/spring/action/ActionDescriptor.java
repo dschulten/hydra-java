@@ -18,9 +18,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Describes an HTTP action. Has knowledge about possible request data, e.g. which types and values are suitable for an
- * action. For example, an action descriptor can be used to create a form with select options and typed input fields
- * that calls a Controller method which handles the request built by the form.
+ * Describes an HTTP method. Has knowledge about possible request data, e.g. which types and values
+ * are suitable for an action. For example, an action descriptor can be used to create a form with select options and
+ * typed input fields that calls a POST handler.
  *
  * @author Dietrich Schulten
  */
@@ -35,7 +35,7 @@ public class ActionDescriptor {
     private ActionInputParameter requestBody;
 
     /**
-     * Creates an action descriptor.
+     * Creates an {@link ActionDescriptor}.
      *
      * @param actionName can be used by the action representation, e.g. to identify the action using a form name.
      * @param httpMethod used during submit

@@ -55,41 +55,39 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
         try {
             Collection<Link> simpleLinks = new ArrayList<Link>();
-            Collection<Affordance> actions = new ArrayList<Affordance>();
-            Collection<Link> uriTemplates = new ArrayList<Link>();
-            Collection<Affordance> uriTemplateActions = new ArrayList<Affordance>();
-            System.out.println(links.toString());
+            Collection<Affordance> affordances = new ArrayList<Affordance>();
+            Collection<Link> templatedLinks = new ArrayList<Link>();
+            Collection<Affordance> templatedAffordances = new ArrayList<Affordance>();
             for (Link link : links) {
                 if (link instanceof Affordance) {
                     final Affordance affordance = (Affordance) link;
                     final List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
                     if (!actionDescriptors.isEmpty()) {
                         if (affordance.isTemplated()) {
-                            uriTemplateActions.add(affordance);
+                            templatedAffordances.add(affordance);
                         } else {
-                            actions.add(affordance);
+                            affordances.add(affordance);
                         }
                     } else {
                         if (affordance.isTemplated()) {
-                            uriTemplates.add(affordance);
+                            templatedLinks.add(affordance);
                         } else {
                             simpleLinks.add(affordance);
                         }
                     }
                 } else if (link.isTemplated()) {
-                    uriTemplates.add(link);
+                    templatedLinks.add(link);
                 } else {
                     simpleLinks.add(link);
                 }
             }
 
-            for (Affordance uriTemplateAction : uriTemplateActions) {
-                // we only have the template, no access to method params
-                jgen.writeObjectFieldStart(uriTemplateAction.getRel());
+            for (Affordance templatedAffordance : templatedAffordances) {
+                jgen.writeObjectFieldStart(templatedAffordance.getRel());
 
                 jgen.writeStringField("@type", "hydra:IriTemplate");
-                jgen.writeStringField("hydra:template", uriTemplateAction.getHref());
-                final List<ActionDescriptor> actionDescriptors = uriTemplateAction.getActionDescriptors();
+                jgen.writeStringField("hydra:template", templatedAffordance.getHref());
+                final List<ActionDescriptor> actionDescriptors = templatedAffordance.getActionDescriptors();
                 ActionDescriptor actionDescriptor = actionDescriptors.get(0);
                 jgen.writeArrayFieldStart("hydra:mapping");
                 writeHydraVariableMapping(jgen, actionDescriptor, actionDescriptor.getPathVariableNames());
@@ -98,28 +96,28 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
                 jgen.writeEndObject();
             }
-            for (Link action : uriTemplates) {
+            for (Link templatedLink : templatedLinks) {
                 // we only have the template, no access to method params
-                jgen.writeObjectFieldStart(action.getRel());
+                jgen.writeObjectFieldStart(templatedLink.getRel());
 
                 jgen.writeStringField("@type", "hydra:IriTemplate");
-                jgen.writeStringField("hydra:template", action.getHref());
+                jgen.writeStringField("hydra:template", templatedLink.getHref());
 
                 jgen.writeArrayFieldStart("hydra:mapping");
-                writeHydraVariableMapping(jgen, null, action.getVariableNames());
+                writeHydraVariableMapping(jgen, null, templatedLink.getVariableNames());
                 jgen.writeEndArray();
 
                 jgen.writeEndObject();
             }
 
-            for (Affordance action : actions) {
-                final String rel = action.getRel();
-                List<ActionDescriptor> actionDescriptors = action.getActionDescriptors();
+            for (Affordance affordance : affordances) {
+                final String rel = affordance.getRel();
+                List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
                 if (!actionDescriptors.isEmpty()) {
                     if (!Link.REL_SELF.equals(rel)) {
                         jgen.writeObjectFieldStart(rel); // begin rel
                     }
-                    jgen.writeStringField(JacksonHydraSerializer.AT_ID, action.getHref());
+                    jgen.writeStringField(JacksonHydraSerializer.AT_ID, affordance.getHref());
                     jgen.writeArrayFieldStart("hydra:operation");
                 }
 

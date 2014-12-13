@@ -50,13 +50,16 @@ public class EventController {
         for (Event event : getEvents()) {
             Resource<Event> eventResource = new Resource<Event>(event);
             eventResource.add(linkTo(methodOn(this.getClass())
-                    .updateEventWithRequestBody(eventResource.getContent().id, eventResource.getContent()))
+                    .getEvent(event.id))
                     .and(linkTo(methodOn(this.getClass())
-                            .deleteEvent(eventResource.getContent().id)))
+                    .updateEventWithRequestBody(event.id, event)))
+                    .and(linkTo(methodOn(this.getClass())
+                            .deleteEvent(event.id)))
                     .withSelfRel());
-            event.getWorkPerformed().add(linkTo(methodOn(ReviewController.class)
-                    .addReview(event.id, (Review) new Review(null, new Rating(null))))
-                    .withRel("review"));
+            event.getWorkPerformed()
+                    .add(linkTo(methodOn(ReviewController.class)
+                            .addReview(event.id, new Review(null, new Rating(null))))
+                            .withRel("review"));
             eventResourcesList.add(eventResource);
         }
 
@@ -64,15 +67,9 @@ public class EventController {
         // specify method by reflection
         final Method getEventMethod = ReflectionUtils.findMethod(this.getClass(), "getEvent", String.class);
         final Affordance eventByNameAffordance = linkTo(getEventMethod, new Object[0])
-                .withRel("eventByName");
-
-        // specify method by sample invocation
-        final Affordance eventByIdAffordance = linkTo(methodOn(this.getClass())
-                .getEvent((Integer) null)) // passing null will result in a template variable
-                .withRel("eventById");
+                .withRel("hydra:search");
 
         return new Resources<Resource<Event>>(eventResourcesList,
-                eventByIdAffordance,
                 eventByNameAffordance);
     }
 
@@ -109,7 +106,8 @@ public class EventController {
     Resource<Event> getEvent(@RequestParam @Expose("http://schema.org/name") String eventName) {
         Resource<Event> ret = null;
         for (Event event : getEvents()) {
-            if (event.getWorkPerformed().getContent().name.startsWith(eventName)) {
+            if (event.getWorkPerformed()
+                    .getContent().name.startsWith(eventName)) {
                 Resource<Event> resource = new Resource<Event>(event);
                 resource.add(linkTo(ReviewController.class).withRel("review"));
                 ret = resource;

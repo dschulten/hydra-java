@@ -111,6 +111,17 @@ The conversion of a spring-hateoas Resource does the following:
 - renders attributes assuming that the attribute name is a property in the default vocab defined by `@vocab`. In other words, it renders an `offers` member as `"offers"` on a json-ld object with a context defining `"@vocab" : "http://schema.org"`, so that you end up with `"http://schema.org/offers"` as linked data name for your "offers" member. To map a custom attribute name such as `"foo"` to an existing property in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocabulary property.
 - renders Java enums assuming that an enum value name is an enumerated value defined by the default vocab. In json-ld it is not only possible to have attribute names, but also attribute values that have linked data names. The idiom to express that is `"@type" : "@vocab"`. An example of this is http://schema.org/OnSitePickup[OnSitePickup], which is an enum value for the property http://schema.org/availableDeliveryMethod[availableDeliveryMethod]. If your enum value is ON_SITE_PICKUP, it will be rendered as ON_SITE_PICKUP and hydra-java will add the necessary definition to the context which makes it clear that ON_SITE_PICKUP is actually `http://schema.org/OnSitePickup`. If your Java enum values have a different name, use `@Expose` on the enum value to get a correct representation in the context. Note that you can also expose an enum value from a different vocabulary such as GoodRelations, see below.
 
+As of version 0.2.0 hydra-java will hydra:operation and hydra:IriTemplate. To make this possible, use the linkTo and methodOn methods of AffordanceBuilder as a drop-in replacement for ControllerLinkBuilder. Templated links created by ControllerLinkBuilder will at least be rendered as IriTemplates, but only with limited information about the template variables.
+
+- renders a templated link as `hydra:IriTemplate`. Method parameters can be annotated with `@Expose` to assign them a property URI, otherwise the variable name will be shown as a term in the current vocab. If you create a link with AffordanceBuilder's linkTo-method facilities and you pass `null` for arguments annotated with `@PathVariable` or `@RequestParam`, it will automatically become a templated link with variables for the `null` arguments.
+- renders a link to method handlers for any *combination* of GET, POST, PUT, PATCH and DELETE as `hydra:operation`. In order to express that multiple HTTP methods can be invoked on the same resource, use the `and()` method of AffordanceBuilder. See below for an example.
+- renders a single, manually created, non-templated Link or Affordance in json-ld style.
+- renders a POJO method parameter annotated with `@RequestBody` as expected class. Use `@Expose` on the POJO class for a custom identifier. The setter methods on the bean appear as `hydra:supportedProperty`, and you can annotate them with `@Expose` to give them a semantic identifier. Again see below for an example.
+
+== Examples
+
+=== Exposing Java Bean Attributes
+
 Assuming a Java enum whose enum values are exposed as values from GoodRelations and which appears on an Offer object with GoodRelations term:
 
 [source, Java]
@@ -158,16 +169,228 @@ The json-ld output says that the `businessFunction` property contains values def
 }
 ----
 
+=== Describing Possible Interactions
+
+In the following we add a `self` rel that can be used with GET, PUT and DELETE to an event bean.
+First we wrap the event into a `Resource`, then we use `add` `linkTo` `methodOn` three times to describe that the self rel can be used to get, update and delete the event.
+
+[source, Java]
+----
+
+    public class Event {
+        public final int id;
+        public final String performer;
+        public final String location;
+        private EventStatusType eventStatus;
+        private String name;
+
+        public Event(int id, String performer, String name, String location, EventStatusType eventStatus) {
+            ...
+        }
+
+        public void setEventStatus(EventStatusType eventStatus) {
+            this.eventStatus = eventStatus;
+        }
+    }
+
+    @Controller
+    @RequestMapping("/events")
+    public class EventController {
+
+        @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
+        public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
+            // get the event from some backend, then:
+            Resource<Event> eventResource = new Resource<Event>(event);
+            eventResource.add(linkTo(methodOn(EventController.class)
+                    .getEvent(event.id))
+                .and(linkTo(methodOn(EventController.class)
+                    .updateEvent(event.id, event)))
+                .and(linkTo(methodOn(EventController.class)
+                    .deleteEvent(event.id)))
+                .withSelfRel());
+            return eventResource;
+        }
+
+        @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
+        public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
+            ...
+        }
+
+
+        @RequestMapping(value = "/{eventId}", method = RequestMethod.PUT)
+        public ResponseEntity<Void> updateEvent(@PathVariable int eventId, @RequestBody Event event) {
+            ...
+        }
+
+        @RequestMapping(value = "/{eventId}", method = RequestMethod.DELETE)
+        public ResponseEntity<Void> deleteEvent(@PathVariable int eventId) {
+            ...
+        }
+    }
+
+----
+
+The resulting json-ld event object has the corresponding GET, PUT and DELETE operations. The PUT operation expects an http://schema.org/Event[Event] with a property http://schema.org/eventStatus[eventStatus]. By default, writable properties (with a setter following the JavaBean conventions) are rendered as `hydra:supportedProperty`. The URI to be used by the operations is the `@id` of the object that has a `hydra:operation`.
+
+[source, Javascript]
+----
+   {
+      "@type": "Event",
+      "@id": "http://localhost/events/1",
+      "performer": "Walk off the Earth",
+      "location": "Wiesbaden",
+      "name": "Gang of Rhythm Tour"
+      "hydra:operation": [
+         {
+             "hydra:method": "GET"
+         },
+         {
+             "hydra:method": "PUT",
+             "hydra:expects":
+             {
+                 "@type": "hydra:Class",
+                 "hydra:subClassOf": "Event",
+                 "hydra:supportedProperty": [
+                     {
+                         "@type": ["hydra:SupportedProperty"],
+                         "hydra:property": "eventStatus",
+                         "hydra:required": "true"
+                     }
+                 ]
+             }
+         },
+         {
+             "hydra:method": "DELETE"
+         }
+     ]
+   }
+----
+
+=== Specifying Property Value Requirements
+
+Now let us tell the client a range of possible values for a property. We want to allow clients to add reviews for the work performed at an event. For this, we add a `Resource<CreativeWork>` to the `Event`, so that we can define an affordance on the creative work which allows clients to send reviews.
+
+[source, Java]
+----
+  public class Event {
+      ...
+      private final Resource<CreativeWork> workPerformed;
+
+      public Resource<CreativeWork> getWorkPerformed() {
+          return workPerformed;
+      }
+      ...
+  }
+
+  // in EventController:
+  @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
+  public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
+
+      // with an event from backend do this:
+
+      event.getWorkPerformed() //  <-- must be a Resource<CreativeWork>
+          .add(linkTo(methodOn(ReviewController.class) // <-- must use AffordanceBuilder.linkTo here
+              .addReview(event.id, new Review(null, new Rating(null))))
+              .withRel("review"));
+      ...
+  }
+
+  @Controller
+  @RequestMapping("/reviews")
+  public class ReviewController {
+
+      @RequestMapping(value = "/events/{eventId}", method = RequestMethod.POST)
+      public ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestBody Review review) {
+          // add review and return 201 Created
+      }
+  }
+----
+
+We expect that clients post a Review with a review body and a rating. The rating value has input constraints, so we annotate the method `setRatingValue` with `@Input(min = 1, max = 5, step = 1)`, as shown below.
+
+[source, Java]
+----
+
+  public class Rating {
+      private String ratingValue;
+
+      public Rating(String ratingValue) {
+          this.ratingValue = ratingValue;
+      }
+
+      public void setRatingValue(@Input(min = 1, max = 5, step = 1) String ratingValue) {
+          this.ratingValue = ratingValue;
+      }
+  }
+
+
+  public class Review {
+
+      private String reviewBody;
+      private Rating reviewRating;
+
+      public Review(String reviewBody, Rating reviewRating) {
+          this.reviewBody = reviewBody;
+      }
+
+      public void setReviewRating(Rating rating) {
+          this.reviewRating = rating;
+      }
+  }
+
+----
+
+In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpecification[PropertyValueSpecification] to express the input constraints `minValue`, `maxValue` and `stepValue`. Note that the creative work has a `review` attribute now, although the `CreativeWork` pojo has no such property. It appears because we added a rel `review` to the workPerformed resource.
+
+[source, Javascript]
+----
+    {
+        "@type": "Event",
+        "@id": "http://localhost/events/1",
+        "performer": "Walk off the Earth",
+        "location": "Wiesbaden",
+        "workPerformed":
+        {
+            "@type": "CreativeWork",
+            "name": "Gang of Rhythm Tour",
+            "review":
+            {
+                "@id": "http://localhost/reviews/events/1",
+                "hydra:operation": [
+                {
+                    "hydra:method": "POST",
+                    "hydra:expects":
+                    {
+                        "@type": "hydra:Class",
+                        "hydra:subClassOf": "Review",
+                        "hydra:supportedProperty": [
+                        {
+                            "@type": [
+                                "hydra:SupportedProperty",
+                                "http://schema.org/PropertyValueSpecification"
+                            ],
+                            "hydra:property": "ratingValue",
+                            "maxValue": 5,
+                            "minValue": 1,
+                            "stepValue": 1
+                        }]
+                    }
+                }]
+            }
+        }
+    }
+
+----
 
 == Maven Support
-The first Maven release to central is underway. These are the maven coordinates for hydra-spring, if you check out and build locally:
+The latest Maven releases of hydra-java are in Maven central. These are the maven coordinates for hydra-spring.
 
 [source, XML]
 ----
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>${hydra-spring.version}</version>
+  <version>0.2.0</version>
 </dependency>
 ----
 
