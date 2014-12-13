@@ -115,7 +115,7 @@ The conversion of a spring-hateoas Resource does the following:
 - renders attributes assuming that the attribute name is a property in the default vocab defined by `@vocab`. In other words, it renders an `offers` member as `"offers"` on a json-ld object with a context defining `"@vocab" : "http://schema.org"`, so that you end up with `"http://schema.org/offers"` as linked data name for your `offers` member. To map a custom attribute name such as `foo` to an existing property in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocab property you set as value of  `@Expose`.
 - renders Java enums assuming that an enum value name is an enumerated value defined by the default vocab. In json-ld it is not only possible to have attribute names, but also attribute *values* that have linked data names. The idiom to express that is `"@type" : "@vocab"`. An example of this is http://schema.org/OnSitePickup[OnSitePickup], which is an enum value for the property http://schema.org/availableDeliveryMethod[availableDeliveryMethod]. If your Java enum value is ON_SITE_PICKUP, it matches the vocab value of OnSitePickup. It will be rendered as ON_SITE_PICKUP and hydra-java will add the necessary definition to the context which makes it clear that ON_SITE_PICKUP is actually `http://schema.org/OnSitePickup`. If your Java enum value has a different name than the vocab value, use `@Expose` on the enum value to get a correct representation in the context. Note that you can also expose an enum value from a different vocabulary such as GoodRelations, see below.
 
-As of version 0.2.0 hydra-java will hydra:operation and hydra:IriTemplate. To make this possible, use the linkTo and methodOn methods of AffordanceBuilder as a drop-in replacement for ControllerLinkBuilder. Templated links created by ControllerLinkBuilder will at least be rendered as IriTemplates, but only with limited information about the template variables.
+As of version 0.2.0 hydra-java will support hydra:operation and hydra:IriTemplate. To make this possible, you *must* use the linkTo and methodOn methods of AffordanceBuilder as a drop-in replacement for ControllerLinkBuilder. Templated links created by ControllerLinkBuilder will at least be rendered as IriTemplates, but only with limited information about the template variables.
 
 - renders a templated link as `hydra:IriTemplate`. Method parameters can be annotated with `@Expose` to assign them a property URI, otherwise the variable name will be shown as a term in the current vocab. If you create a link with AffordanceBuilder's linkTo-method facilities and you pass `null` for arguments annotated with `@PathVariable` or `@RequestParam`, it will automatically become a templated link with variables for the `null` arguments.
 - renders a link to method handlers for any *combination* of GET, POST, PUT, PATCH and DELETE as `hydra:operation`. In order to express that multiple HTTP methods can be invoked on the same resource, use the `and()` method of AffordanceBuilder. See below for an example.
@@ -164,7 +164,7 @@ The json-ld output written by hydra-java makes the GoodRelations url known under
 }
 ----
 
-=== Describing Possible Interactions
+=== Describing Possible Interactions (from V. 0.2.0)
 
 In the following we add a `self` rel that can be used with GET, PUT and DELETE to an event bean.
 First we wrap the event into a `Resource`, then we use `add` `linkTo` `methodOn` three times to describe that the self rel can be used to get, update and delete the event.
@@ -261,7 +261,7 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
    }
 ----
 
-=== Specifying Property Value Requirements
+=== Specifying Property Value Requirements (from 0.2.0)
 
 Now let us tell the client a range of possible values for a property. We want to allow clients to add reviews for the work performed at an event. For this, we add a `Resource<CreativeWork>` to the `Event`, so that we can define an affordance on the creative work which allows clients to send reviews.
 
