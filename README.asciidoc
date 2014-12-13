@@ -5,6 +5,8 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing
 
+Latest release: 0.1.0
+
 == Problem
 
 The meaning of json attributes in api responses, their possible values etc. is usually not obvious without referring to some 
@@ -37,7 +39,7 @@ one-fancy-api requires to achieve that without processing a vendor-specific docu
 
 == Solution (evolving)
 
-I see json-ld (media type application/ld+json) as a possible way to solve this problem without forcing people to ask me
+I see http://www.w3.org/TR/json-ld/[json-ld] (media type application/ld+json) as a possible way to solve this problem without forcing people to ask me
 about my vendor-specific documentation, thus decoupling the clients from my server types.
 
 Clients should be able to understand a response based on widely available, standardized, public information.
@@ -93,6 +95,8 @@ Note that I do not bind my clients to a server type `Person`.
 Rather, client and server are talking about the thing http://schema.org/Person[Person] as it is known and recognized by all major search engines.
 
 For a more expressive example consider the json-ld example of http://schema.org/MusicEvent[MusicEvent], which shows how a ticket offering could look like.
+	
+In a more complex scenario I want to use my own attribute names and object design and still be able to use schema.org or other vocabs to describe their meaning. In json-ld I can. See below for a listing of vocabularies.
 
 == First Steps
 It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC.
@@ -107,9 +111,9 @@ The conversion of a spring-hateoas Resource does the following:
 - renders spring-hateoas `Resources<T>` as `hydra:Collection`
 - renders response with `"@vocab" : "http://schema.org/"` by default, a different `@vocab` can be defined on a class or package using `@Vocab`.
 - supports vocabularies in addition to the default vocabulary via terms in the `@context`. Use `@Term` in conjunction with `@Terms` on a class or package for this.
-- renders `@type` based on the class name by default, a vocabulary class can be produced instead using `@Expose` on the type.
-- renders attributes assuming that the attribute name is a property in the default vocab defined by `@vocab`. In other words, it renders an `offers` member as `"offers"` on a json-ld object with a context defining `"@vocab" : "http://schema.org"`, so that you end up with `"http://schema.org/offers"` as linked data name for your "offers" member. To map a custom attribute name such as `"foo"` to an existing property in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocabulary property.
-- renders Java enums assuming that an enum value name is an enumerated value defined by the default vocab. In json-ld it is not only possible to have attribute names, but also attribute values that have linked data names. The idiom to express that is `"@type" : "@vocab"`. An example of this is http://schema.org/OnSitePickup[OnSitePickup], which is an enum value for the property http://schema.org/availableDeliveryMethod[availableDeliveryMethod]. If your enum value is ON_SITE_PICKUP, it will be rendered as ON_SITE_PICKUP and hydra-java will add the necessary definition to the context which makes it clear that ON_SITE_PICKUP is actually `http://schema.org/OnSitePickup`. If your Java enum values have a different name, use `@Expose` on the enum value to get a correct representation in the context. Note that you can also expose an enum value from a different vocabulary such as GoodRelations, see below.
+- renders `@type` based on the Java class name by default, a vocabulary class can be produced instead using `@Expose` on the Java class.
+- renders attributes assuming that the attribute name is a property in the default vocab defined by `@vocab`. In other words, it renders an `offers` member as `"offers"` on a json-ld object with a context defining `"@vocab" : "http://schema.org"`, so that you end up with `"http://schema.org/offers"` as linked data name for your `offers` member. To map a custom attribute name such as `foo` to an existing property in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocab property you set as value of  `@Expose`.
+- renders Java enums assuming that an enum value name is an enumerated value defined by the default vocab. In json-ld it is not only possible to have attribute names, but also attribute *values* that have linked data names. The idiom to express that is `"@type" : "@vocab"`. An example of this is http://schema.org/OnSitePickup[OnSitePickup], which is an enum value for the property http://schema.org/availableDeliveryMethod[availableDeliveryMethod]. If your Java enum value is ON_SITE_PICKUP, it matches the vocab value of OnSitePickup. It will be rendered as ON_SITE_PICKUP and hydra-java will add the necessary definition to the context which makes it clear that ON_SITE_PICKUP is actually `http://schema.org/OnSitePickup`. If your Java enum value has a different name than the vocab value, use `@Expose` on the enum value to get a correct representation in the context. Note that you can also expose an enum value from a different vocabulary such as GoodRelations, see below.
 
 As of version 0.2.0 hydra-java will hydra:operation and hydra:IriTemplate. To make this possible, use the linkTo and methodOn methods of AffordanceBuilder as a drop-in replacement for ControllerLinkBuilder. Templated links created by ControllerLinkBuilder will at least be rendered as IriTemplates, but only with limited information about the template variables.
 
@@ -123,6 +127,8 @@ As of version 0.2.0 hydra-java will hydra:operation and hydra:IriTemplate. To ma
 === Exposing Java Bean Attributes
 
 Assuming a Java enum whose enum values are exposed as values from GoodRelations and which appears on an Offer object with GoodRelations term:
+
+The example shows a Java enum named `BusinessFunctionˋ whose enum values are exposed as values from GoodRelations. The enum appears on an Offer object with a GoodRelations term:
 
 [source, Java]
 ----
@@ -142,30 +148,19 @@ Assuming a Java enum whose enum values are exposed as values from GoodRelations 
     }
 ----
 
-The json-ld output says that the `businessFunction` property contains values defined by a vocabulary and maps the Java enum value `RENT` to its linked data name `"gr:LeaseOut"`.
+The json-ld output written by hydra-java makes the GoodRelations url known under the shorthand `gr`, says that the `businessFunction` property contains values defined by a vocabulary and maps the Java enum value `RENT` to its linked data name `"gr:LeaseOut"`.
 
 [source, Javascript]
 ----
 {
     "@context": {
-      "@vocab": "http://schema.org/"
+      "@vocab": "http://schema.org/",
       "gr": "http://purl.org/goodrelations/v1#",
       "businessFunction": {"@type": "@vocab"},
-      "RENT": "gr:LeaseOut",
+      "RENT": "gr:LeaseOut"
     },
     "@type": "Offer",
-    "businessFunction": "RENT",
-    "priceSpecification": {
-      "@type": "UnitPriceSpecification",
-      "price": 3.99,
-      "priceCurrency": "USD",
-      "datetime": "2012-12-31T23:59:59Z"
-    },
-    "eligibleDuration": {
-      "@type": "QuantitativeValue",
-      "value": "30",
-      "unitCode": "DAY"
-    }
+    "businessFunction": "RENT"
 }
 ----
 
@@ -390,10 +385,19 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.2.0</version>
+  <version>0.1.0</version>
 </dependency>
 ----
 
+== Vocabularies
+What if schema.org is not sufficient? On
+http://lov.okfn.org/dataset/lov/[Linked Open Vocabularies] you can search for terms in other vocabularies. Another option is to http://www.w3.org/wiki/WebSchemas/SchemaDotOrgProposals[propose an addition to schema.org].
+
+If you are unsure which vocab to use, ask on the http://lists.w3.org/Archives/Public/public-hydra/[ hydra mailing list].
+
+
+
+	
 == Acknowledgements
 
 I would like to thank Mike Amundsen, Stu Charlton, Jon Moore, Jørn Wildt, Mike Kelly, Markus Lanthaler, Gregg Kellog and Manu Sporny for their inspiration and for valuable comments along the way. Also thanks to Oliver Gierke who has been accepting some of my pull requests to spring-hateoas.
