@@ -20,7 +20,7 @@ public class StringOptions implements Options {
 	 * 
 	 * <pre>
 	 * &#0064;RequestMapping(value = "/customer", method = RequestMethod.GET, params = { "mood" })
-	 * public HttpEntity<SamplePersonResource> showPersonByMood(
+	 * public HttpEntity&lt;SamplePersonResourcegt; showPersonByMood(
 	 *     &#0064;RequestParam &#0064;Select({ "angry", "happy", "grumpy", "bored" })
 	 *     String mood) {
 	 *     ...

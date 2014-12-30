@@ -54,7 +54,7 @@ public class AffordanceBuilder implements LinkBuilder {
      * Creates a new {@link AffordanceBuilder} with a base of the mapping annotated to the given controller class.
      *
      * @param controller the class to discover the annotation on, must not be {@literal null}.
-     * @return
+     * @return builder
      */
     public static AffordanceBuilder linkTo(Class<?> controller) {
         return linkTo(controller, new Object[0]);
@@ -67,7 +67,7 @@ public class AffordanceBuilder implements LinkBuilder {
      * @param controller the class to discover the annotation on, must not be {@literal null}.
      * @param parameters additional parameters to bind to the URI template declared in the annotation, must not be
      *                   {@literal null}.
-     * @return
+     * @return builder
      */
     public static AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
         return FACTORY.linkTo(controller, parameters);

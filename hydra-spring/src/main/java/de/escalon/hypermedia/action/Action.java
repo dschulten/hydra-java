@@ -27,7 +27,7 @@ public @interface Action {
     /**
      * The type of the action.
      *
-     * @return
+     * @return action type
      */
     String value();
 

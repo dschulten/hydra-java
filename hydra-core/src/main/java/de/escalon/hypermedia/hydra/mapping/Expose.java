@@ -13,7 +13,7 @@ import java.lang.annotation.*;
 
 /**
  * The Expose annotation allows to make the annotated item known under an alias which is meaningful in a vocabulary.
- * <p/>
+ *
  * Created by dschulten on 10.08.2014.
  */
 @Documented

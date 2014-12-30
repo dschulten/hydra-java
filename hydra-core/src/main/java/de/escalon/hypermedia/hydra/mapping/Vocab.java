@@ -12,7 +12,7 @@ package de.escalon.hypermedia.hydra.mapping;
 import java.lang.annotation.*;
 
 /**
- * Defines default vocab for a package or type, use inside <code></code>package-info.java</code>.
+ * Defines default vocab for a package or type, use inside <code>package-info.java</code>.
  */
 @Documented
 @Target({ElementType.PACKAGE, ElementType.TYPE})

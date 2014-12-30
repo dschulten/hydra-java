@@ -94,6 +94,8 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         if (!isUnwrappingSerializer()) {
             jgen.writeStartObject();
         }
+        // TODO use serializerProvider.getAttributes to hold a stack of contexts
+
         Deque<String> deque = (Deque<String>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
         if (deque == null) {
             deque = new ArrayDeque<String>();
@@ -135,11 +137,6 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     private void serializeContext(Object bean, JsonGenerator jgen,
                                   SerializerProvider serializerProvider, Deque<String> deque) throws IOException {
         try {
-            // TODO use serializerProvider.getAttributes to hold a stack of contexts
-            // and check if we need to write a context for the current bean at all
-            // If it is in the same vocab: no context
-            // If the terms are already defined in the context: no context
-
             SerializationConfig config = serializerProvider.getConfig();
             final Class<?> mixInClass = config.findMixInClassFor(bean.getClass());
 
@@ -147,17 +144,20 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             Map<String, Object> terms = getTerms(bean, mixInClass);
 
             final String currentVocab = deque.peek();
-
             deque.push(vocab);
+            // check if we need to write a context for the current bean at all
+            // If it is in the same vocab: no context
+            // If the terms are already defined in the context: no context
             boolean mustWriteContext;
             if (currentVocab == null || !vocab.equals(currentVocab)) {
                 mustWriteContext = true;
             } else {
-                // only write if bean has terms
+                // only write context if bean has terms
                 if (terms.isEmpty()) {
                     mustWriteContext = false;
                 } else {
                     // TODO actually, need not repeat vocab in context if same
+                    // TODO collect terms from nested beans in top-level context?
                     mustWriteContext = true;
                 }
             }

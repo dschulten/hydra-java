@@ -10,6 +10,9 @@
 
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Sample Review.
  * Created by dschulten on 16.09.2014.
@@ -17,15 +20,24 @@ package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 public class Review {
 
     private String reviewBody;
+
+
+
     private Rating reviewRating;
 
-    public Review(String reviewBody, Rating reviewRating) {
+    @JsonCreator
+    public Review(@JsonProperty("reviewBody") String reviewBody, @JsonProperty("reviewRating") Rating reviewRating) {
         this.reviewBody = reviewBody;
+        this.reviewRating = reviewRating;
     }
 
     @SuppressWarnings("unused")
     public String getReviewBody() {
         return reviewBody;
+    }
+
+    public Rating getReviewRating() {
+        return reviewRating;
     }
 
     public void setReviewRating(Rating rating) {

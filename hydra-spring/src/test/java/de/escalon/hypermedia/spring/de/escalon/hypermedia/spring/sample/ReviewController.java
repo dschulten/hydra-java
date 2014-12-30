@@ -17,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -48,6 +49,9 @@ public class ReviewController {
     public
     @ResponseBody
     ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestBody Review review) {
+        Assert.notNull(review);
+        Assert.notNull(review.getReviewRating());
+        Assert.notNull(review.getReviewRating().getRatingValue());
         final HttpHeaders headers = new HttpHeaders();
         headers.setLocation(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
                 .getReviews(eventId))

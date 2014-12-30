@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring.action;
@@ -15,6 +18,7 @@ import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.Options;
 import de.escalon.hypermedia.action.Select;
 import de.escalon.hypermedia.action.Type;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.Property;
@@ -26,7 +30,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ValueConstants;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -54,15 +57,20 @@ public class ActionInputParameter {
     private ConversionService conversionService = new DefaultFormattingConversionService();
 
     /**
-     * @param methodParameter
-     * @param value
-     * @param conversionService
+     * Creates input parameter descriptor.
+     *
+     * @param methodParameter   to describe
+     * @param value             used during sample invocation
+     * @param conversionService to apply to value
      */
     public ActionInputParameter(MethodParameter methodParameter, Object value, ConversionService conversionService) {
         this.methodParameter = methodParameter;
         this.value = value;
         this.requestBody = methodParameter.getParameterAnnotation(RequestBody.class);
-//        if (requestBody != null) {
+        this.requestParam = methodParameter.getParameterAnnotation(RequestParam.class);
+        this.pathVariable = methodParameter.getParameterAnnotation(PathVariable.class);
+        // always determine input constraints,
+        // might be a nested property which is neither requestBody, requestParam nor pathVariable
         this.inputAnnotation = methodParameter.getParameterAnnotation(Input.class);
         if (inputAnnotation != null) {
             putInputConstraint(MIN, Integer.MIN_VALUE, inputAnnotation.min());
@@ -71,9 +79,7 @@ public class ActionInputParameter {
             putInputConstraint(MAX_LENGTH, Integer.MAX_VALUE, inputAnnotation.maxLength());
             putInputConstraint(STEP, 0, inputAnnotation.step());
         }
-//        }
-        this.requestParam = methodParameter.getParameterAnnotation(RequestParam.class);
-        this.pathVariable = methodParameter.getParameterAnnotation(PathVariable.class);
+
         this.conversionService = conversionService;
         this.typeDescriptor = TypeDescriptor.nested(methodParameter, 0);
     }
@@ -108,6 +114,7 @@ public class ActionInputParameter {
      *
      * @return value, may be null
      */
+    @Nullable
     public String getCallValueFormatted() {
         String ret;
         if (value == null) {
@@ -142,12 +149,12 @@ public class ActionInputParameter {
         return requestBody != null;
     }
 
-    private boolean isRequestParam() {
+    public boolean isRequestParam() {
         return requestParam != null;
     }
 
-    private boolean isPathVariable() {
-        return requestParam != null;
+    public boolean isPathVariable() {
+        return pathVariable != null;
     }
 
     public boolean hasInputConstraints() {
@@ -199,46 +206,6 @@ public class ActionInputParameter {
     }
 
 
-    public Object[] getPossibleValues(Field field, ActionDescriptor actionDescriptor) {
-        // TODO: other sources of possible values, e.g. max, min, step
-        try {
-            Class<?> parameterType = getParameterType();
-            Object[] possibleValues;
-            Class<?> nested;
-            if (Enum[].class.isAssignableFrom(parameterType)) {
-                possibleValues = parameterType.getComponentType()
-                        .getEnumConstants();
-            } else if (Enum.class.isAssignableFrom(parameterType)) {
-                possibleValues = parameterType.getEnumConstants();
-            } else if (Collection.class.isAssignableFrom(parameterType)
-                    && Enum.class.isAssignableFrom(nested = TypeDescriptor.nested(field, 1)
-                    .getType())) {
-                possibleValues = nested.getEnumConstants();
-            } else {
-                Select select = field.getAnnotation(Select.class);
-                if (select != null) {
-                    Class<? extends Options> options = select.options();
-                    Options instance = options.newInstance();
-                    List<Object> from = new ArrayList<Object>();
-                    for (String paramName : select.args()) {
-                        ActionInputParameter parameterValue = actionDescriptor.getActionInputParameter(paramName);
-                        if (parameterValue != null) {
-                            from.add(parameterValue.getCallValue());
-                        }
-                    }
-
-                    Object[] args = from.toArray();
-                    possibleValues = instance.get(select.value(), args);
-                } else {
-                    possibleValues = new Object[0];
-                }
-            }
-            return possibleValues;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public Object[] getPossibleValues(Property property, ActionDescriptor actionDescriptor) {
         // TODO: other sources of possible values, e.g. max, min, step
         // TODO remove code duplication of getPossibleValues
@@ -257,10 +224,12 @@ public class ActionInputParameter {
                 possibleValues = nested.getEnumConstants();
             } else {
                 Annotation[][] parameterAnnotations = property.getWriteMethod().getParameterAnnotations();
+                // setter has exactly one param
                 Select select = getSelectAnnotationFromFirstParam(parameterAnnotations[0]);
                 if (select != null) {
-                    Class<? extends Options> options = select.options();
-                    Options instance = options.newInstance();
+                    Class<? extends Options> optionsClass = select.options();
+                    Options options = optionsClass.newInstance();
+                    // collect call values to pass to options.get
                     List<Object> from = new ArrayList<Object>();
                     for (String paramName : select.args()) {
                         ActionInputParameter parameterValue = actionDescriptor.getActionInputParameter(paramName);
@@ -270,7 +239,7 @@ public class ActionInputParameter {
                     }
 
                     Object[] args = from.toArray();
-                    possibleValues = instance.get(select.value(), args);
+                    possibleValues = options.get(select.value(), args);
                 } else {
                     possibleValues = new Object[0];
                 }

@@ -10,6 +10,8 @@
 
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.action.Input;
 
 /**
@@ -20,11 +22,16 @@ public class Rating {
     public final String worstRating = "1";
     private String ratingValue;
 
-    public Rating(String worstRating) {
+    @JsonCreator
+    public Rating(@JsonProperty("ratingValue") String ratingValue) {
         this.ratingValue = ratingValue;
     }
 
     public void setRatingValue(@Input(min = 1, max = 5, step = 1) String ratingValue) {
         this.ratingValue = ratingValue;
+    }
+
+    public String getRatingValue() {
+        return ratingValue;
     }
 }

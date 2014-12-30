@@ -10,6 +10,7 @@
 
 package de.escalon.hypermedia.spring;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.escalon.hypermedia.spring.action.ActionDescriptor;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpMethod;
@@ -27,8 +28,7 @@ import java.util.Map;
  * Represents an http affordance for purposes of a ReST service as described by
  * <a href="http://tools.ietf.org/html/rfc5988">Web Linking rfc5988</a>. Additionally includes hints for the http method
  * and expected request body.
- * <p/>
- * Created by dschulten on 07.09.2014.
+ * <p>Created by dschulten on 07.09.2014.</p>
  *
  * @see <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a>
  */
@@ -62,16 +62,11 @@ public class Affordance extends Link {
         super(href);
     }
 
+    @JsonIgnore
     public List<ActionDescriptor> getActionDescriptors() {
         return Collections.unmodifiableList(actionDescriptors);
     }
-
-//    /**
-//     * Adds action descriptor.
-//     */
-//    public void addActionDescriptor(ActionDescriptor actionDescriptor) {
-//        this.actionDescriptors.add(actionDescriptor);
-//    }
+    
 
     /**
      * The relation type of the link.
@@ -223,6 +218,7 @@ public class Affordance extends Link {
      *
      * @return header name
      */
+    @JsonIgnore
     public String getHeaderName() {
         String headerName;
         if (uriTemplateComponents.hasVariables()) {
@@ -299,6 +295,7 @@ public class Affordance extends Link {
         return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod, actionDescriptors);
     }
 
+    @JsonIgnore
     public List<String> getRels() {
         final List<String> rels = linkParams.get("rel");
         return rels == null ? Collections.<String>emptyList() : Collections.unmodifiableList(rels);
