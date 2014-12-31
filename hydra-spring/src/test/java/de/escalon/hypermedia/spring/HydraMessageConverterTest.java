@@ -177,9 +177,17 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
                         ".['hydra:method']").value("POST"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[0].['hydra:property']").value("ratingValue"))
+                        ".['hydra:expects'].['hydra:supportedProperty'].[0].['hydra:property']").value("reviewBody"))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review" +
+                        ".['hydra:operation'].[0]" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['hydra:property']").value("reviewRating"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[0].['minValue']").value(1))
+                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['http://schema.org/rangeIncludes']" +
+                        ".['hydra:supportedProperty'][0].['hydra:property']").value("ratingValue"))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['http://schema.org/rangeIncludes']" +
+                        ".['hydra:supportedProperty'][0].['minValue']").value(1))
+
                 .andReturn();
         System.out.println(result.getResponse()
                 .getContentAsString());

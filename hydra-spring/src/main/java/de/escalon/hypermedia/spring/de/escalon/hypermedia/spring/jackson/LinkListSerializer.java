@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson;
@@ -22,6 +25,7 @@ import de.escalon.hypermedia.spring.action.ActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.Property;
 import org.springframework.hateoas.IanaRels;
 import org.springframework.hateoas.Link;
@@ -35,8 +39,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- * Serializer to convert Link to json-ld representation.
- * Created by dschulten on 19.09.2014.
+ * Serializer to convert Link to json-ld representation. Created by dschulten on 19.09.2014.
  */
 public class LinkListSerializer extends StdSerializer<List<Link>> {
 
@@ -188,7 +191,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     }
 
     private void recurseSupportedProperties(JsonGenerator jgen, Class<?> beanType, ActionDescriptor actionDescriptor,
-                                            ActionInputParameter actionInputParameter) throws IntrospectionException, IOException {
+                                            ActionInputParameter actionInputParameter) throws IntrospectionException,
+            IOException {
         // TODO support Option provider by other method args?
         final BeanInfo beanInfo = Introspector.getBeanInfo(beanType);
         final PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
@@ -200,9 +204,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 continue;
             }
             final Class<?> propertyType = propertyDescriptor.getPropertyType();
+            // TODO: the property name must be a valid URI - need to check context for terms?
+            String propertyName = getWritableExposedPropertyOrPropertyName(propertyDescriptor);
             if (DataType.isScalar(propertyType)) {
-                // TODO: the property name must be a valid URI - need to check context for terms?
-                String propertyName = getWritableExposedPropertyOrPropertyName(propertyDescriptor);
 
                 final Property property = new Property(beanType,
                         propertyDescriptor.getReadMethod(),
@@ -218,7 +222,25 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 writeSupportedProperty(jgen, propertySetterInputParameter,
                         propertyName, property, possiblePropertyValues);
             } else {
+                jgen.writeStartObject();
+                jgen.writeStringField("hydra:property", propertyName);
+                // TODO: is the property required -> for bean props we need the Access annotation for that
+                jgen.writeObjectFieldStart("http://schema.org/rangeIncludes");
+                Expose expose = AnnotationUtils.getAnnotation(propertyType, Expose.class);
+                String subClassOf;
+                if (expose != null) {
+                    subClassOf = expose.value();
+                } else {
+                    subClassOf = propertyType.getSimpleName();
+                }
+                jgen.writeStringField("hydra:subClassOf", subClassOf);
+
+                jgen.writeArrayFieldStart("hydra:supportedProperty");
                 recurseSupportedProperties(jgen, propertyType, actionDescriptor, actionInputParameter);
+                jgen.writeEndArray();
+
+                jgen.writeEndObject();
+                jgen.writeEndObject();
             }
         }
     }
@@ -248,15 +270,20 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
     private void writePossiblePropertyValues(JsonGenerator jgen, ActionInputParameter actionInputParameter,
                                              Property property, Object[] possiblePropertyValues) throws IOException {
-        if (possiblePropertyValues.length > 0) {
-            jgen.writeArrayFieldStart("hydra:option");
-
-            for (Object possibleValue : possiblePropertyValues) {
-                // TODO: apply "hydra:option" : { "@type": "@vocab"} to context for enums
-                writePossibleValue(jgen, possibleValue, property.getType());
-            }
-            jgen.writeEndArray();
-        }
+        // Enable the following to list possible values.
+        // Problem: how to express individuals only for certain hydra:options
+        // not all hydra:options should be taken as uris, sometimes they might be just literals
+        // how to make that clear to the client?
+        // maybe we must write them out for options
+//        if (possiblePropertyValues.length > 0) {
+//            jgen.writeArrayFieldStart("hydra:option");
+//
+//            for (Object possibleValue : possiblePropertyValues) {
+//                // TODO: apply "hydra:option" : { "@type": "@vocab"} to context for enums
+//                writePossibleValue(jgen, possibleValue, property.getType());
+//            }
+//            jgen.writeEndArray();
+//        }
 
         if (actionInputParameter.isArrayOrCollection()) {
             jgen.writeBooleanField("multipleValues", true);

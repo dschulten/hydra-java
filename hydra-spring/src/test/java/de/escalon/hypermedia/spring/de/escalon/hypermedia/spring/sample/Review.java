@@ -20,9 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Review {
 
     private String reviewBody;
-
-
-
     private Rating reviewRating;
 
     @JsonCreator
@@ -34,6 +31,10 @@ public class Review {
     @SuppressWarnings("unused")
     public String getReviewBody() {
         return reviewBody;
+    }
+
+    public void setReviewBody(String reviewBody) {
+        this.reviewBody = reviewBody;
     }
 
     public Rating getReviewRating() {
