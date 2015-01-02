@@ -68,6 +68,7 @@
     <modules>
         <module>hydra-core</module>
         <module>hydra-spring</module>
+        <module>hydra-sample</module>
     </modules>
 
     <dependencyManagement>
