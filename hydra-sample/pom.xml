@@ -1,0 +1,18 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.escalon.hypermedia</groupId>
+  <artifactId>hydra-sample</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <parent>
+    <artifactId>hydra-parent</artifactId>
+    <groupId>de.escalon.hypermedia</groupId>
+    <version>0.2.0-SNAPSHOT</version>
+  </parent>
+  <modules>
+    <module>service</module>
+    <module>webapp</module>
+  </modules>
+  <packaging>pom</packaging>
+  <name>hydra-sample</name>
+</project>

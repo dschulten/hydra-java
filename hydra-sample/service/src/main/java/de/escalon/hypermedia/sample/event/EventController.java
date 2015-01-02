@@ -1,0 +1,92 @@
+package de.escalon.hypermedia.sample.event;
+
+import de.escalon.hypermedia.sample.beans.Event;
+import de.escalon.hypermedia.sample.model.EventModel;
+import de.escalon.hypermedia.sample.model.Rating;
+import de.escalon.hypermedia.sample.model.Review;
+import de.escalon.hypermedia.spring.AffordanceBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * Sample Event Controller.
+ * Created by dschulten on 28.12.2014.
+ */
+@Controller
+@RequestMapping("/events")
+public class EventController {
+
+    @Autowired
+    private EventBackend eventBackend;
+
+    @Autowired
+    private EventResourceAssembler assembler;
+
+    @RequestMapping(method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Resources<Event>> getEvents() {
+        List<Event> events = assembler.toResources(eventBackend.getEvents());
+        for (Event event : events) {
+            addAffordances(event);
+        }
+        Resources<Event> eventResources = new Resources<Event>(events);
+
+        eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class).addEvent(null))
+                .withSelfRel());
+
+        return new ResponseEntity<Resources<Event>>(eventResources, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
+    public ResponseEntity<Event> getEvent(@PathVariable Integer eventId) {
+        Event event = assembler.toResource(eventBackend.getEvent(eventId));
+
+        addAffordances(event);
+
+        return new ResponseEntity<Event>(event, HttpStatus.OK);
+    }
+
+    private void addAffordances(Event event) {
+        event.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
+                .updateEvent(event.id, null))
+                .and(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
+                        .deleteEvent(event.id)))
+                .withSelfRel());
+        event.workPerformed.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(ReviewController.class)
+                .addReview(event.id, new Review(null, new Rating(null))))
+                .withRel("review"));
+    }
+
+    @RequestMapping(value = "/{eventId}", method = RequestMethod.PUT)
+    public ResponseEntity<Void> updateEvent(@PathVariable int eventId, @RequestBody Event event) {
+        eventBackend.updateEvent(eventId, event.getEventStatus());
+        return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+    }
+
+    @RequestMapping(value = "/{eventId}", method = RequestMethod.DELETE)
+    public ResponseEntity<Void> deleteEvent(@PathVariable int eventId) {
+        eventBackend.deleteEvent(eventId);
+        return new ResponseEntity<Void>(HttpStatus.NO_CONTENT);
+    }
+
+
+    @RequestMapping(method = RequestMethod.POST)
+    public ResponseEntity<Void> addEvent(@RequestBody Event event) {
+        EventModel eventModel = new EventModel(-1, event.performer, event.workPerformed.getContent(), event.location,
+                event.getEventStatus());
+        int eventId = eventBackend.addEvent(eventModel);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setLocation(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
+                .getEvent(eventId)).toUri());
+        return new ResponseEntity<Void>(httpHeaders, HttpStatus.CREATED);
+    }
+
+
+}
