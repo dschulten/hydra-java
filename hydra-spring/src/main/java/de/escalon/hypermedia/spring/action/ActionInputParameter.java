@@ -166,7 +166,6 @@ public class ActionInputParameter {
     }
 
     public Object[] getPossibleValues(ActionDescriptor actionDescriptor) {
-        // TODO: other sources of possible values, e.g. max, min, step
         try {
             Class<?> parameterType = getParameterType();
             Object[] possibleValues;
@@ -207,7 +206,6 @@ public class ActionInputParameter {
 
 
     public Object[] getPossibleValues(Property property, ActionDescriptor actionDescriptor) {
-        // TODO: other sources of possible values, e.g. max, min, step
         // TODO remove code duplication of getPossibleValues
         try {
             Class<?> parameterType = property.getType();

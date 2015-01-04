@@ -213,7 +213,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                         propertyDescriptor.getWriteMethod(),
                         propertyDescriptor.getName());
 
-                // TODO getPossibleValues should work for the current actionInputParameter
                 ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
                         new MethodParameter(propertyDescriptor.getWriteMethod(), 0), null);
                 final Object[] possiblePropertyValues =

@@ -152,11 +152,10 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             if (currentVocab == null || !vocab.equals(currentVocab)) {
                 mustWriteContext = true;
             } else {
-                // only write context if bean has terms
                 if (terms.isEmpty()) {
+                    // do not write context if bean has no terms
                     mustWriteContext = false;
                 } else {
-                    // TODO actually, need not repeat vocab in context if same
                     // TODO collect terms from nested beans in top-level context?
                     mustWriteContext = true;
                 }
@@ -250,9 +249,6 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             }
         }
 
-        // TODO do this recursively for nested beans and collect as long as
-        // nested beans have same vocab
-        // expose getters in context
         final BeanInfo beanInfo = Introspector.getBeanInfo(beanClass);
         final PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
         for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
@@ -260,7 +256,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             if (method != null) {
                 final Expose expose = method.getAnnotation(Expose.class);
                 if (Enum.class.isAssignableFrom(method.getReturnType())) {
-                    addEnumTerms(termsMap, expose, propertyDescriptor.getName(), (Enum)method.invoke(bean));
+                    addEnumTerms(termsMap, expose, propertyDescriptor.getName(), (Enum) method.invoke(bean));
                 } else {
                     if (expose != null) {
                         termsMap.put(propertyDescriptor.getName(), expose.value());
@@ -273,7 +269,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
 
     private void addEnumTerms(Map<String, Object> termsMap, Expose expose, String name,
                               Enum value) throws NoSuchFieldException {
-        if (value!=null) {
+        if (value != null) {
             Map<String, String> map = new LinkedHashMap<String, String>();
             if (expose != null) {
                 map.put(AT_ID, expose.value());
