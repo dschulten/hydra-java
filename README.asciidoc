@@ -385,7 +385,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0-alpha1</version>
 </dependency>
 ----
 
