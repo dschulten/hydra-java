@@ -265,8 +265,6 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
 
 Now let us tell the client a range of possible values for a property. We want to allow clients to add reviews for the work performed at an event. For this, we add a `Resource<CreativeWork>` to the `Event`, so that we can define an affordance on the creative work which allows clients to send reviews.
 
-If an expected property holds a nested json object, hydra-java will render it following a proposal from https://github.com/HydraCG/Specifications/issues/26[Hydra-CG Issue 26] using http://schema.org/rangeIncludes[schema:rangeIncludes]. The fact that this issue is not resolved yet is the main reason why hydra-java 0.2.0 is an alpha release. So be especially wary that changes are likely for the way hydra-java prescribes nested properties.
-
 [source, Java]
 ----
   public class Event {
@@ -378,6 +376,9 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
     }
 
 ----
+
+If an expected property on a request object holds a nested json object in turn, hydra-java will render it following a proposal from https://github.com/HydraCG/Specifications/issues/26[Hydra-CG Issue 26] using http://schema.org/rangeIncludes[schema:rangeIncludes]. The fact that this issue is not resolved yet is the main reason why hydra-java 0.2.0 is an alpha release. So be especially wary that changes are likely for the way hydra-java prescribes nested properties.
+
 
 == Maven Support
 The latest Maven releases of hydra-java are in Maven central. These are the maven coordinates for hydra-spring.
