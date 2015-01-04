@@ -3,8 +3,10 @@ Add Sonatype password to server ossrh in local settings.xml
 Release to Sonatype with Github password:
 mvn release:prepare release:perform -Dusername=XXX -Dpassword=XXX
 
-Release staging repo:
-Login to https://oss.sonatype.org/
-
+Should automatically release from staging repo https://oss.sonatype.org/
 Details:
 http://central.sonatype.org/pages/releasing-the-deployment.html#locate-and-examine-your-staging-repository
+
+Publish to openshift after release has become available in Central:
+Adjust latest version in openshift project: ssh://549fcacc5973ca16e1000025@jbosswildfly-escalon.rhcloud.com/~/git/jbosswildfly.git/
+https://jenkins-escalon.rhcloud.com/job/jbosswildfly-build/
