@@ -1,0 +1,10 @@
+Add Sonatype password to server ossrh in local settings.xml
+
+Release to Sonatype with Github password:
+mvn release:prepare release:perform -Dusername=XXX -Dpassword=XXX
+
+Release staging repo:
+Login to https://oss.sonatype.org/
+
+Details:
+http://central.sonatype.org/pages/releasing-the-deployment.html#locate-and-examine-your-staging-repository
