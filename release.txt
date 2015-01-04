@@ -1,5 +1,15 @@
 Add Sonatype password to server ossrh in local settings.xml
 
+<settings>
+  <servers>
+    <server>
+      <id>ossrh</id>
+      <username>XXX</username>
+      <password>XXX</password>
+    </server>
+  </servers>
+</settings>
+
 Release to Sonatype with Github password:
 mvn release:prepare release:perform -Dusername=XXX -Dpassword=XXX
 
