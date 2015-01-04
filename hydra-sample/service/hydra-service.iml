@@ -19,8 +19,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="hydra-spring" />
-    <orderEntry type="module" module-name="hydra-core" />
+    <orderEntry type="library" name="Maven: de.escalon.hypermedia:hydra-spring:0.2.0-alpha1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: de.escalon.hypermedia:hydra-core:0.2.0-alpha1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.hateoas:spring-hateoas:0.16.0.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.objenesis:objenesis:2.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.4.1" level="project" />
