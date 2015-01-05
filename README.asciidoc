@@ -7,6 +7,8 @@ Status: Testing
 
 Latest release: 0.2.0-alpha1
 
+http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API]
+
 == Problem
 
 The meaning of json attributes in api responses, their possible values etc. is usually not obvious without referring to some 
