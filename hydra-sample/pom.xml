@@ -5,7 +5,7 @@
   <parent>
     <artifactId>hydra-parent</artifactId>
     <groupId>de.escalon.hypermedia</groupId>
-    <version>0.2.0-alpha2-SNAPSHOT</version>
+    <version>0.2.0-alpha2</version>
   </parent>
   <modules>
     <module>service</module>
