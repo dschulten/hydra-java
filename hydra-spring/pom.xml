@@ -11,7 +11,7 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>hydra-parent</artifactId>
+        <artifactId>hydra-java</artifactId>
         <groupId>de.escalon.hypermedia</groupId>
         <version>0.2.0-alpha3-SNAPSHOT</version>
     </parent>
@@ -24,7 +24,7 @@
     <dependencies>
         <dependency>
             <groupId>de.escalon.hypermedia</groupId>
-            <artifactId>hydra-core</artifactId>
+            <artifactId>hydra-jsonld</artifactId>
         </dependency>
 
         <dependency>

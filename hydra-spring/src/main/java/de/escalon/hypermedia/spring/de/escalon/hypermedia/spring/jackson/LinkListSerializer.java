@@ -293,13 +293,13 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
         jgen.writeStringField("hydra:property", propertyName);
 
-        writePossiblePropertyValues(jgen, actionInputParameter, property, possiblePropertyValues);
+        writePossiblePropertyValues(jgen, currentVocab, actionInputParameter, property, possiblePropertyValues);
 
 
         jgen.writeEndObject();
     }
 
-    private void writePossiblePropertyValues(JsonGenerator jgen, ActionInputParameter actionInputParameter,
+    private void writePossiblePropertyValues(JsonGenerator jgen, String currentVocab, ActionInputParameter actionInputParameter,
                                              Property property, Object[] possiblePropertyValues) throws IOException {
         // Enable the following to list possible values.
         // Problem: how to express individuals only for certain hydra:options
@@ -317,7 +317,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 //        }
 
         if (actionInputParameter.isArrayOrCollection()) {
-            jgen.writeBooleanField("multipleValues", true);
+
+            jgen.writeBooleanField(getPropertyOrClassNameInVocab(currentVocab, "multipleValues",
+                    JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"), true);
         }
         //  valueRequired (hard to say, using @Access on Event is for all update requests - or make
         //     specific request beans for different
@@ -345,7 +347,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 // TODO support min, max for date, datetime, time: using long or String, using minProvider/maxProvider?
                 final Object constraint = inputConstraints.get(keyToAppendValue);
                 if (constraint != null) {
-                    jgen.writeFieldName(keyToAppendValue + "Value");
+
+                    jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, keyToAppendValue + "Value",
+                            JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
                     jgen.writeNumber(constraint
                             .toString());
                 }
@@ -357,7 +361,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             for (String keyToPrependValue : keysToPrependValue) {
                 final Object constraint = inputConstraints.get(keyToPrependValue);
                 if (constraint != null) {
-                    jgen.writeFieldName("value" + StringUtils.capitalize(keyToPrependValue));
+                    jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "value" + StringUtils.capitalize(keyToPrependValue),
+                            JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
                     jgen.writeNumber(constraint
                             .toString());
                 }

@@ -12,6 +12,7 @@ package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import de.escalon.hypermedia.action.Input;
 
 /**
  * Sample Review.
@@ -33,7 +34,7 @@ public class Review {
         return reviewBody;
     }
 
-    public void setReviewBody(String reviewBody) {
+    public void setReviewBody(@Input(pattern=".{10,}") String reviewBody) {
         this.reviewBody = reviewBody;
     }
 

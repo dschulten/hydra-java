@@ -44,6 +44,7 @@ public class ActionInputParameter {
     public static final String STEP = "step";
     public static final String MIN_LENGTH = "minLength";
     public static final String MAX_LENGTH = "maxLength";
+    public static final String PATTERN = "pattern";
     private final TypeDescriptor typeDescriptor;
     private final RequestBody requestBody;
     private final RequestParam requestParam;
@@ -78,6 +79,7 @@ public class ActionInputParameter {
             putInputConstraint(MIN_LENGTH, Integer.MIN_VALUE, inputAnnotation.minLength());
             putInputConstraint(MAX_LENGTH, Integer.MAX_VALUE, inputAnnotation.maxLength());
             putInputConstraint(STEP, 0, inputAnnotation.step());
+            putInputConstraint(PATTERN, "", inputAnnotation.pattern());
         }
 
         this.conversionService = conversionService;
@@ -94,8 +96,9 @@ public class ActionInputParameter {
         this(methodParameter, value, new DefaultFormattingConversionService());
     }
 
-    private void putInputConstraint(String key, int defaultValue, int value) {
-        if (value != defaultValue) {
+
+    private void putInputConstraint(String key, Object defaultValue, Object value) {
+        if (!value.equals(defaultValue)) {
             inputConstraints.put(key, value);
         }
     }

@@ -3,7 +3,7 @@
   <artifactId>hydra-sample</artifactId>
   <name>${project.groupId}:${project.artifactId}:${project.version}</name>
   <parent>
-    <artifactId>hydra-parent</artifactId>
+    <artifactId>hydra-java</artifactId>
     <groupId>de.escalon.hypermedia</groupId>
     <version>0.2.0-alpha3-SNAPSHOT</version>
   </parent>

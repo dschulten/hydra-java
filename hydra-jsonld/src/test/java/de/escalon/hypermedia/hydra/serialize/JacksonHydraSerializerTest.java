@@ -10,13 +10,11 @@
 
 package de.escalon.hypermedia.hydra.serialize;
 
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
@@ -30,10 +28,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;

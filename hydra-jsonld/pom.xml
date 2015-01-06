@@ -13,11 +13,11 @@
 
     <parent>
         <groupId>de.escalon.hypermedia</groupId>
-        <artifactId>hydra-parent</artifactId>
+        <artifactId>hydra-java</artifactId>
         <version>0.2.0-alpha3-SNAPSHOT</version>
     </parent>
 
-    <artifactId>hydra-core</artifactId>
+    <artifactId>hydra-jsonld</artifactId>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}:${project.version}</name>

@@ -12,7 +12,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="hydra-core" />
+    <orderEntry type="module" module-name="hydra-jsonld" />
     <orderEntry type="library" name="Maven: org.springframework.hateoas:spring-hateoas:0.16.0.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-aop:3.2.9.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: aopalliance:aopalliance:1.0" level="project" />

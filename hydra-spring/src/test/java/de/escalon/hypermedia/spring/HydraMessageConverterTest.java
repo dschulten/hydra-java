@@ -187,7 +187,14 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['minValue']").value(1))
-
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation']" +
+                        ".[0]" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
+                        ".['hydra:supportedProperty'][0].['maxValue']").value(5))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation']" +
+                        ".[0]" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
+                        ".['hydra:supportedProperty'][0].['stepValue']").value(1))
                 .andReturn();
         System.out.println(result.getResponse()
                 .getContentAsString());

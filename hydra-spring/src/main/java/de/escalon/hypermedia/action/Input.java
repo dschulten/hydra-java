@@ -45,6 +45,8 @@ public @interface Input {
 
     int maxLength() default Integer.MAX_VALUE;
 
+    String pattern() default "";
+
     int step() default 0;
 
 }
