@@ -29,6 +29,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.Property;
 import org.springframework.hateoas.IanaRels;
 import org.springframework.hateoas.Link;
+import org.springframework.util.Assert;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -54,7 +55,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
     @Override
     public void serialize(List<Link> links, JsonGenerator jgen,
-                          SerializerProvider provider) throws IOException {
+                          SerializerProvider serializerProvider) throws IOException {
 
         try {
             Collection<Link> simpleLinks = new ArrayList<Link>();
@@ -113,6 +114,10 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeEndObject();
             }
 
+            Deque<String> vocabStack = (Deque<String>) serializerProvider.getAttribute(JacksonHydraSerializer
+                    .KEY_LD_CONTEXT);
+            String currentVocab = vocabStack != null ? vocabStack.peek() : null;
+
             for (Affordance affordance : affordances) {
                 final String rel = affordance.getRel();
                 List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
@@ -149,14 +154,13 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                             typeName = requestBodyInputParameter.getNestedParameterType()
                                     .getSimpleName();
                         }
-                        // TODO see slides of Markus' talk, as mentioned in his response to "Event Api"
-//                                jgen.writeStringField("@id", typeName);
                         jgen.writeStringField("@type", "hydra:Class");
                         jgen.writeStringField("hydra:subClassOf", typeName);
 
                         jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
                         // TODO check need for actionDescriptor and requestBodyInputParameter here:
-                        recurseSupportedProperties(jgen, clazz, actionDescriptor, requestBodyInputParameter);
+                        recurseSupportedProperties(jgen, currentVocab, clazz, actionDescriptor,
+                                requestBodyInputParameter);
                         jgen.writeEndArray(); // end hydra:supportedProperty
 
                         jgen.writeEndObject(); // end hydra:expects
@@ -190,7 +194,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         }
     }
 
-    private void recurseSupportedProperties(JsonGenerator jgen, Class<?> beanType, ActionDescriptor actionDescriptor,
+    private void recurseSupportedProperties(JsonGenerator jgen, String currentVocab, Class<?>
+            beanType, ActionDescriptor actionDescriptor,
                                             ActionInputParameter actionInputParameter) throws IntrospectionException,
             IOException {
         // TODO support Option provider by other method args?
@@ -218,13 +223,14 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 final Object[] possiblePropertyValues =
                         actionInputParameter.getPossibleValues(property, actionDescriptor);
 
-                writeSupportedProperty(jgen, propertySetterInputParameter,
+                writeSupportedProperty(jgen, currentVocab, propertySetterInputParameter,
                         propertyName, property, possiblePropertyValues);
             } else {
                 jgen.writeStartObject();
                 jgen.writeStringField("hydra:property", propertyName);
-                // TODO: is the property required -> for bean props we need the Access annotation for that
-                jgen.writeObjectFieldStart("http://schema.org/rangeIncludes");
+                // TODO: is the property required -> for bean props we need the Access annotation to express that
+                jgen.writeObjectFieldStart(getPropertyOrClassNameInVocab(currentVocab, "rangeIncludes",
+                        JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
                 Expose expose = AnnotationUtils.getAnnotation(propertyType, Expose.class);
                 String subClassOf;
                 if (expose != null) {
@@ -235,7 +241,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeStringField("hydra:subClassOf", subClassOf);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty");
-                recurseSupportedProperties(jgen, propertyType, actionDescriptor, actionInputParameter);
+                recurseSupportedProperties(jgen, currentVocab, propertyType, actionDescriptor,
+                        actionInputParameter);
                 jgen.writeEndArray();
 
                 jgen.writeEndObject();
@@ -244,8 +251,32 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         }
     }
 
+    /**
+     * Gets property or class name in the current context, either without prefix if the current vocab is the given
+     * vocabulary, or prefixed otherwise.
+     *
+     * @param currentVocab        to determine the current vocab
+     * @param propertyOrClassName name to contextualize
+     * @param vocabulary          to which the given property belongs
+     * @param vocabularyPrefix    to use if the current vocab does not match the given vocabulary to which the name
+     *                            belongs
+     * @return
+     */
+    private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName,
+                                                 String vocabulary, String vocabularyPrefix) {
+        Assert.notNull(vocabulary);
+        String ret;
+        if (vocabulary.equals(currentVocab)) {
+            ret = propertyOrClassName;
+        } else {
+            ret = vocabularyPrefix + propertyOrClassName;
+        }
+        return ret;
+    }
 
-    private void writeSupportedProperty(JsonGenerator jgen, ActionInputParameter actionInputParameter,
+
+    private void writeSupportedProperty(JsonGenerator jgen, String currentVocab,
+                                        ActionInputParameter actionInputParameter,
                                         String propertyName, Property property,
                                         Object[] possiblePropertyValues) throws IOException {
 
@@ -256,7 +287,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
         // TODO detect schema.org in context and make sure we add it for PropertyValueSpec
         // TODO when recursing through bean for context creation
-        jgen.writeString("http://schema.org/PropertyValueSpecification");
+        jgen.writeString(getPropertyOrClassNameInVocab(currentVocab, "PropertyValueSpecification",
+                JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
         jgen.writeEndArray();
 
         jgen.writeStringField("hydra:property", propertyName);

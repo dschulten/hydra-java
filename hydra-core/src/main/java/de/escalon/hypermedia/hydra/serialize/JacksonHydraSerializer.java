@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 package de.escalon.hypermedia.hydra.serialize;
 
@@ -39,6 +42,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     public static final String AT_VOCAB = "@vocab";
     public static final String AT_TYPE = "@type";
     public static final String AT_ID = "@id";
+    public static final String HTTP_SCHEMA_ORG = "http://schema.org/";
 
     public JacksonHydraSerializer(BeanSerializerBase source) {
         super(source);
@@ -96,28 +100,28 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         }
         // TODO use serializerProvider.getAttributes to hold a stack of contexts
 
-        Deque<String> deque = (Deque<String>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
-        if (deque == null) {
-            deque = new ArrayDeque<String>();
-            serializerProvider.setAttribute(KEY_LD_CONTEXT, deque);
+        Deque<String> vocabStack = (Deque<String>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
+        if (vocabStack == null) {
+            vocabStack = new ArrayDeque<String>();
+            serializerProvider.setAttribute(KEY_LD_CONTEXT, vocabStack);
         }
 
-        serializeContext(bean, jgen, serializerProvider, deque);
+        serializeContext(bean, jgen, serializerProvider, vocabStack);
         serializeType(bean, jgen, serializerProvider);
         serializeFields(bean, jgen, serializerProvider);
         if (!isUnwrappingSerializer()) {
             jgen.writeEndObject();
         }
-        deque = (Deque<String>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
-        if (!deque.isEmpty()) {
-            deque.pop();
+        vocabStack = (Deque<String>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
+        if (!vocabStack.isEmpty()) {
+            vocabStack.pop();
         }
     }
 
     private void serializeType(Object bean, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         // adds @type attribute, reflecting the simple name of the class or the exposed annotation on the class.
         final Expose classExpose = getAnnotation(bean.getClass(), Expose.class);
-        // TODO allow to search up the hierarchy for ResourceSupport mixins and cache find result?
+        // TODO allow to search up the hierarchy for ResourceSupport mixins and cache found result?
         final Class<?> mixin = provider.getConfig()
                 .findMixInClassFor(bean.getClass());
         final Expose mixinExpose = getAnnotation(mixin, Expose.class);
@@ -135,7 +139,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     }
 
     private void serializeContext(Object bean, JsonGenerator jgen,
-                                  SerializerProvider serializerProvider, Deque<String> deque) throws IOException {
+                                  SerializerProvider serializerProvider, Deque<String> vocabStack) throws IOException {
         try {
             SerializationConfig config = serializerProvider.getConfig();
             final Class<?> mixInClass = config.findMixInClassFor(bean.getClass());
@@ -143,8 +147,8 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             String vocab = getVocab(bean, mixInClass);
             Map<String, Object> terms = getTerms(bean, mixInClass);
 
-            final String currentVocab = deque.peek();
-            deque.push(vocab);
+            final String currentVocab = vocabStack.peek();
+            vocabStack.push(vocab);
             // check if we need to write a context for the current bean at all
             // If it is in the same vocab: no context
             // If the terms are already defined in the context: no context
@@ -197,8 +201,15 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         }
     }
 
+    /**
+     * Gets vocab for given bean.
+     *
+     * @param bean       to inspect for vocab
+     * @param mixInClass for bean which might define a vocab
+     * @return explicitly defined vocab or http://schema.org
+     */
     private String getVocab(Object bean, Class<?> mixInClass) {
-        // write vocab in context
+        // determine vocab in context
         final Vocab packageVocab = getAnnotation(bean.getClass()
                 .getPackage(), Vocab.class);
         final Vocab classVocab = getAnnotation(bean.getClass(), Vocab.class);
@@ -213,13 +224,14 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         } else if (packageVocab != null) {
             vocab = packageVocab.value();
         } else {
-            vocab = "http://schema.org/";
+            vocab = HTTP_SCHEMA_ORG;
         }
         return vocab;
     }
 
     private Map<String, Object> getTerms(Object bean,
-                                         Class<?> mixInClass) throws IntrospectionException, IllegalAccessException, NoSuchFieldException, InvocationTargetException {
+                                         Class<?> mixInClass) throws IntrospectionException, IllegalAccessException,
+            NoSuchFieldException, InvocationTargetException {
         // define terms from package or type in context
         final Class<?> beanClass = bean.getClass();
         Map<String, Object> termsMap = getAnnotatedTerms(beanClass.getPackage(), beanClass.getPackage()

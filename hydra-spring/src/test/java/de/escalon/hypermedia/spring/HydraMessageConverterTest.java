@@ -182,10 +182,10 @@ public class HydraMessageConverterTest {
                         ".['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['hydra:property']").value("reviewRating"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['http://schema.org/rangeIncludes']" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['hydra:property']").value("ratingValue"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['http://schema.org/rangeIncludes']" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['minValue']").value(1))
 
                 .andReturn();
