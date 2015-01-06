@@ -7,6 +7,8 @@ Status: Testing
 
 Latest release: 0.2.0-alpha1
 
+You may try the http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work.
+
 == Problem
 
 The meaning of json attributes in api responses, their possible values etc. is usually not obvious without referring to some 
@@ -402,6 +404,9 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
 
 ----
 
+If an expected property on a request object holds a nested json object in turn, hydra-java will render it following a proposal from https://github.com/HydraCG/Specifications/issues/26[Hydra-CG Issue 26] using http://schema.org/rangeIncludes[schema:rangeIncludes]. The fact that this issue is not resolved yet is the main reason why hydra-java 0.2.0 is an alpha release. So be especially wary that changes are likely for the way hydra-java prescribes nested properties.
+
+
 == Maven Support
 The latest Maven releases of hydra-java are in Maven central. These are the maven coordinates for hydra-spring.
 
@@ -410,7 +415,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0-alpha1</version>
 </dependency>
 ----
 
