@@ -388,7 +388,9 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
                             "hydra:subClassOf": "Rating",
                             "hydra:supportedProperty": [
                             {
-                                "@type": ["hydra:SupportedProperty", "PropertyValueSpecification"],
+                                "@type": [
+                                    "hydra:SupportedProperty",
+                                    "PropertyValueSpecification"],
                                 "hydra:property": "ratingValue",
                                 "maxValue": 5,
                                 "minValue": 1,
