@@ -5,7 +5,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing
 
-Latest release: 0.1.0
+Latest release: 0.2.0-alpha1
 
 == Problem
 
@@ -108,19 +108,24 @@ The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/
 The conversion of a spring-hateoas Resource does the following:
 
 - renders a spring-hateoas `List<Link>` in a `Resource<T>` in json-ld style
-- renders spring-hateoas `Resources<T>` as `hydra:Collection`
-- renders response with `"@vocab" : "http://schema.org/"` by default, a different `@vocab` can be defined on a class or package using `@Vocab`.
+- renders spring-hateoas `Resources<T>` as `hydra:Collection`. If you use this feature, make sure you have a `@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")` annotation in your context.
+- renders response with `"@vocab" : "http://schema.org/"` by default, a different `@vocab` can be defined on a class or package using the `@Vocab` annotation.
 - supports vocabularies in addition to the default vocabulary via terms in the `@context`. Use `@Term` in conjunction with `@Terms` on a class or package for this.
 - renders `@type` based on the Java class name by default, a vocabulary class can be produced instead using `@Expose` on the Java class.
 - renders attributes assuming that the attribute name is a property in the default vocab defined by `@vocab`. In other words, it renders an `offers` member as `"offers"` on a json-ld object with a context defining `"@vocab" : "http://schema.org"`, so that you end up with `"http://schema.org/offers"` as linked data name for your `offers` member. To map a custom attribute name such as `foo` to an existing property in the default vocab or other vocabs use `@Expose` on the attribute and a term will be created in `@context` which maps your attribute to the vocab property you set as value of  `@Expose`.
 - renders Java enums assuming that an enum value name is an enumerated value defined by the default vocab. In json-ld it is not only possible to have attribute names, but also attribute *values* that have linked data names. The idiom to express that is `"@type" : "@vocab"`. An example of this is http://schema.org/OnSitePickup[OnSitePickup], which is an enum value for the property http://schema.org/availableDeliveryMethod[availableDeliveryMethod]. If your Java enum value is ON_SITE_PICKUP, it matches the vocab value of OnSitePickup. It will be rendered as ON_SITE_PICKUP and hydra-java will add the necessary definition to the context which makes it clear that ON_SITE_PICKUP is actually `http://schema.org/OnSitePickup`. If your Java enum value has a different name than the vocab value, use `@Expose` on the enum value to get a correct representation in the context. Note that you can also expose an enum value from a different vocabulary such as GoodRelations, see below.
 
-As of version 0.2.0 hydra-java will support hydra:operation and hydra:IriTemplate. To make this possible, you *must* use the linkTo and methodOn methods of AffordanceBuilder as a drop-in replacement for ControllerLinkBuilder. Templated links created by ControllerLinkBuilder will at least be rendered as IriTemplates, but only with limited information about the template variables.
+As of version 0.2.0 hydra-java supports hydra:operation and hydra:IriTemplate. To make this possible, you *must* use the `linkTo` and `methodOn` methods of AffordanceBuilder as a drop-in replacement for `ControllerLinkBuilder`. Templated links created by ControllerLinkBuilder will at least be rendered as IriTemplates, but only with limited information about the template variables.
 
-- renders a templated link as `hydra:IriTemplate`. Method parameters can be annotated with `@Expose` to assign them a property URI, otherwise the variable name will be shown as a term in the current vocab. If you create a link with AffordanceBuilder's linkTo-method facilities and you pass `null` for arguments annotated with `@PathVariable` or `@RequestParam`, it will automatically become a templated link with variables for the `null` arguments.
-- renders a link to method handlers for any *combination* of GET, POST, PUT, PATCH and DELETE as `hydra:operation`. In order to express that multiple HTTP methods can be invoked on the same resource, use the `and()` method of AffordanceBuilder. See below for an example.
-- renders a single, manually created, non-templated Link or Affordance in json-ld style.
-- renders a POJO method parameter annotated with `@RequestBody` as expected class. Use `@Expose` on the POJO class for a custom identifier. The setter methods on the bean appear as `hydra:supportedProperty`, and you can annotate them with `@Expose` to give them a semantic identifier. Again see below for an example.
+Furthermore, if you use these hydra features, make sure you have a `@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")` annotation in your context.
+
+* renders a templated link as `hydra:IriTemplate`. Method parameters can be annotated with `@Expose` to assign them a property URI, otherwise the variable name will be shown as a term in the current vocab. If you create a link with AffordanceBuilder's linkTo-method facilities and you pass `null` for arguments annotated with `@PathVariable` or `@RequestParam`, it will automatically become a templated link with variables for the `null` arguments.
+* renders a link to method handlers for any *combination* of GET, POST, PUT, PATCH and DELETE as `hydra:operation`. In order to express that multiple HTTP methods can be invoked on the same resource, use the `and()` method of AffordanceBuilder. See below for an example.
+* renders a single, manually created, non-templated Link or Affordance in json-ld style.
+* renders a POJO method parameter annotated with `@RequestBody` as expected hydra:subClassOf. Use `@Expose` on the POJO class for a custom identifier. The setter methods on the bean appear as `hydra:supportedProperty`, and you can annotate them with `@Expose` to give them a semantic identifier. Again see below for an example.
+* uses certain schema.org facilities to describe expected request bodies. For this we need schema.org either as `@vocab` or as a `schema:` term. If you do not use schema.org as `@vocab`, make sure you have a `@Term(define = "schema", as = "http://schema.org/")` in the context.
+** expresses value constraints by means of http://schema.org/PropertyValueSpecification. To specify such constraints, use the @Input annotation.
+** expresses supported properties whose value is an object by nesting them via http://schema.org/rangeIncludes.
 
 == Examples
 
@@ -339,41 +344,61 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
 
 [source, Javascript]
 ----
+{
+    "@context":
     {
-        "@type": "Event",
-        "@id": "http://localhost/events/1",
-        "performer": "Walk off the Earth",
-        "location": "Wiesbaden",
-        "workPerformed":
+        "@vocab": "http://schema.org/",
+        "hydra": "http://www.w3.org/ns/hydra/core#",
+        "eventStatus":
         {
-            "@type": "CreativeWork",
-            "name": "Gang of Rhythm Tour",
-            "review":
+            "@type": "@vocab"
+        },
+        "EVENT_SCHEDULED": "EventScheduled"
+    },
+    "@type": "Event",
+    "performer": "Walk off the Earth",
+    "location": "Wiesbaden",
+    "eventStatus": "EVENT_SCHEDULED",
+    "workPerformed":
+    {
+        "@type": "CreativeWork",
+        "name": "Gang of Rhythm Tour",
+        "review":
+        {
+            "@id": "http://localhost:8210/webapp/hypermedia-api/reviews/events/1",
+            "hydra:operation": [
             {
-                "@id": "http://localhost/reviews/events/1",
-                "hydra:operation": [
+                "@type": "ReviewAction",
+                "hydra:method": "POST",
+                "hydra:expects":
                 {
-                    "hydra:method": "POST",
-                    "hydra:expects":
+                    "@type": "hydra:Class",
+                    "hydra:subClassOf": "Review",
+                    "hydra:supportedProperty": [
                     {
-                        "@type": "hydra:Class",
-                        "hydra:subClassOf": "Review",
-                        "hydra:supportedProperty": [
+                        "@type": ["hydra:SupportedProperty", "PropertyValueSpecification"],
+                        "hydra:property": "reviewBody"
+                    },
+                    {
+                        "hydra:property": "reviewRating",
+                        "rangeIncludes":
                         {
-                            "@type": [
-                                "hydra:SupportedProperty",
-                                "http://schema.org/PropertyValueSpecification"
-                            ],
-                            "hydra:property": "ratingValue",
-                            "maxValue": 5,
-                            "minValue": 1,
-                            "stepValue": 1
-                        }]
-                    }
-                }]
-            }
+                            "hydra:subClassOf": "Rating",
+                            "hydra:supportedProperty": [
+                            {
+                                "@type": ["hydra:SupportedProperty", "PropertyValueSpecification"],
+                                "hydra:property": "ratingValue",
+                                "maxValue": 5,
+                                "minValue": 1,
+                                "stepValue": 1
+                            }]
+                        }
+                    }]
+                }
+            }]
         }
     }
+}
 
 ----
 
