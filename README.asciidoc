@@ -7,7 +7,7 @@ Status: Testing
 
 Latest release: 0.2.0-alpha1
 
-You may try the http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work.
+You may try the http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. When you POST or PUT, make sure you add a suitable Content-Type header.
 
 == Problem
 
