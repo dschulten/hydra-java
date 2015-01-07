@@ -5,7 +5,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing
 
-Latest release: 0.2.0-alpha1
+Latest release: 0.2.0-alpha2
 
 You may try the http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. When you POST or PUT, make sure you add a suitable Content-Type header.
 
