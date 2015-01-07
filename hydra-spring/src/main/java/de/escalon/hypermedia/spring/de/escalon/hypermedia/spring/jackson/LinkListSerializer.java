@@ -160,7 +160,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                         jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
                         // TODO check need for actionDescriptor and requestBodyInputParameter here:
                         recurseSupportedProperties(jgen, currentVocab, clazz, actionDescriptor,
-                                requestBodyInputParameter);
+                                requestBodyInputParameter, requestBodyInputParameter.getCallValue());
                         jgen.writeEndArray(); // end hydra:supportedProperty
 
                         jgen.writeEndObject(); // end hydra:expects
@@ -196,7 +196,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
     private void recurseSupportedProperties(JsonGenerator jgen, String currentVocab, Class<?>
             beanType, ActionDescriptor actionDescriptor,
-                                            ActionInputParameter actionInputParameter) throws IntrospectionException,
+                                            ActionInputParameter actionInputParameter, Object currentCallValue) throws IntrospectionException,
             IOException {
         // TODO support Option provider by other method args?
         final BeanInfo beanInfo = Introspector.getBeanInfo(beanType);
@@ -218,8 +218,10 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                         propertyDescriptor.getWriteMethod(),
                         propertyDescriptor.getName());
 
+                Object propertyValue = getPropertyValue(currentCallValue, propertyDescriptor);
+
                 ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
-                        new MethodParameter(propertyDescriptor.getWriteMethod(), 0), null);
+                        new MethodParameter(propertyDescriptor.getWriteMethod(), 0), propertyValue);
                 final Object[] possiblePropertyValues =
                         actionInputParameter.getPossibleValues(property, actionDescriptor);
 
@@ -241,14 +243,29 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeStringField("hydra:subClassOf", subClassOf);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty");
+
+                Object propertyValue = getPropertyValue(currentCallValue, propertyDescriptor);
+
                 recurseSupportedProperties(jgen, currentVocab, propertyType, actionDescriptor,
-                        actionInputParameter);
+                        actionInputParameter, propertyValue);
                 jgen.writeEndArray();
 
                 jgen.writeEndObject();
                 jgen.writeEndObject();
             }
         }
+    }
+
+    private Object getPropertyValue(Object currentCallValue, PropertyDescriptor propertyDescriptor) {
+        Object propertyValue = null;
+        if (currentCallValue != null && propertyDescriptor.getReadMethod() != null) {
+            try {
+                propertyValue = propertyDescriptor.getReadMethod().invoke(currentCallValue);
+            } catch (Exception e) {
+                throw new RuntimeException("failed to read property from call value", e);
+            }
+        }
+        return propertyValue;
     }
 
     /**
@@ -293,14 +310,14 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
         jgen.writeStringField("hydra:property", propertyName);
 
-        writePossiblePropertyValues(jgen, currentVocab, actionInputParameter, property, possiblePropertyValues);
+        writePossiblePropertyValues(jgen, currentVocab, actionInputParameter, possiblePropertyValues);
 
 
         jgen.writeEndObject();
     }
 
-    private void writePossiblePropertyValues(JsonGenerator jgen, String currentVocab, ActionInputParameter actionInputParameter,
-                                             Property property, Object[] possiblePropertyValues) throws IOException {
+    private void writePossiblePropertyValues(JsonGenerator jgen, String currentVocab, ActionInputParameter
+            actionInputParameter, Object[] possiblePropertyValues) throws IOException {
         // Enable the following to list possible values.
         // Problem: how to express individuals only for certain hydra:options
         // not all hydra:options should be taken as uris, sometimes they might be just literals
@@ -311,16 +328,17 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 //
 //            for (Object possibleValue : possiblePropertyValues) {
 //                // TODO: apply "hydra:option" : { "@type": "@vocab"} to context for enums
-//                writePossibleValue(jgen, possibleValue, property.getType());
+//                writeScalarValue(jgen, possibleValue, actionInputParameter.getParameterType());
 //            }
 //            jgen.writeEndArray();
 //        }
 
         if (actionInputParameter.isArrayOrCollection()) {
-
             jgen.writeBooleanField(getPropertyOrClassNameInVocab(currentVocab, "multipleValues",
                     JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"), true);
         }
+
+
         //  valueRequired (hard to say, using @Access on Event is for all update requests - or make
         //     specific request beans for different
         //     purposes rather than always passing an instance of e.g. Event?)
@@ -340,6 +358,29 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         //  (/) stepValue
         final Map<String, Object> inputConstraints = actionInputParameter.getInputConstraints();
 
+        if (actionInputParameter.hasCallValue()) {
+            if (actionInputParameter.isArrayOrCollection()) {
+                Object[] callValues = actionInputParameter.getCallValues();
+                Class<?> componentType = callValues.getClass().getComponentType();
+                // only write defaultValue for array of scalars
+                if (DataType.isScalar(componentType)) {
+                    jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "defaultValue",
+                            JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
+                    jgen.writeStartArray();
+                    for (Object callValue : callValues) {
+                        writeScalarValue(jgen, callValue, componentType);
+                    }
+                    jgen.writeEndArray();
+                }
+            } else {
+                jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "defaultValue",
+                        JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
+
+                writeScalarValue(jgen, actionInputParameter.getCallValueFormatted(), actionInputParameter
+                        .getNestedParameterType());
+            }
+        }
+
         if (!inputConstraints.isEmpty()) {
             final List<String> keysToAppendValue = Arrays.asList(ActionInputParameter.MAX, ActionInputParameter.MIN,
                     ActionInputParameter.STEP);
@@ -347,7 +388,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 // TODO support min, max for date, datetime, time: using long or String, using minProvider/maxProvider?
                 final Object constraint = inputConstraints.get(keyToAppendValue);
                 if (constraint != null) {
-
                     jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, keyToAppendValue + "Value",
                             JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
                     jgen.writeNumber(constraint
@@ -357,23 +397,30 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
 
             final List<String> keysToPrependValue = Arrays.asList(ActionInputParameter.MAX_LENGTH,
-                    ActionInputParameter.MIN_LENGTH);
+                    ActionInputParameter.MIN_LENGTH, ActionInputParameter.PATTERN);
             for (String keyToPrependValue : keysToPrependValue) {
                 final Object constraint = inputConstraints.get(keyToPrependValue);
                 if (constraint != null) {
-                    jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "value" + StringUtils.capitalize(keyToPrependValue),
+                    jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "value" + StringUtils.capitalize
+                                    (keyToPrependValue),
                             JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
-                    jgen.writeNumber(constraint
-                            .toString());
+                    if (ActionInputParameter.PATTERN.equals(keyToPrependValue)) {
+                        jgen.writeString(constraint.toString());
+                    } else {
+                        jgen.writeNumber(constraint
+                                .toString());
+                    }
                 }
             }
+
+
         }
 
 
     }
 
-    private void writePossibleValue(JsonGenerator jgen, Object possibleValue,
-                                    Class<?> valueType) throws IOException {
+    private void writeScalarValue(JsonGenerator jgen, Object possibleValue,
+                                  Class<?> valueType) throws IOException {
         if (Number.class.isAssignableFrom(valueType)) {
             jgen.writeNumber(possibleValue.toString());
         } else if (Boolean.class.isAssignableFrom(valueType)) {

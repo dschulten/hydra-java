@@ -58,7 +58,7 @@ public class EventController {
                     .withSelfRel());
             event.getWorkPerformed()
                     .add(linkTo(methodOn(ReviewController.class)
-                            .addReview(event.id, new Review(null, new Rating(null))))
+                            .addReview(event.id, new Review(null, new Rating(3))))
                             .withRel("review"));
             eventResourcesList.add(eventResource);
         }

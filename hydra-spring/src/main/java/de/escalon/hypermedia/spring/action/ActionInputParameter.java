@@ -326,11 +326,15 @@ public class ActionInputParameter {
         return callValues;
     }
 
+    public boolean hasCallValue() {
+        return value != null;
+    }
+
     public String getParameterName() {
         return methodParameter.getParameterName();
     }
 
-    Class<?> getParameterType() {
+    public Class<?> getParameterType() {
         return methodParameter.getParameterType();
     }
 

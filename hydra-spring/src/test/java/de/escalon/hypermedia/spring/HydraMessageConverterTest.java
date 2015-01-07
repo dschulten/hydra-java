@@ -178,6 +178,10 @@ public class HydraMessageConverterTest {
                         ".['hydra:method']").value("POST"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[0].['hydra:property']").value("reviewBody"))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation']" +
+                        ".[0]" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[0].['valuePattern']")
+                        .value(".{10,}"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review" +
                         ".['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['hydra:property']").value("reviewRating"))
@@ -195,6 +199,10 @@ public class HydraMessageConverterTest {
                         ".[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['stepValue']").value(1))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation']" +
+                        ".[0]" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
+                        ".['hydra:supportedProperty'][0].['defaultValue']").value(3))
                 .andReturn();
         System.out.println(result.getResponse()
                 .getContentAsString());

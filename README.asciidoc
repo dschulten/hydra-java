@@ -126,7 +126,7 @@ Furthermore, if you use these hydra features, make sure you have a `@Term(define
 * renders a single, manually created, non-templated Link or Affordance in json-ld style.
 * renders a POJO method parameter annotated with `@RequestBody` as expected hydra:subClassOf. Use `@Expose` on the POJO class for a custom identifier. The setter methods on the bean appear as `hydra:supportedProperty`, and you can annotate them with `@Expose` to give them a semantic identifier. Again see below for an example.
 * uses certain schema.org facilities to describe expected request bodies. For this we need schema.org either as `@vocab` or as a `schema:` term. If you do not use schema.org as `@vocab`, make sure you have a `@Term(define = "schema", as = "http://schema.org/")` in the context.
-** expresses value constraints by means of http://schema.org/PropertyValueSpecification. To specify such constraints, use the @Input annotation. Available constraints are min, max, step, minLength and maxLength.
+** expresses default value and value constraints by means of http://schema.org/PropertyValueSpecification. To specify such constraints, use the @Input annotation. Available constraints are min, max, step, minLength,  maxLength and pattern.
 ** expresses supported properties whose value is an object by nesting them via http://schema.org/rangeIncludes.
 
 == Examples

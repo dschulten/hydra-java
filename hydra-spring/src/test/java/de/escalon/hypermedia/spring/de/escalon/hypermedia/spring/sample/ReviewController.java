@@ -32,8 +32,8 @@ import java.util.List;
 public class ReviewController {
 
     @SuppressWarnings("unchecked")
-    List<List<Review>> reviews = Arrays.asList(Arrays.asList(new Review("Five peeps, one guitar", new Rating("5"))),
-            Arrays.asList(new Review("Great actress, special atmosphere", new Rating("5"))));
+    List<List<Review>> reviews = Arrays.asList(Arrays.asList(new Review("Five peeps, one guitar", new Rating(5))),
+            Arrays.asList(new Review("Great actress, special atmosphere", new Rating(5))));
 
     @RequestMapping(value = "/events/{eventId}", method = RequestMethod.GET)
     @ResponseBody
