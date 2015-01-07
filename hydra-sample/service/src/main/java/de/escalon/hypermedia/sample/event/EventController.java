@@ -60,7 +60,7 @@ public class EventController {
                         .deleteEvent(event.id)))
                 .withSelfRel());
         event.workPerformed.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(ReviewController.class)
-                .addReview(event.id, new Review(null, new Rating(null))))
+                .addReview(event.id, new Review(null, new Rating(3))))
                 .withRel("review"));
     }
 

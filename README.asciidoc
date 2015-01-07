@@ -292,7 +292,7 @@ Now let us tell the client a range of possible values for a property. We want to
 
       event.getWorkPerformed() //  <-- must be a Resource<CreativeWork>
           .add(linkTo(methodOn(ReviewController.class) // <-- must use AffordanceBuilder.linkTo here
-              .addReview(event.id, new Review(null, new Rating(null))))
+              .addReview(event.id, new Review(null, new Rating(3)))) // <-- defaultValue for ratingValue
               .withRel("review"));
       ...
   }
@@ -308,7 +308,7 @@ Now let us tell the client a range of possible values for a property. We want to
   }
 ----
 
-We expect that clients post a Review with a review body and a rating. The rating value has input constraints, so we annotate the method `setRatingValue` with `@Input(min = 1, max = 5, step = 1)`, as shown below.
+We expect that clients post a Review with a review body and a rating. The review body and the rating value have input constraints, so we annotate the method `setReviewBody` with `@Input(pattern=".{10,}")` and `setRatingValue` with `@Input(min = 1, max = 5, step = 1)`, as shown below.
 
 [source, Java]
 ----
@@ -331,7 +331,7 @@ We expect that clients post a Review with a review body and a rating. The rating
       private String reviewBody;
       private Rating reviewRating;
 
-      public Review(String reviewBody, Rating reviewRating) {
+      public Review(@Input(pattern=".{10,}") String reviewBody, Rating reviewRating) {
           this.reviewBody = reviewBody;
       }
 
@@ -379,7 +379,8 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
                     "hydra:supportedProperty": [
                     {
                         "@type": ["hydra:SupportedProperty", "PropertyValueSpecification"],
-                        "hydra:property": "reviewBody"
+                        "hydra:property": "reviewBody",
+                        "valuePattern": ".{10,}"
                     },
                     {
                         "hydra:property": "reviewRating",
@@ -392,6 +393,7 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
                                     "hydra:SupportedProperty",
                                     "PropertyValueSpecification"],
                                 "hydra:property": "ratingValue",
+                                "defaultValue": 3,
                                 "maxValue": 5,
                                 "minValue": 1,
                                 "stepValue": 1
