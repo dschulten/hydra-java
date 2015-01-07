@@ -22,14 +22,14 @@ public class EventBackend {
         count++;
         eventModels.put(count, new EventModel(count, "Walk off the Earth", new CreativeWork("Gang of Rhythm Tour"),
                 "Wiesbaden", EventStatusType.EVENT_SCHEDULED));
-        reviews.put(count, new ArrayList<Review>(Arrays.asList(new Review("Five peeps, one guitar", new Rating("5")))));
+        reviews.put(count, new ArrayList<Review>(Arrays.asList(new Review("Five peeps, one guitar", new Rating(5)))));
 
 
         count++;
         eventModels.put(count, new EventModel(count, "Cornelia Bielefeldt", new CreativeWork("Mein letzter Film"),
                 "Heilbronn", EventStatusType.EVENT_SCHEDULED));
         reviews.put(count, new ArrayList<Review>(Arrays.asList(new Review("Great actress, special atmosphere", new
-                Rating("5")))));
+                Rating(5)))));
     }
 
     public Collection<EventModel> getEvents() {
