@@ -398,7 +398,7 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
                     "rdfs:subClassOf": "Review",
                     "hydra:supportedProperty": [
                     {
-                        "@type": ["hydra:SupportedProperty", "PropertyValueSpecification"],
+                        "@type": "PropertyValueSpecification",
                         "hydra:property": "reviewBody",
                         "valuePattern": ".{10,}"
                     },
@@ -409,9 +409,7 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
                             "rdfs:subClassOf": "Rating",
                             "hydra:supportedProperty": [
                             {
-                                "@type": [
-                                    "hydra:SupportedProperty",
-                                    "PropertyValueSpecification"],
+                                "@type": "PropertyValueSpecification",
                                 "hydra:property": "ratingValue",
                                 "defaultValue": 3,
                                 "maxValue": 5,
