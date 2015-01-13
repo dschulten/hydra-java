@@ -178,12 +178,12 @@ The json-ld output written by hydra-java makes the GoodRelations url known under
 An affordance is a rich hyperlink. That means, it not only contains a URI or a URITemplate, but also information about the usage of the URI. The word is a neologism introduced by http://amundsen.com/blog/archives/1109[Mike Amundsen].
 A hydra-java `Affordance` can be used to render media-types which support this kind of information: first and foremost hydra, but it is quite easy to add message converters for other media types once the basic information is available.
 
-Version 0.2.0 provides an `AffordanceBuilder` class which is a drop-in replacement for the spring-hateoas `ControllerLinkBuilder`. It is used to build `Affordance` instances which inherit from the spring-hateoas `Link` but add the following traits to it:
+Version 0.2.0 provides an `AffordanceBuilder` class which is a drop-in replacement for the spring-hateoas `ControllerLinkBuilder`. It is used to build `Affordance` instances which inherit from the spring-hateoas `Link` but adds the following traits to it:
 
 * Full support for all attributes of a http Link header as described by the https://tools.ietf.org/html/rfc5988[web linking rfc 5988]
 * Support for templated link headers as described by the http://tools.ietf.org/html/draft-nottingham-link-template-01[Link-Template Header Internet draft]
 * Improved creation of link templates. You can use the `linkTo-methodOn` technique to create templated links to handler methods. By simply leaving a parameter undefined (`null`) in a `methodOn` sample call, a template variable will be applied to your link.
-* Facility to chain several method invocations on the same resource. If the same link is used to PUT and DELETE a resource, use AffordanceBuilder.and() to add both method handlers to the affordance.
+* Facility to chain several method invocations on the same resource. If the same link is used to PUT and DELETE a resource, use `AffordanceBuilder.and()` to add both method handlers to the affordance.
 * Has action descriptors with information about http methods and expected request data. Based on reflection and a minimal set of annotations it is possible to render forms-like affordances with quite precise information about expected input.
 
 In the following we use `AffordanceBuilder` to add a `self` rel that can be used with GET, PUT and DELETE to an event bean.
