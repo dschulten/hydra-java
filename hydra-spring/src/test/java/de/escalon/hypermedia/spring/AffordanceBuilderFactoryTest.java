@@ -10,7 +10,7 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.EventController;
+import de.escalon.hypermedia.spring.sample.EventController;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;

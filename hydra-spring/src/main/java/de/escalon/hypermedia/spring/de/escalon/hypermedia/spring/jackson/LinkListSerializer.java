@@ -155,7 +155,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                                     .getSimpleName();
                         }
                         jgen.writeStringField("@type", "hydra:Class");
-                        jgen.writeStringField("hydra:subClassOf", typeName);
+
+                        jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab, "subClassOf", "http://www.w3.org/2000/01/rdf-schema#", "rdfs:"), typeName);
 
                         jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
                         // TODO check need for actionDescriptor and requestBodyInputParameter here:
@@ -299,15 +300,15 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
         jgen.writeStartObject();
 
-        jgen.writeArrayFieldStart("@type");
-        jgen.writeString("hydra:SupportedProperty");
+        if (actionInputParameter.hasCallValue() || actionInputParameter.hasInputConstraints()) {
+            // jgen.writeArrayFieldStart("@type");
+            // jgen.writeString("hydra:SupportedProperty");
 
-        // TODO detect schema.org in context and make sure we add it for PropertyValueSpec
-        // TODO when recursing through bean for context creation
-        jgen.writeString(getPropertyOrClassNameInVocab(currentVocab, "PropertyValueSpecification",
-                JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
-        jgen.writeEndArray();
+            jgen.writeStringField(JacksonHydraSerializer.AT_TYPE, getPropertyOrClassNameInVocab(currentVocab,
+                    "PropertyValueSpecification", JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
 
+            //jgen.writeEndArray();
+        }
         jgen.writeStringField("hydra:property", propertyName);
 
         writePossiblePropertyValues(jgen, currentVocab, actionInputParameter, possiblePropertyValues);
@@ -343,12 +344,12 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         //     specific request beans for different
         //     purposes rather than always passing an instance of e.g. Event?)
         //       -> update is a different use case than create - or maybe have an @Requires("eventStatus")
-        //          annotation alongside requestBody to tell which attributes are required, and use Requires over
+        //          annotation alongside requestBody to tell which attributes are required or writable, and use Requires over
         //          bean structure, where ctor with least length of args is required and setters are supported
-        //          but optional?
-        //  defaultValue (pre-filled value, e.g. list of selected items for option)
+        //          but optional? The bean structure does say what is writable for updates, but not what is required for creation. Right now setters are supportedProperties. For creation we would have to add constructor arguments as supportedProperties.
+        //  (/) defaultValue (pre-filled value, e.g. list of selected items for option)
         //  valueName (for iri templates only)
-        //  readonlyValue (true for final public field or absence of setter, send fixed value like hidden field?)
+        //  (/) readonlyValue (true for final public field or absence of setter, send fixed value like hidden field?) -> use hydra:readable, hydra:writable
         //  (/) multipleValues
         //  (/) valueMinLength
         //  (/) valueMaxLength
@@ -385,7 +386,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             final List<String> keysToAppendValue = Arrays.asList(ActionInputParameter.MAX, ActionInputParameter.MIN,
                     ActionInputParameter.STEP);
             for (String keyToAppendValue : keysToAppendValue) {
-                // TODO support min, max for date, datetime, time: using long or String, using minProvider/maxProvider?
                 final Object constraint = inputConstraints.get(keyToAppendValue);
                 if (constraint != null) {
                     jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, keyToAppendValue + "Value",

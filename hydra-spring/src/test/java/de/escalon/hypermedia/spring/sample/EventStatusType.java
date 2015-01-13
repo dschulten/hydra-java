@@ -8,20 +8,11 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample;
+package de.escalon.hypermedia.spring.sample;
 
 /**
- * Created by dschulten on 08.12.2014.
+ * Created by dschulten on 03.10.2014.
  */
-public class Person {
-
-    private String name;
-
-    public Person(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
+public enum EventStatusType {
+    EVENT_CANCELLED, EVENT_POSTPONED, EVENT_SCHEDULED, EVENT_RESCHEDULED
 }

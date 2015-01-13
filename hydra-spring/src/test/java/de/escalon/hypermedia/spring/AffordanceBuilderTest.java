@@ -12,7 +12,7 @@ package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.spring.action.ActionDescriptor;
 import de.escalon.hypermedia.spring.action.ActionInputParameter;
-import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.EventStatusType;
+import de.escalon.hypermedia.spring.sample.EventStatusType;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;

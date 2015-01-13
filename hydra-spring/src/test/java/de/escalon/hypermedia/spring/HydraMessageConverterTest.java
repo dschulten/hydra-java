@@ -13,8 +13,8 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.EventController;
-import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.sample.ReviewController;
+import de.escalon.hypermedia.spring.sample.EventController;
+import de.escalon.hypermedia.spring.sample.ReviewController;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -268,13 +268,13 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:method']")
                         .value("PUT"))
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:expects']" +
-                        ".['hydra:subClassOf']")
+                        ".['rdfs:subClassOf']")
                         .value("Event"))
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[2]['hydra:method']")
                         .value("DELETE"))
 
 //                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].['hydra:expects']
-// .['hydra:supportedProperty'][0].@type")
+//.['hydra:supportedProperty'][0].@type")
 //                        .value(Matchers.containsInAnyOrder("hydra:SupportedProperty", "PropertyValueSpecification")))
 
                 .andReturn();

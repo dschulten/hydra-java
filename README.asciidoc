@@ -3,11 +3,13 @@
 
 Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[json-ld] with http://www.hydra-cg.com/spec/latest/core/[hydra].
 
-Status: Testing
+Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
-Latest release: 0.2.0-alpha2
+Latest release: 0.2.0-alpha3
 
-You may try the http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. When you POST or PUT, make sure you add a suitable Content-Type header.
+:toc:
+
+You may try the http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. Sending `Accept: application/ld+json` will get you hydra, but `application/json` or `application/hal+json` work as well. I plan to add other mime-types in the future. When you POST or PUT, make sure you add a Content-Type header matching your request.
 
 == Problem
 
@@ -171,10 +173,21 @@ The json-ld output written by hydra-java makes the GoodRelations url known under
 }
 ----
 
-=== Describing Possible Interactions (from V. 0.2.0)
+=== AffordanceBuilder for rich hyperlinks (from V. 0.2.0)
 
-In the following we add a `self` rel that can be used with GET, PUT and DELETE to an event bean.
-First we wrap the event into a `Resource`, then we use `add` `linkTo` `methodOn` three times to describe that the self rel can be used to get, update and delete the event.
+An affordance is a rich hyperlink. That means, it not only contains a URI or a URITemplate, but also information about the usage of the URI. The word is a neologism introduced by http://amundsen.com/blog/archives/1109[Mike Amundsen].
+A hydra-java `Affordance` can be used to render media-types which support this kind of information: first and foremost hydra, but it is quite easy to add message converters for other media types once the basic information is available.
+
+Version 0.2.0 provides an `AffordanceBuilder` class which is a drop-in replacement for the spring-hateoas `ControllerLinkBuilder`. It is used to build `Affordance` instances which inherit from the spring-hateoas `Link` but add the following traits to it:
+
+* Full support for all attributes of a http Link header as described by the https://tools.ietf.org/html/rfc5988[web linking rfc 5988]
+* Support for templated link headers as described by the http://tools.ietf.org/html/draft-nottingham-link-template-01[Link-Template Header Internet draft]
+* Improved creation of link templates. You can use the `linkTo-methodOn` technique to create templated links to handler methods. By simply leaving a parameter undefined (`null`) in a `methodOn` sample call, a template variable will be applied to your link.
+* Facility to chain several method invocations on the same resource. If the same link is used to PUT and DELETE a resource, use AffordanceBuilder.and() to add both method handlers to the affordance.
+* Has action descriptors with information about http methods and expected request data. Based on reflection and a minimal set of annotations it is possible to render forms-like affordances with quite precise information about expected input.
+
+In the following we use `AffordanceBuilder` to add a `self` rel that can be used with GET, PUT and DELETE to an event bean.
+First we wrap the event into a `Resource` so we can add affordances to it. Then we use the `linkTo-methodOn` technique three times to describe that the self rel can be used to get, update and delete the event.
 
 [source, Java]
 ----
@@ -254,7 +267,6 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
                  "hydra:subClassOf": "Event",
                  "hydra:supportedProperty": [
                      {
-                         "@type": ["hydra:SupportedProperty"],
                          "hydra:property": "eventStatus",
                          "hydra:required": "true"
                      }
@@ -292,7 +304,7 @@ Now let us tell the client a range of possible values for a property. We want to
 
       event.getWorkPerformed() //  <-- must be a Resource<CreativeWork>
           .add(linkTo(methodOn(ReviewController.class) // <-- must use AffordanceBuilder.linkTo here
-              .addReview(event.id, new Review(null, new Rating(3)))) // <-- defaultValue for ratingValue
+              .addReview(event.id, new Review(null, new Rating(3)))) // <-- default ratingValue 3
               .withRel("review"));
       ...
   }
@@ -316,9 +328,11 @@ We expect that clients post a Review with a review body and a rating. The review
   public class Rating {
       private String ratingValue;
 
-      public Rating(String ratingValue) {
-          this.ratingValue = ratingValue;
+      @JsonCreator
+      public Rating(@JsonProperty("ratingValue") Integer ratingValue) {
+        ..
       }
+
 
       public void setRatingValue(@Input(min = 1, max = 5, step = 1) String ratingValue) {
           this.ratingValue = ratingValue;
@@ -331,8 +345,14 @@ We expect that clients post a Review with a review body and a rating. The review
       private String reviewBody;
       private Rating reviewRating;
 
-      public Review(@Input(pattern=".{10,}") String reviewBody, Rating reviewRating) {
-          this.reviewBody = reviewBody;
+      @JsonCreator
+      public Review(@JsonProperty("reviewBody") String reviewBody,
+          @JsonProperty("reviewRating") Rating reviewRating) {
+             ...
+      }
+
+      public void setReviewBody(@Input(pattern=".{10,}") String reviewBody) {
+        ...
       }
 
       public void setReviewRating(Rating rating) {
@@ -342,7 +362,7 @@ We expect that clients post a Review with a review body and a rating. The review
 
 ----
 
-In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpecification[PropertyValueSpecification] to express the input constraints `minValue`, `maxValue` and `stepValue`. Note that the creative work has a `review` attribute now, although the `CreativeWork` pojo has no such property. It appears because we added a rel `review` to the workPerformed resource.
+In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpecification[PropertyValueSpecification] to express the input constraints `minValue`, `maxValue`, `stepValue` and `valuePattern`, as well as `defaultValue` containing the rating value `3` that was passed to the sample method invocation with `methodOn`. Note that the creative work has a `review` attribute now, although the `CreativeWork` pojo has no such property. It appears because we added a rel `review` to the workPerformed resource.
 
 [source, Javascript]
 ----
@@ -419,7 +439,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.2.0-alpha1</version>
+  <version>0.2.0-alpha3</version>
 </dependency>
 ----
 
