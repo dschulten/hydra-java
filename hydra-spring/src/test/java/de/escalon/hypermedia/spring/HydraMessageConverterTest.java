@@ -268,7 +268,7 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:method']")
                         .value("PUT"))
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:expects']" +
-                        ".['rdfs:subClassOf']")
+                        ".['@type']")
                         .value("Event"))
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[2]['hydra:method']")
                         .value("DELETE"))

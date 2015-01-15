@@ -154,9 +154,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                             typeName = requestBodyInputParameter.getNestedParameterType()
                                     .getSimpleName();
                         }
-                        jgen.writeStringField("@type", "hydra:Class");
-
-                        jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab, "subClassOf", "http://www.w3.org/2000/01/rdf-schema#", "rdfs:"), typeName);
+                        jgen.writeStringField("@type", typeName);
 
                         jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
                         // TODO check need for actionDescriptor and requestBodyInputParameter here:
@@ -197,7 +195,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
     private void recurseSupportedProperties(JsonGenerator jgen, String currentVocab, Class<?>
             beanType, ActionDescriptor actionDescriptor,
-                                            ActionInputParameter actionInputParameter, Object currentCallValue) throws IntrospectionException,
+                                            ActionInputParameter actionInputParameter, Object currentCallValue)
+            throws IntrospectionException,
             IOException {
         // TODO support Option provider by other method args?
         final BeanInfo beanInfo = Introspector.getBeanInfo(beanType);
@@ -235,13 +234,13 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeObjectFieldStart(getPropertyOrClassNameInVocab(currentVocab, "rangeIncludes",
                         JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
                 Expose expose = AnnotationUtils.getAnnotation(propertyType, Expose.class);
-                String subClassOf;
+                String typeName;
                 if (expose != null) {
-                    subClassOf = expose.value();
+                    typeName = expose.value();
                 } else {
-                    subClassOf = propertyType.getSimpleName();
+                    typeName = propertyType.getSimpleName();
                 }
-                jgen.writeStringField("hydra:subClassOf", subClassOf);
+                jgen.writeStringField(JacksonHydraSerializer.AT_TYPE, typeName);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty");
 
@@ -273,21 +272,21 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
      * Gets property or class name in the current context, either without prefix if the current vocab is the given
      * vocabulary, or prefixed otherwise.
      *
-     * @param currentVocab        to determine the current vocab
-     * @param propertyOrClassName name to contextualize
-     * @param vocabulary          to which the given property belongs
-     * @param vocabularyPrefix    to use if the current vocab does not match the given vocabulary to which the name
-     *                            belongs
+     * @param currentVocab              to determine the current vocab
+     * @param propertyOrClassName       name to contextualize
+     * @param vocabulary                to which the given property belongs
+     * @param vocabularyPrefixWithColon to use if the current vocab does not match the given vocabulary to which the
+     *                                  name belongs, should end with colon
      * @return
      */
-    private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName,
-                                                 String vocabulary, String vocabularyPrefix) {
+    private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName, String
+            vocabulary, String vocabularyPrefixWithColon) {
         Assert.notNull(vocabulary);
         String ret;
         if (vocabulary.equals(currentVocab)) {
             ret = propertyOrClassName;
         } else {
-            ret = vocabularyPrefix + propertyOrClassName;
+            ret = vocabularyPrefixWithColon + propertyOrClassName;
         }
         return ret;
     }
@@ -344,12 +343,16 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         //     specific request beans for different
         //     purposes rather than always passing an instance of e.g. Event?)
         //       -> update is a different use case than create - or maybe have an @Requires("eventStatus")
-        //          annotation alongside requestBody to tell which attributes are required or writable, and use Requires over
+        //          annotation alongside requestBody to tell which attributes are required or writable, and use
+        // Requires over
         //          bean structure, where ctor with least length of args is required and setters are supported
-        //          but optional? The bean structure does say what is writable for updates, but not what is required for creation. Right now setters are supportedProperties. For creation we would have to add constructor arguments as supportedProperties.
+        //          but optional? The bean structure does say what is writable for updates, but not what is required
+        // for creation. Right now setters are supportedProperties. For creation we would have to add constructor
+        // arguments as supportedProperties.
         //  (/) defaultValue (pre-filled value, e.g. list of selected items for option)
         //  valueName (for iri templates only)
-        //  (/) readonlyValue (true for final public field or absence of setter, send fixed value like hidden field?) -> use hydra:readable, hydra:writable
+        //  (/) readonlyValue (true for final public field or absence of setter, send fixed value like hidden field?)
+        // -> use hydra:readable, hydra:writable
         //  (/) multipleValues
         //  (/) valueMinLength
         //  (/) valueMaxLength
