@@ -195,7 +195,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
     private void recurseSupportedProperties(JsonGenerator jgen, String currentVocab, Class<?>
             beanType, ActionDescriptor actionDescriptor,
-                                            ActionInputParameter actionInputParameter, Object currentCallValue) throws IntrospectionException,
+                                            ActionInputParameter actionInputParameter, Object currentCallValue)
+            throws IntrospectionException,
             IOException {
         // TODO support Option provider by other method args?
         final BeanInfo beanInfo = Introspector.getBeanInfo(beanType);
@@ -271,21 +272,21 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
      * Gets property or class name in the current context, either without prefix if the current vocab is the given
      * vocabulary, or prefixed otherwise.
      *
-     * @param currentVocab        to determine the current vocab
-     * @param propertyOrClassName name to contextualize
-     * @param vocabulary          to which the given property belongs
-     * @param vocabularyPrefix    to use if the current vocab does not match the given vocabulary to which the name
-     *                            belongs
+     * @param currentVocab              to determine the current vocab
+     * @param propertyOrClassName       name to contextualize
+     * @param vocabulary                to which the given property belongs
+     * @param vocabularyPrefixWithColon to use if the current vocab does not match the given vocabulary to which the
+     *                                  name belongs, should end with colon
      * @return
      */
-    private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName,
-                                                 String vocabulary, String vocabularyPrefix) {
+    private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName, String
+            vocabulary, String vocabularyPrefixWithColon) {
         Assert.notNull(vocabulary);
         String ret;
         if (vocabulary.equals(currentVocab)) {
             ret = propertyOrClassName;
         } else {
-            ret = vocabularyPrefix + propertyOrClassName;
+            ret = vocabularyPrefixWithColon + propertyOrClassName;
         }
         return ret;
     }

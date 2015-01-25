@@ -9,7 +9,6 @@ Latest release: 0.2.0-alpha2
 
 :toc:
 
-You may try the http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. Sending `Accept: application/ld+json` will get you hydra, but `application/json` or `application/hal+json` work as well. I plan to add other mime-types in the future. When you POST or PUT, make sure you add a Content-Type header matching your request.
 
 == Problem
 
@@ -132,6 +131,11 @@ Furthermore, if you use these hydra features, make sure you have a `@Term(define
 ** expresses supported properties whose value is an object by nesting them via http://schema.org/rangeIncludes.
 
 == Examples
+
+=== Live Demo
+
+Use a ReST client to access http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. Sending `Accept: application/ld+json` will get you hydra, but `application/json` or `application/hal+json` work as well. When you POST or PUT, make sure you add a Content-Type header matching your request.
+
 
 === Exposing Java Bean Attributes
 
@@ -263,8 +267,7 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
              "hydra:method": "PUT",
              "hydra:expects":
              {
-                 "@type": "hydra:Class",
-                 "rdfs:subClassOf": "Event",
+                 "@type": "Event",
                  "hydra:supportedProperty": [
                      {
                          "hydra:property": "eventStatus",
@@ -364,6 +367,8 @@ We expect that clients post a Review with a review body and a rating. The review
 
 In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpecification[PropertyValueSpecification] to express the input constraints `minValue`, `maxValue`, `stepValue` and `valuePattern`, as well as `defaultValue` containing the rating value `3` that was passed to the sample method invocation with `methodOn`. Note that the creative work has a `review` attribute now, although the `CreativeWork` pojo has no such property. It appears because we added a rel `review` to the workPerformed resource.
 
+Right now it is not possible to specify a list of expected values, neither with hydra nor with `schema:PropertyValueSpecification`. If you are interested in that, look into https://github.com/HydraCG/Specifications/issues/82[#82 Add support for allowed literals and allowed individuals] and participate in the discussion in the http://lists.w3.org/Archives/Public/public-hydra/2015Jan/0019.html[Hydra-CG mailing list].
+
 [source, Javascript]
 ----
 {
@@ -381,45 +386,43 @@ In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpec
     "performer": "Walk off the Earth",
     "location": "Wiesbaden",
     "eventStatus": "EVENT_SCHEDULED",
-    "workPerformed":
-    {
+    "workPerformed": {
         "@type": "CreativeWork",
         "name": "Gang of Rhythm Tour",
-        "review":
-        {
+        "review": {
             "@id": "http://localhost:8210/webapp/hypermedia-api/reviews/events/1",
             "hydra:operation": [
-            {
-                "@type": "ReviewAction",
-                "hydra:method": "POST",
-                "hydra:expects":
                 {
-                    "@type": "hydra:Class",
-                    "rdfs:subClassOf": "Review",
-                    "hydra:supportedProperty": [
-                    {
-                        "@type": "PropertyValueSpecification",
-                        "hydra:property": "reviewBody",
-                        "valuePattern": ".{10,}"
-                    },
-                    {
-                        "hydra:property": "reviewRating",
-                        "rangeIncludes":
-                        {
-                            "rdfs:subClassOf": "Rating",
-                            "hydra:supportedProperty": [
+                    "@type": "ReviewAction",
+                    "hydra:method": "POST",
+                    "hydra:expects": {
+                        "@type": "Review",
+                        "hydra:supportedProperty": [
                             {
                                 "@type": "PropertyValueSpecification",
-                                "hydra:property": "ratingValue",
-                                "defaultValue": 3,
-                                "maxValue": 5,
-                                "minValue": 1,
-                                "stepValue": 1
-                            }]
-                        }
-                    }]
+                                "hydra:property": "reviewBody",
+                                "valuePattern": ".{10,}"
+                            },
+                            {
+                                "hydra:property": "reviewRating",
+                                "rangeIncludes": {
+                                    "@type": "Rating",
+                                    "hydra:supportedProperty": [
+                                        {
+                                            "@type": "PropertyValueSpecification",
+                                            "hydra:property": "ratingValue",
+                                            "defaultValue": 3,
+                                            "maxValue": 5,
+                                            "minValue": 1,
+                                            "stepValue": 1
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
                 }
-            }]
+            ]
         }
     }
 }
