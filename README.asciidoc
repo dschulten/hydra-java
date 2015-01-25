@@ -267,8 +267,7 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
              "hydra:method": "PUT",
              "hydra:expects":
              {
-                 "@type": "hydra:Class",
-                 "rdfs:subClassOf": "Event",
+                 "@type": "Event",
                  "hydra:supportedProperty": [
                      {
                          "hydra:property": "eventStatus",
@@ -367,6 +366,8 @@ We expect that clients post a Review with a review body and a rating. The review
 ----
 
 In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpecification[PropertyValueSpecification] to express the input constraints `minValue`, `maxValue`, `stepValue` and `valuePattern`, as well as `defaultValue` containing the rating value `3` that was passed to the sample method invocation with `methodOn`. Note that the creative work has a `review` attribute now, although the `CreativeWork` pojo has no such property. It appears because we added a rel `review` to the workPerformed resource.
+
+Right now it is not possible to specify a list of expected values, neither with hydra nor with `schema:PropertyValueSpecification`. If you are interested in that, look into https://github.com/HydraCG/Specifications/issues/82[#82 Add support for allowed literals and allowed individuals] and participate in the discussion in the http://lists.w3.org/Archives/Public/public-hydra/2015Jan/0019.html[Hydra-CG mailing list].
 
 [source, Javascript]
 ----
