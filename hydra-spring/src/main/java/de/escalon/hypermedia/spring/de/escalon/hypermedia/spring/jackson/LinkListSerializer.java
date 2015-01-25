@@ -154,9 +154,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                             typeName = requestBodyInputParameter.getNestedParameterType()
                                     .getSimpleName();
                         }
-                        jgen.writeStringField("@type", "hydra:Class");
-
-                        jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab, "subClassOf", "http://www.w3.org/2000/01/rdf-schema#", "rdfs:"), typeName);
+                        jgen.writeStringField("@type", typeName);
 
                         jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
                         // TODO check need for actionDescriptor and requestBodyInputParameter here:
@@ -235,13 +233,13 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeObjectFieldStart(getPropertyOrClassNameInVocab(currentVocab, "rangeIncludes",
                         JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
                 Expose expose = AnnotationUtils.getAnnotation(propertyType, Expose.class);
-                String subClassOf;
+                String subClass;
                 if (expose != null) {
-                    subClassOf = expose.value();
+                    subClass = expose.value();
                 } else {
-                    subClassOf = propertyType.getSimpleName();
+                    subClass = propertyType.getSimpleName();
                 }
-                jgen.writeStringField("hydra:subClassOf", subClassOf);
+                jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab, "subClassOf", "http://www.w3.org/2000/01/rdf-schema#", "rdfs:"), subClass);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty");
 

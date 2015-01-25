@@ -4,7 +4,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
 
 /**
- * Sample Event.
+ * Sample Event model bean.
  * Created by dschulten on 11.09.2014.
  */
 public class EventModel {
