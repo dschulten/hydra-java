@@ -5,7 +5,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
-Latest release: 0.2.0-alpha2
+Latest release: 0.2.0-alpha4
 
 :toc:
 
@@ -440,7 +440,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.2.0-alpha2</version>
+  <version>0.2.0-alpha4</version>
 </dependency>
 ----
 
