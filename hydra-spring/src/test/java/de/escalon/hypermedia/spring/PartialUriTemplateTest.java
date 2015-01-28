@@ -59,6 +59,26 @@ public class PartialUriTemplateTest {
     }
 
     @Test
+    public void testExpandLevelOnePathSegment() throws Exception {
+        final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events/{city}");
+        Map<String, Object> val = new HashMap<String, Object>();
+        val.put("city", "Wiesbaden");
+        final UriTemplateComponents expanded = template.expand(val);
+        assertEquals("http://example.com/events/Wiesbaden",
+                expanded.toString());
+    }
+
+    @Test
+    public void testExpandLevelOnePathSegmentWithPrefix() throws Exception {
+        final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events/v{version}/Wiesbaden");
+        Map<String, Object> val = new HashMap<String, Object>();
+        val.put("version", "1.2.0");
+        final UriTemplateComponents expanded = template.expand(val);
+        assertEquals("http://example.com/events/v1.2.0/Wiesbaden",
+                expanded.toString());
+    }
+
+    @Test
     public void testExpandLevelOneQueryWithOneVariable() throws Exception {
         final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events/Wiesbaden?eventName={eventName}");
         Map<String, Object> val = new HashMap<String, Object>();

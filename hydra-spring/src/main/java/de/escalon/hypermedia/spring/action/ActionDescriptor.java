@@ -13,9 +13,7 @@ package de.escalon.hypermedia.spring.action;
 import de.escalon.hypermedia.spring.UriTemplateComponents;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Describes an HTTP method. Has knowledge about possible request data, e.g. which types and values
@@ -108,5 +106,21 @@ public class ActionDescriptor {
      */
     public void setSemanticActionType(String semanticActionType) {
         this.semanticActionType = semanticActionType;
+    }
+
+    public Map<String, ActionInputParameter> getRequiredUrlVariables() {
+        Map<String, ActionInputParameter> ret = new HashMap<String, ActionInputParameter>();
+        for (Map.Entry<String, ActionInputParameter> entry : requestParams.entrySet()) {
+            ActionInputParameter actionInputParameter = entry.getValue();
+            if (actionInputParameter.isRequired()) {
+                ret.put(entry.getKey(), actionInputParameter);
+            }
+        }
+        for (Map.Entry<String, ActionInputParameter> entry : pathVariables.entrySet()) {
+            ActionInputParameter actionInputParameter = entry.getValue();
+            ret.put(entry.getKey(), actionInputParameter);
+        }
+        // requestBody not supported, would have to use exploded modifier
+        return ret;
     }
 }

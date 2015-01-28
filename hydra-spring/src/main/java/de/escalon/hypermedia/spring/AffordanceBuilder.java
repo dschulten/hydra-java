@@ -127,14 +127,14 @@ public class AffordanceBuilder implements LinkBuilder {
     public Affordance build(String... rels) {
         Assert.notEmpty(rels);
         final Affordance affordance;
-        affordance = new Affordance(this.toString(), rels);
+        affordance = new Affordance(new PartialUriTemplate(this.toString()), actionDescriptors, rels);
         for (Map.Entry<String, List<String>> linkParamEntry : linkParams.entrySet()) {
             final List<String> values = linkParamEntry.getValue();
             for (String value : values) {
                 affordance.addLinkParam(linkParamEntry.getKey(), value);
             }
         }
-        affordance.setActionDescriptors(actionDescriptors);
+        //affordance.setActionDescriptors(actionDescriptors);
         return affordance;
     }
 
@@ -149,6 +149,12 @@ public class AffordanceBuilder implements LinkBuilder {
         return this;
     }
 
+    /**
+     * Allows to define link header params (not UriTemplate variables).
+     * @param name of the link header param
+     * @param value of the link header param
+     * @return builder
+     */
     public AffordanceBuilder withLinkParam(String name, String value) {
         this.linkParams.add(name, value);
         return this;

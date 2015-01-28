@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,6 +44,26 @@ public class EventController {
 
         return new ResponseEntity<Resources<Event>>(eventResources, HttpStatus.OK);
     }
+
+    @RequestMapping(method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Resources<Event>> findEvents(@RequestParam String name) {
+        List<Event> events = assembler.toResources(eventBackend.getEvents());
+        List<Event> matches = new ArrayList<Event>();
+        for (Event event : events) {
+            if(event.workPerformed.getContent().name.equals(name)) {
+                addAffordances(event);
+                matches.add(event);
+            }
+        }
+        Resources<Event> eventResources = new Resources<Event>(matches);
+
+        eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class).addEvent(null))
+                .withSelfRel());
+
+        return new ResponseEntity<Resources<Event>>(eventResources, HttpStatus.OK);
+    }
+
 
     @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
     public ResponseEntity<Event> getEvent(@PathVariable Integer eventId) {

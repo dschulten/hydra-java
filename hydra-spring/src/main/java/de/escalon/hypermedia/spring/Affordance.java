@@ -13,7 +13,6 @@ package de.escalon.hypermedia.spring;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.escalon.hypermedia.spring.action.ActionDescriptor;
 import org.springframework.hateoas.Link;
-import org.springframework.http.HttpMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -36,24 +35,38 @@ public class Affordance extends Link {
 
     private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
-    private HttpMethod httpMethod;
+
     private UriTemplateComponents uriTemplateComponents;
 
+    /**
+     * Creates affordance, action descriptors and link param values may be added later.
+     * @param uriTemplate
+     * @param rels
+     */
     public Affordance(String uriTemplate, String... rels) {
-        super(uriTemplate);
-        this.uriTemplateComponents = new PartialUriTemplate(uriTemplate).unexpandedComponents();
+        this(new PartialUriTemplate(uriTemplate), new ArrayList<ActionDescriptor>(),rels);
+    }
+
+    /**
+     * Creates affordance, action descriptors and link header params may be added later.
+     *
+     * @param uriTemplate
+     * @param rels
+     */
+    public Affordance(PartialUriTemplate uriTemplate, List<ActionDescriptor> actionDescriptors, String... rels) {
+        super(uriTemplate.stripOptionalVariables(actionDescriptors)); // keep only required and expanded variables
+        this.uriTemplateComponents = uriTemplate.unexpandedComponents();
         Assert.noNullElements(rels, "null rels are not allowed");
         for (String rel : rels) {
             addRel(rel);
         }
-
+        this.actionDescriptors.addAll(actionDescriptors);
     }
 
-    private Affordance(String uriTemplate, MultiValueMap<String, String> linkParams, HttpMethod httpMethod,
+    private Affordance(String uriTemplate, MultiValueMap<String, String> linkParams,
                        List<ActionDescriptor> actionDescriptors) {
         super(uriTemplate);
         this.linkParams = linkParams;
-        this.httpMethod = httpMethod;
         this.actionDescriptors = actionDescriptors;
     }
 
@@ -273,7 +286,7 @@ public class Affordance extends Link {
     @Override
     public Affordance withRel(String rel) {
         linkParams.set("rel", rel);
-        return new Affordance(this.getHref(), linkParams, httpMethod, actionDescriptors);
+        return new Affordance(this.getHref(), linkParams, actionDescriptors);
     }
 
     @Override
@@ -282,17 +295,17 @@ public class Affordance extends Link {
                 .contains(Link.REL_SELF)) {
             linkParams.add("rel", Link.REL_SELF);
         }
-        return new Affordance(this.getHref(), linkParams, httpMethod, actionDescriptors);
+        return new Affordance(this.getHref(), linkParams, actionDescriptors);
     }
 
     @Override
     public Affordance expand(Object... arguments) {
-        return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod, actionDescriptors);
+        return new Affordance(super.expand(arguments).getHref(), linkParams, actionDescriptors);
     }
 
     @Override
     public Affordance expand(Map<String, ? extends Object> arguments) {
-        return new Affordance(super.expand(arguments).getHref(), linkParams, httpMethod, actionDescriptors);
+        return new Affordance(super.expand(arguments).getHref(), linkParams, actionDescriptors);
     }
 
     @JsonIgnore

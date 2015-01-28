@@ -26,7 +26,7 @@ public class UriTemplateComponents {
     /**
      * Represents components of a Uri Template with variables.
      * @param baseUri may be relative or absolute, and may contain {xxx} or {/xxx} style variables
-     * @param queryHead start of query containing expanded key-value pairs (no variables), beginning with ?, may be empty or null
+     * @param queryHead start of query containing expanded key-value pairs (no variables), beginning with ?, may be empty
      * @param queryTail comma-separated list of unexpanded query keys, may be empty
      * @param fragmentIdentifier, beginning with #, may contain a fragment variable, may also be empty
      */
@@ -77,6 +77,10 @@ public class UriTemplateComponents {
         return fragmentIdentifier;
     }
 
+    /**
+     * Concatenates all components to uri String.
+     * @return uri String
+     */
     public String toString() {
         return baseUri + StringUtils.defaultString(getQuery()) + StringUtils.defaultString(fragmentIdentifier);
     }

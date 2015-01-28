@@ -10,8 +10,9 @@
 
 package de.escalon.hypermedia.spring;
 
+import de.escalon.hypermedia.spring.action.ActionDescriptor;
+import de.escalon.hypermedia.spring.action.ActionInputParameter;
 import org.springframework.hateoas.TemplateVariable;
-import org.springframework.hateoas.UriTemplate;
 import org.springframework.util.Assert;
 
 import java.io.UnsupportedEncodingException;
@@ -99,11 +100,21 @@ public class PartialUriTemplate {
         return variableNames;
     }
 
+    /**
+     * Returns raw template components, without variables expanded
+     *
+     * @return components
+     */
     UriTemplateComponents unexpandedComponents() {
         return expand(Collections.<String, Object>emptyMap());
     }
 
     public UriTemplateComponents expand(Map<String, Object> parameters) {
+        return getUriTemplateComponents(parameters, Collections.<String>emptyList());
+
+    }
+
+    private UriTemplateComponents getUriTemplateComponents(Map<String, Object> parameters, List<String> requiredArgs) {
         Assert.notNull(parameters, "Parameters must not be null!");
 
         final StringBuilder baseUrl = new StringBuilder(urlComponents.get(0));
@@ -129,11 +140,13 @@ public class PartialUriTemplate {
                         switch (variable.getType()) {
                             case REQUEST_PARAM:
                             case REQUEST_PARAM_CONTINUED:
-                                // query vars without value always go last (query tail)
-                                if (queryTail.length() > 0) {
-                                    queryTail.append(',');
+                                if(requiredArgs.isEmpty() || requiredArgs.contains(variable.getName())) {
+                                    // query vars without value always go last (query tail)
+                                    if (queryTail.length() > 0) {
+                                        queryTail.append(',');
+                                    }
+                                    queryTail.append(variable.getName());
                                 }
-                                queryTail.append(variable.getName());
                                 break;
                             case FRAGMENT:
                                 fragmentIdentifier.append(variable.toString());
@@ -162,9 +175,6 @@ public class PartialUriTemplate {
                                     // level 1 variable in query
                                     queryHead.append(urlEncode(value.toString()));
                                 } else {
-                                    if(baseUrl.length() > 0 && baseUrl.charAt(baseUrl.length() - 1) != '/') {
-                                        baseUrl.append('/');
-                                    }
                                     baseUrl.append(urlEncode(value.toString()));
                                 }
                                 break;
@@ -181,7 +191,6 @@ public class PartialUriTemplate {
 
         return new UriTemplateComponents(baseUrl.toString(), queryHead.toString(), queryTail.toString(),
                 fragmentIdentifier.toString());
-
     }
 
     private String urlEncode(String s) {
@@ -190,5 +199,18 @@ public class PartialUriTemplate {
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("failed to urlEncode " + s, e);
         }
+    }
+
+    public String stripOptionalVariables(List<ActionDescriptor> actionDescriptors) {
+        return getUriTemplateComponents(Collections.<String, Object>emptyMap(), getRequiredArgNames(actionDescriptors)).toString();
+    }
+
+    private List<String> getRequiredArgNames(List<ActionDescriptor> actionDescriptors) {
+        List<String> ret = new ArrayList<String>();
+        for (ActionDescriptor actionDescriptor : actionDescriptors) {
+            Map<String, ActionInputParameter> required = actionDescriptor.getRequiredUrlVariables();
+            ret.addAll(required.keySet());
+        }
+        return ret;
     }
 }
