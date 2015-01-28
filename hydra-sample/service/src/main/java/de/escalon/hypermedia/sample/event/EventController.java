@@ -30,36 +30,41 @@ public class EventController {
     @Autowired
     private EventResourceAssembler assembler;
 
+//    @RequestMapping(method = RequestMethod.GET)
+//    @ResponseBody
+//    public ResponseEntity<Resources<Event>> getEvents() {
+//        List<Event> events = assembler.toResources(eventBackend.getEvents());
+//        for (Event event : events) {
+//            addAffordances(event);
+//        }
+//        Resources<Event> eventResources = new Resources<Event>(events);
+//
+//        eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class).addEvent(null))
+//                .withSelfRel());
+//
+//        return new ResponseEntity<Resources<Event>>(eventResources, HttpStatus.OK);
+//    }
+
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<Resources<Event>> getEvents() {
-        List<Event> events = assembler.toResources(eventBackend.getEvents());
-        for (Event event : events) {
-            addAffordances(event);
-        }
-        Resources<Event> eventResources = new Resources<Event>(events);
-
-        eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class).addEvent(null))
-                .withSelfRel());
-
-        return new ResponseEntity<Resources<Event>>(eventResources, HttpStatus.OK);
-    }
-
-    @RequestMapping(method = RequestMethod.GET)
-    @ResponseBody
-    public ResponseEntity<Resources<Event>> findEvents(@RequestParam String name) {
+    public ResponseEntity<Resources<Event>> findEvents(@RequestParam(required=false) String name) {
         List<Event> events = assembler.toResources(eventBackend.getEvents());
         List<Event> matches = new ArrayList<Event>();
         for (Event event : events) {
-            if(event.workPerformed.getContent().name.equals(name)) {
+            if (name == null || event.workPerformed.getContent().name.equals(name)) {
                 addAffordances(event);
                 matches.add(event);
             }
         }
         Resources<Event> eventResources = new Resources<Event>(matches);
 
-        eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class).addEvent(null))
+        eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
+                .addEvent(null))
                 .withSelfRel());
+
+        eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
+                .findEvents(null))
+                .withRel("hydra:search"));
 
         return new ResponseEntity<Resources<Event>>(eventResources, HttpStatus.OK);
     }
