@@ -103,12 +103,10 @@ public class EventController {
         return resource;
     }
 
-
-    @RequestMapping(value = "/regex/{eventId:.+}", method = RequestMethod.GET)
+    @RequestMapping(value = "/regex/{eventId:+}", method = RequestMethod.GET)
     public
     @ResponseBody
     Resource<Event> getEventWithRegexPathVariableMapping(@PathVariable @Expose("ex:eventId") Integer eventId) {
-
         Resource<Event> resource = new Resource<Event>(getEvents().get(eventId));
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
