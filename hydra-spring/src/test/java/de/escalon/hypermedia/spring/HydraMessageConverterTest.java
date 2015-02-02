@@ -256,6 +256,25 @@ public class HydraMessageConverterTest {
     }
 
     @Test
+    public void convertsTemplatedLinkWithRegexAsIriTemplate() throws Exception {
+        final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
+                .accept(HypermediaTypes.APPLICATION_JSONLD))
+                .andExpect(MockMvcResultMatchers.status()
+                        .isOk())
+                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(jsonPath("$.['ex:regex'].@type").value("hydra:IriTemplate"))
+                .andExpect(jsonPath("$.['ex:regex'].['hydra:template']").value
+                        ("http://localhost/events/regex/{eventId}"))
+                .andExpect(jsonPath("$.['ex:regex'].['hydra:mapping'][0].['hydra:variable']").value("eventId"))
+                .andExpect(jsonPath("$.['ex:regex'].['hydra:mapping'][0].['hydra:property']").value
+                        ("ex:eventId"))
+
+                .andReturn();
+        LOG.debug(result.getResponse()
+                .getContentAsString());
+    }
+
+    @Test
     public void convertsAffordanceWithRequestBody() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
                 .accept(HypermediaTypes.APPLICATION_JSONLD))

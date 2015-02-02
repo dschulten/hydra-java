@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  */
 public class PartialUriTemplate {
 
-    private static final Pattern VARIABLE_REGEX = Pattern.compile("\\{([\\?\\&#/]?)([\\w\\,]+)\\}");
+    private static final Pattern VARIABLE_REGEX = Pattern.compile("\\{([\\?\\&#/]?)([\\w\\,]+)(:??.*?)\\}");
 
     private final List<String> urlComponents = new ArrayList<String>();
 
@@ -43,10 +43,12 @@ public class PartialUriTemplate {
         Assert.hasText(template, "Template must not be null or empty!");
 
         Matcher matcher = VARIABLE_REGEX.matcher(template);
-
+        // first group is the variable start without leading {: "", "/", "?", "#",
+        // second group is the comma-separated name list without the trailing } of the variable
         int endOfPart = 0;
         while (matcher.find()) {
 
+            // 0 is the current match, i.e. the entire variable expression
             int startOfPart = matcher.start(0);
             // add part before current match
             if (endOfPart < startOfPart) {
@@ -76,7 +78,9 @@ public class PartialUriTemplate {
             urlComponents.add(variablePart);
 
             // collect variablesInPart and track for each part which variables it contains
+            // group(1) is the variable head without the leading {
             TemplateVariable.VariableType type = TemplateVariable.VariableType.from(matcher.group(1));
+            // group(2) is the
             String[] names = matcher.group(2)
                     .split(",");
             List<Integer> variablesInPart = new ArrayList<Integer>();

@@ -68,9 +68,12 @@ public class EventController {
         final Method getEventMethod = ReflectionUtils.findMethod(this.getClass(), "getEvent", String.class);
         final Affordance eventByNameAffordance = linkTo(getEventMethod, new Object[0])
                 .withRel("hydra:search");
+        final Affordance eventWithRegexAffordance = linkTo(
+                methodOn(this.getClass()).getEventWithRegexPathVariableMapping(null)).withRel("ex:regex");
+
 
         return new Resources<Resource<Event>>(eventResourcesList,
-                eventByNameAffordance);
+                eventByNameAffordance, eventWithRegexAffordance);
     }
 
 
@@ -95,6 +98,15 @@ public class EventController {
     public
     @ResponseBody
     Resource<Event> getEvent(@PathVariable Integer eventId) {
+        Resource<Event> resource = new Resource<Event>(getEvents().get(eventId));
+        resource.add(linkTo(ReviewController.class).withRel("review"));
+        return resource;
+    }
+
+    @RequestMapping(value = "/regex/{eventId:+}", method = RequestMethod.GET)
+    public
+    @ResponseBody
+    Resource<Event> getEventWithRegexPathVariableMapping(@PathVariable @Expose("ex:eventId") Integer eventId) {
         Resource<Event> resource = new Resource<Event>(getEvents().get(eventId));
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
