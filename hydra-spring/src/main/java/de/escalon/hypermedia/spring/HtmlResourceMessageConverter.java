@@ -11,8 +11,8 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.action.Type;
-import de.escalon.hypermedia.spring.action.ActionDescriptor;
-import de.escalon.hypermedia.spring.action.ActionInputParameter;
+import de.escalon.hypermedia.action.ActionDescriptor;
+import de.escalon.hypermedia.action.ActionInputParameter;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.converter.AbstractHttpMessageConverter;

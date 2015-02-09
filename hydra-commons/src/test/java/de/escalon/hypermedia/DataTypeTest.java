@@ -10,6 +10,7 @@
 
 package de.escalon.hypermedia;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -20,26 +21,26 @@ public class DataTypeTest {
 
     @Test
     public void testIsScalarPrimitive() throws Exception {
-        assertTrue(DataType.isScalar(int.class));
+        Assert.assertTrue(DataType.isScalar(int.class));
     }
 
     @Test
     public void testIsScalarNumber() throws Exception {
-        assertTrue(DataType.isScalar(Integer.class));
+        Assert.assertTrue(DataType.isScalar(Integer.class));
     }
 
     @Test
     public void testIsScalarBigDecimal() throws Exception {
-        assertTrue(DataType.isScalar(BigDecimal.class));
+        Assert.assertTrue(DataType.isScalar(BigDecimal.class));
     }
 
     @Test
     public void testIsNumberPrimitive() throws Exception {
-        assertTrue(DataType.isNumber(int.class));
+        Assert.assertTrue(DataType.isNumber(int.class));
     }
 
     @Test
     public void testIsNumberBigDecimal() throws Exception {
-        assertTrue(DataType.isNumber(BigDecimal.class));
+        Assert.assertTrue(DataType.isNumber(BigDecimal.class));
     }
 }

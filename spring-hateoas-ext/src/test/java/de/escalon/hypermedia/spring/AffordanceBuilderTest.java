@@ -10,10 +10,10 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.spring.action.ActionDescriptor;
-import de.escalon.hypermedia.spring.action.ActionInputParameter;
-import de.escalon.hypermedia.spring.sample.EventStatusType;
+import de.escalon.hypermedia.action.ActionDescriptor;
+import de.escalon.hypermedia.action.ActionInputParameter;
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
@@ -47,6 +47,11 @@ public class AffordanceBuilderTest {
 
     }
 
+    enum EventStatusType {
+        EVENT_POSTPONED, EVENT_RESCHEDULED, EVENT_SCHEDULED, EVENT_CANCELLED
+
+    }
+
     public static class DummyController {
 
         @RequestMapping("/things")
@@ -71,7 +76,7 @@ public class AffordanceBuilderTest {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))
                 .build("next");
-        assertEquals("Link: <http://example.com/things>; rel=\"next\"", affordance.toString());
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"", affordance.toString());
     }
 
     @Test
@@ -80,7 +85,7 @@ public class AffordanceBuilderTest {
                 .createThing(new Thing()))
                 .withTitle("my-title")
                 .build("next");
-        assertEquals("Link: <http://example.com/things>; rel=\"next\"; title=\"my-title\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; title=\"my-title\"",
                 affordance.toString());
     }
 
@@ -90,7 +95,7 @@ public class AffordanceBuilderTest {
                 .createThing(new Thing()))
                 .withTitleStar("UTF-8'de'n%c3%a4chstes%20Kapitel")
                 .build("next");
-        assertEquals("Link: <http://example.com/things>; rel=\"next\"; title*=\"UTF-8'de'n%c3%a4chstes%20Kapitel\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; title*=\"UTF-8'de'n%c3%a4chstes%20Kapitel\"",
                 affordance.toString());
     }
 
@@ -100,7 +105,7 @@ public class AffordanceBuilderTest {
                 .createThing(new Thing()))
                 .withAnchor("http://api.example.com/api")
                 .build("next");
-        assertEquals("Link: <http://example.com/things>; rel=\"next\"; anchor=\"http://api.example.com/api\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; anchor=\"http://api.example.com/api\"",
                 affordance.toString());
     }
 
@@ -110,7 +115,7 @@ public class AffordanceBuilderTest {
                 .createThing(new Thing()))
                 .withType("application/pdf")
                 .build("next");
-        assertEquals("Link: <http://example.com/things>; rel=\"next\"; type=\"application/pdf\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; type=\"application/pdf\"",
                 affordance.toString());
     }
 
@@ -120,7 +125,7 @@ public class AffordanceBuilderTest {
                 .createThing(new Thing()))
                 .withMedia("qhd")
                 .build("next");
-        assertEquals("Link: <http://example.com/things>; rel=\"next\"; media=\"qhd\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; media=\"qhd\"",
                 affordance.toString());
     }
 
@@ -131,7 +136,7 @@ public class AffordanceBuilderTest {
                 .withHreflang("en-us")
                 .withHreflang("de")
                 .build("next");
-        assertEquals("Link: <http://example.com/things>; rel=\"next\"; hreflang=\"en-us\"; hreflang=\"de\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; hreflang=\"en-us\"; hreflang=\"de\"",
                 affordance.toString());
     }
 
@@ -143,7 +148,7 @@ public class AffordanceBuilderTest {
                 .withLinkParam("param1", "bar")
                 .withLinkParam("param2", "baz")
                 .build("next");
-        assertEquals("Link: <http://example.com/things>; rel=\"next\"; param1=\"foo\"; param1=\"bar\"; param2=\"baz\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; param1=\"foo\"; param1=\"bar\"; param2=\"baz\"",
                 affordance.toString());
     }
 
@@ -152,17 +157,17 @@ public class AffordanceBuilderTest {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .updateThing(1, (EventStatusType)null))
                 .build("eventStatus");
-        assertEquals("Link-Template: <http://example.com/things/1/eventStatus{?eventStatus}>; rel=\"eventStatus\"",
+        Assert.assertEquals("Link-Template: <http://example.com/things/1/eventStatus{?eventStatus}>; rel=\"eventStatus\"",
                 affordance.toString());
         final ActionDescriptor actionDescriptor = affordance.getActionDescriptors().get(0);
-        assertThat((EventStatusType[]) actionDescriptor.getActionInputParameter("eventStatus")
+        Assert.assertThat((EventStatusType[]) actionDescriptor.getActionInputParameter("eventStatus")
                         .getPossibleValues(actionDescriptor),
                 Matchers.arrayContainingInAnyOrder(
                         EventStatusType.EVENT_CANCELLED,
                         EventStatusType.EVENT_POSTPONED,
                         EventStatusType.EVENT_RESCHEDULED,
                         EventStatusType.EVENT_SCHEDULED));
-        assertEquals("updateThing", actionDescriptor.getActionName());
+        Assert.assertEquals("updateThing", actionDescriptor.getActionName());
     }
 
     @Test
@@ -170,13 +175,13 @@ public class AffordanceBuilderTest {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .updateThing(1, (Thing)null))
                 .build("event");
-        assertEquals("Link: <http://example.com/things/1>; rel=\"event\"",
+        Assert.assertEquals("Link: <http://example.com/things/1>; rel=\"event\"",
                 affordance.toString());
         final ActionDescriptor actionDescriptor = affordance.getActionDescriptors().get(0);
         final ActionInputParameter thingParameter = actionDescriptor.getRequestBody();
-        assertEquals("Thing", ((Class)thingParameter.getGenericParameterType()).getSimpleName());
-        assertThat(thingParameter.isRequestBody(), is(true));
-        assertEquals("updateThing", actionDescriptor.getActionName());
+        Assert.assertEquals("Thing", ((Class) thingParameter.getGenericParameterType()).getSimpleName());
+        Assert.assertThat(thingParameter.isRequestBody(), Matchers.is(true));
+        Assert.assertEquals("updateThing", actionDescriptor.getActionName());
     }
 
 
@@ -185,7 +190,7 @@ public class AffordanceBuilderTest {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))
                 .build("next", "thing");
-        assertEquals("Link: <http://example.com/things>; rel=\"next thing\"", affordance.toString());
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next thing\"", affordance.toString());
     }
 
     @Test(expected = IllegalArgumentException.class)

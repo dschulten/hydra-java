@@ -10,7 +10,7 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.spring.action.ActionDescriptor;
+import de.escalon.hypermedia.action.ActionDescriptor;
 import org.springframework.hateoas.Identifiable;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkBuilder;

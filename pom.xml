@@ -66,7 +66,9 @@
   </scm>
 
     <modules>
+        <module>hydra-commons</module>
         <module>hydra-jsonld</module>
+        <module>spring-hateoas-ext</module>
         <module>hydra-spring</module>
         <module>hydra-sample</module>
     </modules>
@@ -95,7 +97,17 @@
             </dependency>
             <dependency>
                 <groupId>de.escalon.hypermedia</groupId>
+                <artifactId>hydra-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.escalon.hypermedia</groupId>
                 <artifactId>hydra-jsonld</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.escalon.hypermedia</groupId>
+                <artifactId>spring-hateoas-ext</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -160,8 +172,7 @@
             <dependency>
                 <groupId>com.github.jsonld-java</groupId>
                 <artifactId>jsonld-java</artifactId>
-                <version>0.5.0</version>
-                <scope>test</scope>
+                <version>0.5.1</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>

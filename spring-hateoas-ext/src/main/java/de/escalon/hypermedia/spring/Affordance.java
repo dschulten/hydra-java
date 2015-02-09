@@ -11,7 +11,7 @@
 package de.escalon.hypermedia.spring;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import de.escalon.hypermedia.spring.action.ActionDescriptor;
+import de.escalon.hypermedia.action.ActionDescriptor;
 import org.springframework.hateoas.Link;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;

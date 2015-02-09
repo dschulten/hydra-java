@@ -11,6 +11,7 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.spring.sample.EventController;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -44,7 +45,7 @@ public class AffordanceBuilderFactoryTest {
         final Method getEventMethod = ReflectionUtils.findMethod(EventController.class, "getEvent", String.class);
         final Affordance affordance = factory.linkTo(getEventMethod, new Object[0])
                 .build("foo");
-        assertEquals("http://example.com/events{?eventName}", affordance.getHref());
+        Assert.assertEquals("http://example.com/events/{eventId}", affordance.getHref());
     }
 
     @Test
@@ -53,14 +54,14 @@ public class AffordanceBuilderFactoryTest {
         final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventController.class)
                 .getEvent((String) null))
                 .build("foo");
-        assertEquals("http://example.com/events{?eventName}", affordance.getHref());
+        Assert.assertEquals("http://example.com/events/{eventId}", affordance.getHref());
     }
 
     @Test
     public void testLinkToControllerClass() throws Exception {
         final Affordance affordance = factory.linkTo(EventController.class, new Object[0])
                 .build("foo");
-        assertEquals("http://example.com/events", affordance.getHref());
+        Assert.assertEquals("http://example.com/events", affordance.getHref());
     }
 
 

@@ -10,9 +10,10 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.spring.action.ActionDescriptor;
-import de.escalon.hypermedia.spring.action.ActionInputParameter;
+import de.escalon.hypermedia.action.ActionDescriptor;
+import de.escalon.hypermedia.action.ActionInputParameter;
 import org.springframework.hateoas.TemplateVariable;
+import org.springframework.hateoas.TemplateVariable.VariableType;
 import org.springframework.util.Assert;
 
 import java.io.UnsupportedEncodingException;

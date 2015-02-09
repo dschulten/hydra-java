@@ -11,11 +11,9 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.action.Action;
-import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
-import de.escalon.hypermedia.spring.action.ActionDescriptor;
-import de.escalon.hypermedia.spring.action.ActionInputParameter;
+import de.escalon.hypermedia.action.ActionDescriptor;
+import de.escalon.hypermedia.action.ActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.MethodLinkBuilderFactory;
@@ -23,13 +21,10 @@ import org.springframework.hateoas.core.AnnotationMappingDiscoverer;
 import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.hateoas.core.MappingDiscoverer;
 import org.springframework.hateoas.core.MethodParameters;
-import org.springframework.hateoas.mvc.UriComponentsContributor;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.*;
 

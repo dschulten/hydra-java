@@ -11,13 +11,9 @@
  * the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring.action;
+package de.escalon.hypermedia.action;
 
 import de.escalon.hypermedia.DataType;
-import de.escalon.hypermedia.action.Input;
-import de.escalon.hypermedia.action.Options;
-import de.escalon.hypermedia.action.Select;
-import de.escalon.hypermedia.action.Type;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;

@@ -10,6 +10,7 @@
 
 package de.escalon.hypermedia.spring;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -28,7 +29,7 @@ public class PartialUriTemplateTest {
         val.put("location", "Schlachthof");
         val.put("section", "description");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
                 expanded.toString());
     }
 
@@ -41,7 +42,7 @@ public class PartialUriTemplateTest {
         val.put("location", "Schlachthof");
         val.put("section", "description");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof",
                 expanded.toString());
     }
 
@@ -54,7 +55,7 @@ public class PartialUriTemplateTest {
         val.put("location", "Schlachthof");
         val.put("section", "description");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour",
                 expanded.toString());
     }
 
@@ -64,7 +65,7 @@ public class PartialUriTemplateTest {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("city", "Wiesbaden");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden",
+        Assert.assertEquals("http://example.com/events/Wiesbaden",
                 expanded.toString());
     }
 
@@ -74,7 +75,7 @@ public class PartialUriTemplateTest {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("city", "Wiesbaden");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden",
+        Assert.assertEquals("http://example.com/events/Wiesbaden",
                 expanded.toString());
     }
 
@@ -84,7 +85,7 @@ public class PartialUriTemplateTest {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("version", "1.2.0");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/v1.2.0/Wiesbaden",
+        Assert.assertEquals("http://example.com/events/v1.2.0/Wiesbaden",
                 expanded.toString());
     }
 
@@ -97,7 +98,7 @@ public class PartialUriTemplateTest {
         val.put("location", "Schlachthof");
         val.put("section", "description");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour",
                 expanded.toString());
     }
 
@@ -110,7 +111,7 @@ public class PartialUriTemplateTest {
         val.put("location", "Schlachthof");
         val.put("section", "description");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof",
                 expanded.toString());
     }
 
@@ -124,7 +125,7 @@ public class PartialUriTemplateTest {
         val.put("location", "Schlachthof");
         val.put("section", "description");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
                 expanded.toString());
     }
 
@@ -139,7 +140,7 @@ public class PartialUriTemplateTest {
         val.put("location", "Schlachthof");
         val.put("section", "description");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
                 expanded.toString());
     }
 
@@ -153,7 +154,7 @@ public class PartialUriTemplateTest {
         val.put("location", "Schlachthof");
         val.put("section", "description");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#price",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#price",
                 expanded.toString());
     }
 
@@ -166,7 +167,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof{#section}",
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof{#section}",
                 expanded.toString());
     }
 
@@ -176,7 +177,7 @@ public class PartialUriTemplateTest {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("location", "Schlachthof");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events{/city}/concerts?location=Schlachthof{&eventName}", expanded.toString());
+        Assert.assertEquals("http://example.com/events{/city}/concerts?location=Schlachthof{&eventName}", expanded.toString());
     }
 
     @Test
@@ -186,7 +187,7 @@ public class PartialUriTemplateTest {
         val.put("city", "Wiesbaden");
         val.put("location", "Schlachthof");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events/Wiesbaden/concerts?location=Schlachthof{&eventName}", expanded.toString());
+        Assert.assertEquals("http://example.com/events/Wiesbaden/concerts?location=Schlachthof{&eventName}", expanded.toString());
     }
 
     @Test
@@ -195,7 +196,7 @@ public class PartialUriTemplateTest {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("location", "Schlachthof");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&location=Schlachthof", expanded.toString());
+        Assert.assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&location=Schlachthof", expanded.toString());
     }
 
     @Test
@@ -204,7 +205,7 @@ public class PartialUriTemplateTest {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("location", "Schlachthof");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&foo=bar&location=Schlachthof", expanded.toString());
+        Assert.assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&foo=bar&location=Schlachthof", expanded.toString());
     }
 
     @Test
@@ -214,6 +215,6 @@ public class PartialUriTemplateTest {
         val.put("baz", "Gnarf");
         val.put("location", "Schlachthof");
         final UriTemplateComponents expanded = template.expand(val);
-        assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&foo=bar&location=Schlachthof&baz=Gnarf", expanded.toString());
+        Assert.assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&foo=bar&location=Schlachthof&baz=Gnarf", expanded.toString());
     }
 }

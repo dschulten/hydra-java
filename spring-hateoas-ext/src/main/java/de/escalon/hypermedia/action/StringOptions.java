@@ -13,7 +13,7 @@ package de.escalon.hypermedia.action;
 public class StringOptions implements Options {
 
 	/**
-	 * Allows to specify possible values for an argument. This allows an {@link de.escalon.hypermedia.spring.action.ActionDescriptor} to determine possible
+	 * Allows to specify possible values for an argument. This allows an {@link ActionDescriptor} to determine possible
 	 * values for an action argument.
 	 * <p>
 	 * The example below defines four possible values for the <code>mood</code> parameter.

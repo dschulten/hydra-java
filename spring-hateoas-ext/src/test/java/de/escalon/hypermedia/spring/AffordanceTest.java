@@ -11,6 +11,7 @@
 package de.escalon.hypermedia.spring;
 
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -26,19 +27,19 @@ public class AffordanceTest {
     @Test
     public void testConstructorWithoutRels() {
         final Affordance affordance = new Affordance("http://localhost/things/{id}");
-        assertEquals("http://localhost/things/{id}", affordance.getHref());
-        assertNull("rel must be null", affordance.getRel());
-        assertEquals(0, affordance.getRels()
+        Assert.assertEquals("http://localhost/things/{id}", affordance.getHref());
+        Assert.assertNull("rel must be null", affordance.getRel());
+        Assert.assertEquals(0, affordance.getRels()
                 .size());
-        assertThat(affordance.getRels(), is(empty()));
+        Assert.assertThat(affordance.getRels(), Matchers.is(Matchers.empty()));
     }
 
     @Test
     public void testConstructorWithSingleRel() {
         final Affordance affordance = new Affordance("http://localhost/things/{id}", "thing");
-        assertEquals("http://localhost/things/{id}", affordance.getHref());
-        assertEquals("thing", affordance.getRel());
-        assertThat(affordance.getRels(), contains("thing"));
+        Assert.assertEquals("http://localhost/things/{id}", affordance.getHref());
+        Assert.assertEquals("thing", affordance.getRel());
+        Assert.assertThat(affordance.getRels(), Matchers.contains("thing"));
 
     }
 
@@ -46,30 +47,30 @@ public class AffordanceTest {
     public void testConstructorWithRels() {
         final Affordance affordance = new Affordance("http://localhost/things/{id}",
                 "start", "http://example.net/relation/other");
-        assertEquals("http://localhost/things/{id}", affordance.getHref());
-        assertEquals("start", affordance.getRel());
-        assertThat(affordance.getRels(), contains("start", "http://example.net/relation/other"));
+        Assert.assertEquals("http://localhost/things/{id}", affordance.getHref());
+        Assert.assertEquals("start", affordance.getRel());
+        Assert.assertThat(affordance.getRels(), Matchers.contains("start", "http://example.net/relation/other"));
     }
 
     @Test
     public void testIsTemplated() {
         final Affordance affordance = new Affordance("http://localhost/things/{id}", "thing");
-        assertEquals("http://localhost/things/{id}", affordance.getHref());
-        assertTrue("must recognize template", affordance.isTemplated());
+        Assert.assertEquals("http://localhost/things/{id}", affordance.getHref());
+        Assert.assertTrue("must recognize template", affordance.isTemplated());
 
     }
 
     @Test
     public void testGetVariables() {
         final Affordance affordance = new Affordance("http://localhost/things/{id}", "thing");
-        assertThat(affordance.getVariableNames(), contains("id"));
+        Assert.assertThat(affordance.getVariableNames(), Matchers.contains("id"));
 
     }
 
     @Test
     public void testExpand() {
         final Affordance affordance = new Affordance("http://localhost/things{/id}", "thing");
-        assertEquals("http://localhost/things/100", affordance.expand(100).getHref());
+        Assert.assertEquals("http://localhost/things/100", affordance.expand(100).getHref());
 
     }
 
@@ -80,6 +81,6 @@ public class AffordanceTest {
         Map<String, Object> arguments = new HashMap<String, Object>();
         arguments.put("id", 101);
 
-        assertEquals("http://localhost/things?id=101", affordance.expand(101).getHref());
+        Assert.assertEquals("http://localhost/things?id=101", affordance.expand(101).getHref());
     }
 }

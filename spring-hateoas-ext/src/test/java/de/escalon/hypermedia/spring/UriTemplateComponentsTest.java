@@ -10,6 +10,7 @@
 
 package de.escalon.hypermedia.spring;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -19,12 +20,12 @@ public class UriTemplateComponentsTest {
     @Test
     public void testToStringWithQueryContinuation() throws Exception {
         UriTemplateComponents uriTemplateComponents = new UriTemplateComponents("http://example.com", "?foo=bar", "baz, gnarf", "#fragmentIdentifier");
-        assertEquals("http://example.com?foo=bar{&baz, gnarf}#fragmentIdentifier", uriTemplateComponents.toString());
+        Assert.assertEquals("http://example.com?foo=bar{&baz, gnarf}#fragmentIdentifier", uriTemplateComponents.toString());
     }
 
     @Test
     public void testToStringWithQueryVariables() throws Exception {
         UriTemplateComponents uriTemplateComponents = new UriTemplateComponents("http://example.com", "", "baz, gnarf", "#fragmentIdentifier");
-        assertEquals("http://example.com{?baz, gnarf}#fragmentIdentifier", uriTemplateComponents.toString());
+        Assert.assertEquals("http://example.com{?baz, gnarf}#fragmentIdentifier", uriTemplateComponents.toString());
     }
 }
