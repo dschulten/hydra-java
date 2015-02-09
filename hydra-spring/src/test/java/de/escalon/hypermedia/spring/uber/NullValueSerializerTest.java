@@ -13,12 +13,14 @@ package de.escalon.hypermedia.spring.uber;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class NullValueSerializerTest {
 

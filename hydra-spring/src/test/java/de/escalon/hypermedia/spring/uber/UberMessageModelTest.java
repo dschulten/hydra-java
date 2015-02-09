@@ -11,6 +11,7 @@
 package de.escalon.hypermedia.spring.uber;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore
 public class UberMessageModelTest {
 
 	private UberMessageModel uberMessageModel;

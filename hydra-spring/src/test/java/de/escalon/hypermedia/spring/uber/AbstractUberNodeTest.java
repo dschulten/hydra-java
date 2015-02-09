@@ -11,6 +11,7 @@
 package de.escalon.hypermedia.spring.uber;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.hateoas.Link;
 
@@ -18,6 +19,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class AbstractUberNodeTest {
 
 	private static final String URL_PREVIOUS = "http://www.example.com/previous";
