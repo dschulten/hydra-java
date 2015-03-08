@@ -132,6 +132,9 @@ Furthermore, if you use these hydra features, make sure you have a `@Term(define
 
 == Examples
 
+=== Designing a Hydra API ===
+See my article https://www.w3.org/community/hydra/wiki/Restbucks_with_Hydra for an example of an ordering flow.
+
 === Live Demo
 
 Use a ReST client to access http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. Sending `Accept: application/ld+json` will get you hydra, but `application/json` or `application/hal+json` work as well. When you POST or PUT, make sure you add a Content-Type header matching your request.
