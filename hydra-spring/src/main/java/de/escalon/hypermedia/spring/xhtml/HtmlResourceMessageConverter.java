@@ -8,20 +8,27 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring;
+package de.escalon.hypermedia.spring.xhtml;
 
 import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.action.ActionDescriptor;
 import de.escalon.hypermedia.action.ActionInputParameter;
+import de.escalon.hypermedia.spring.uber.NullValueSerializer;
+import org.springframework.hateoas.*;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.*;
 import java.util.Map.Entry;
 
 /**
@@ -41,7 +48,7 @@ import java.util.Map.Entry;
  *     &lt;/property&gt;
  *   &lt;/bean&gt;
  *
- *   &lt;bean id="htmlFormMessageConverter" class="de.escalon.hypermedia.spring.HtmlResourceMessageConverter"&gt;
+ *   &lt;bean id="htmlFormMessageConverter" class="de.escalon.hypermedia.spring.xhtml.HtmlResourceMessageConverter"&gt;
  *     &lt;property name="supportedMediaTypes" value="text/html" /&gt;
  *   &lt;/bean&gt;
  * </pre>
@@ -188,6 +195,200 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
         FileCopyUtils.copy(sb.toString()
                 .getBytes("UTF-8"), outputMessage.getBody());
 
+    }
+
+    static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
+    static final Set<String> FILTER_BEAN = new HashSet<String>(Arrays.asList("class"));
+
+
+//    public static class XhtmlOutput {
+//
+//        public void addLinks(List<Link> links) {
+//        }
+//
+//        public void addData(Object itemNode) {
+//
+//        }
+//    }
+    /**
+     * Recursively converts object to nodes of uber data.
+     *
+     * @param object to convert
+     * @param writer to write to
+     */
+    public static void writeResource(XhtmlWriter writer, Object object) {
+        Set<String> filtered = FILTER_RESOURCE_SUPPORT;
+        if (object == null) {
+            return;
+        }
+        try {
+            // TODO: move all returns to else branch of property descriptor handling
+            if (object instanceof Resource) {
+                Resource<?> resource = (Resource<?>) object;
+                writer.addLinks(resource.getLinks());
+                writeResource(writer, resource.getContent());
+                return;
+            } else if (object instanceof Resources) {
+                Resources<?> resources = (Resources<?>) object;
+
+                // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
+                writer.addLinks(resources.getLinks());
+
+                Collection<?> content = resources.getContent();
+                writeResource(writer, content);
+                return;
+            } else if (object instanceof ResourceSupport) {
+                ResourceSupport resource = (ResourceSupport) object;
+
+                writer.addLinks(resource.getLinks());
+
+                // wrap object attributes below to avoid endless loop
+
+            } else if (object instanceof Collection) {
+                Collection<?> collection = (Collection<?>) object;
+                writer.beginUnorderedList();
+                for (Object item : collection) {
+                    writer.beginListItem();
+                    writeResource(writer, item);
+                    writer.endListItem();
+                }
+                writer.endUnorderedList();
+                return;
+            }
+            if (object instanceof Map) {
+                Map<?, ?> map = (Map<?, ?>) object;
+                for (Entry<?, ?> entry : map.entrySet()) {
+                    String name = entry.getKey().toString();
+                    Object content = entry.getValue();
+                    Object value = getContentAsScalarValue(content);
+                    writer.beginDiv();
+                    writer.writeSpan(name);
+                    writer.write(": ");
+                    if (value != null) {
+                        writer.writeSpan(value);
+                    } else {
+                        writeResource(writer, content);
+                    }
+                    writer.endDiv();
+                }
+            } else {
+                PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(object);
+                for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                    String name = propertyDescriptor.getName();
+                    if (filtered.contains(name)) {
+                        continue;
+                    }
+                    Object content = propertyDescriptor.getReadMethod().invoke(object);
+
+                    Object value = getContentAsScalarValue(content);
+
+                    writer.beginDiv();
+                    writer.writeSpan(name);
+                    writer.write(": ");
+                    if (value != null) {
+                        writer.writeSpan(value.toString());
+                    } else {
+                        writeResource(writer, content);
+                    }
+                    writer.endDiv();
+
+                }
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException("failed to transform object " + object, ex);
+        }
+
+    }
+
+    private static PropertyDescriptor[] getPropertyDescriptors(Object bean) {
+        try {
+            return Introspector.getBeanInfo(bean.getClass()).getPropertyDescriptors();
+        } catch (IntrospectionException e) {
+            throw new RuntimeException("failed to get property descriptors of bean " + bean, e);
+        }
+    }
+
+    static class NullValue {
+
+    }
+
+    /**
+     * Uses {@link NullValueSerializer} to render undefined values as null.
+     */
+    public static final NullValue NULL_VALUE = new NullValue();
+
+    private static Object getContentAsScalarValue(Object content) {
+        Object value = null;
+
+        if (content == null) {
+            value = NULL_VALUE;
+        } else if (content instanceof String || content instanceof Number || content.equals(false) || content.equals(true)) {
+            value = content;
+        }
+        return value;
+    }
+
+//    /**
+//     * Converts link to uber node.
+//     *
+//     * @param link to convert
+//     * @return uber link
+//     */
+//    public static UberNode toUberLink(Link link) {
+//        UberNode uberLink = new UberNode();
+//        uberLink.setRel(Arrays.asList(link.getRel()));
+//        uberLink.setUrl(getUrlProperty(link));
+//        uberLink.setModel(getModelProperty(link));
+////		uberLink.setAction(UberAction.forRequestMethod(link.getRequestMethod()));
+//        if (true) throw new UnsupportedOperationException();
+//        return uberLink;
+//    }
+
+    private static String getModelProperty(Link link) {
+        if (true) throw new UnsupportedOperationException();
+        RequestMethod httpMethod = RequestMethod.DELETE;// link.getRequestMethod();
+        UriTemplate uriTemplate = new UriTemplate(link.getHref());
+        final String model;
+        switch (httpMethod) {
+            case GET:
+            case DELETE: {
+                model = buildModel(uriTemplate.getVariables(), "{?", ",", "}", "%s");
+                break;
+            }
+            case POST:
+            case PUT:
+            case PATCH: {
+                model = buildModel(uriTemplate.getVariables(), "", "&", "", "%s={%s}");
+                break;
+            }
+            default:
+                model = null;
+        }
+        return StringUtils.isEmpty(model) ? null : model;
+    }
+
+    private static String getUrlProperty(Link link) {
+        throw new UnsupportedOperationException();
+//		return UriComponentsBuilder.fromUriString(link.getBaseUri()).build().normalize().toString();
+    }
+
+    private static String buildModel(List<TemplateVariable> variables, String prefix, String separator, String suffix,
+                                     String parameterTemplate) {
+        StringBuilder sb = new StringBuilder();
+        for (TemplateVariable variable : variables) {
+            if (sb.length() == 0) {
+                sb.append(prefix);
+            } else {
+                sb.append(separator);
+            }
+            String parameterName = variable.getName();
+            sb.append(String.format(parameterTemplate, parameterName, parameterName));
+
+        }
+        if (sb.length() > 0) {
+            sb.append(suffix);
+        }
+        return sb.toString();
     }
 
     private void appendForm(StringBuilder sb, ActionDescriptor actionDescriptor) {

@@ -5,8 +5,7 @@
  */
 
 @Terms({
-        @Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#"),
-        @Term(define = "rdfs", as = "http://www.w3.org/2000/01/rdf-schema#")})
+        @Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")})
 package de.escalon.hypermedia.sample.beans;
 
 import de.escalon.hypermedia.hydra.mapping.Term;

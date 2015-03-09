@@ -38,7 +38,7 @@ import java.util.List;
 @Configuration
 @EnableWebMvc
 @EnablePluginRegistries(RelProvider.class)
-@ComponentScan("de.escalon.hypermedia.sample.event")
+@ComponentScan({"de.escalon.hypermedia.sample.event", "de.escalon.hypermedia.sample.store"})
 public class Config extends WebMvcConfigurerAdapter {
 
     private static final boolean EVO_PRESENT =

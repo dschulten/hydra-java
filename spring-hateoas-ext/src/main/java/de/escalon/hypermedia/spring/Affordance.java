@@ -75,6 +75,10 @@ public class Affordance extends Link {
         super(href);
     }
 
+    /**
+     * Gets action descriptors.
+     * @return descriptors, never null
+     */
     @JsonIgnore
     public List<ActionDescriptor> getActionDescriptors() {
         return Collections.unmodifiableList(actionDescriptors);
@@ -140,6 +144,10 @@ public class Affordance extends Link {
         else {
             linkParams.remove("title");
         }
+    }
+
+    public String getTitle() {
+        return linkParams.getFirst("title");
     }
 
     /**
