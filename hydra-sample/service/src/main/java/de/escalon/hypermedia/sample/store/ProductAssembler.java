@@ -22,7 +22,7 @@ public class ProductAssembler extends ResourceAssemblerSupport<ProductModel, Pro
     @Override
     protected Product instantiateResource(ProductModel entity) {
         Product orderedItem = new Product(entity.name);
-        orderedItem.setProductId(entity.productId);
+        orderedItem.setProductID(entity.productId);
         return orderedItem;
     }
 }

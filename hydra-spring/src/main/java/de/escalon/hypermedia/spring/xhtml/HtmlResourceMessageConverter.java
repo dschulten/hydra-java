@@ -10,13 +10,19 @@
 
 package de.escalon.hypermedia.spring.xhtml;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.action.ActionDescriptor;
 import de.escalon.hypermedia.action.ActionInputParameter;
+import de.escalon.hypermedia.spring.HypermediaTypes;
+import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson.JacksonHydraModule;
 import de.escalon.hypermedia.spring.uber.NullValueSerializer;
 import org.springframework.hateoas.*;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
@@ -28,6 +34,8 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -158,15 +166,14 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
             "  </body>" + //
             "</html>";
 
+    public HtmlResourceMessageConverter() {
+        this.setSupportedMediaTypes(
+                Arrays.asList(MediaType.TEXT_HTML));
+    }
+
     @Override
     protected boolean supports(Class<?> clazz) {
-        final boolean ret;
-        if (ActionDescriptor.class == clazz || ActionDescriptor[].class == clazz) {
-            ret = true;
-        } else {
-            ret = false;
-        }
-        return ret;
+        return true;
     }
 
     @Override
@@ -179,21 +186,28 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
     protected void writeInternal(Object t, HttpOutputMessage outputMessage) throws IOException,
             HttpMessageNotWritableException {
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format(HTML_START, "Input Data"));
+        XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody()));
 
-        if (t instanceof ActionDescriptor[]) {
-            ActionDescriptor[] descriptors = (ActionDescriptor[]) t;
-            for (ActionDescriptor actionDescriptor : descriptors) {
-                appendForm(sb, actionDescriptor);
-            }
-        } else {
-            ActionDescriptor actionDescriptor = (ActionDescriptor) t;
-            appendForm(sb, actionDescriptor);
-        }
-        sb.append(HTML_END);
-        FileCopyUtils.copy(sb.toString()
-                .getBytes("UTF-8"), outputMessage.getBody());
+        xhtmlWriter.write(String.format(HTML_START, "Input Data"));
+        writeResource(xhtmlWriter, t);
+        xhtmlWriter.write(HTML_END);
+        xhtmlWriter.flush();
+
+//        StringBuilder sb = new StringBuilder();
+//        sb.append(String.format(HTML_START, "Input Data"));
+//
+//        if (t instanceof ActionDescriptor[]) {
+//            ActionDescriptor[] descriptors = (ActionDescriptor[]) t;
+//            for (ActionDescriptor actionDescriptor : descriptors) {
+//                appendForm(sb, actionDescriptor);
+//            }
+//        } else {
+//            ActionDescriptor actionDescriptor = (ActionDescriptor) t;
+//            appendForm(sb, actionDescriptor);
+//        }
+//        sb.append(HTML_END);
+//        FileCopyUtils.copy(sb.toString()
+//                .getBytes("UTF-8"), outputMessage.getBody());
 
     }
 
@@ -258,41 +272,38 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
             if (object instanceof Map) {
                 Map<?, ?> map = (Map<?, ?>) object;
                 for (Entry<?, ?> entry : map.entrySet()) {
-                    String name = entry.getKey().toString();
+                    String name = entry.getKey()
+                            .toString();
                     Object content = entry.getValue();
-                    Object value = getContentAsScalarValue(content);
-                    writer.beginDiv();
-                    writer.writeSpan(name);
-                    writer.write(": ");
-                    if (value != null) {
-                        writer.writeSpan(value);
-                    } else {
-                        writeResource(writer, content);
-                    }
-                    writer.endDiv();
+                    writeAttribute(writer, name, content);
                 }
+            } else if (object instanceof Enum) {
+                writer.writeSpan(((Enum) object).name());
+            } else if (object instanceof Currency) {
+                // TODO configurable classes which should be rendered with toString
+                // or use JsonSerializer?
+                writer.writeSpan(object.toString());
             } else {
-                PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(object);
-                for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                Class<?> aClass = object.getClass();
+                Map<String, PropertyDescriptor> propertyDescriptors = getPropertyDescriptors(object);
+                Field[] fields = aClass.getFields();
+                for (Field field : fields) {
+                    String name = field.getName();
+                    if(!propertyDescriptors.containsKey(name)) {
+                        Object content = field.get(object);
+                        writeAttribute(writer, name, content);
+                    }
+                }
+                for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
                     String name = propertyDescriptor.getName();
                     if (filtered.contains(name)) {
                         continue;
                     }
                     Object content = propertyDescriptor.getReadMethod().invoke(object);
-
-                    Object value = getContentAsScalarValue(content);
-
-                    writer.beginDiv();
-                    writer.writeSpan(name);
-                    writer.write(": ");
-                    if (value != null) {
-                        writer.writeSpan(value.toString());
-                    } else {
-                        writeResource(writer, content);
-                    }
-                    writer.endDiv();
-
+                    writeAttribute(writer, name, content);
                 }
+
+
             }
         } catch (Exception ex) {
             throw new RuntimeException("failed to transform object " + object, ex);
@@ -300,9 +311,29 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
 
     }
 
-    private static PropertyDescriptor[] getPropertyDescriptors(Object bean) {
+    private static void writeAttribute(XhtmlWriter writer, String name, Object content) throws IOException {
+        Object value = getContentAsScalarValue(content);
+
+        writer.beginDiv();
+        writer.writeSpan(name);
+        writer.write(": ");
+        if (value != null && value != NULL_VALUE) {
+            writer.writeSpan(value.toString());
+        } else {
+            writeResource(writer, content);
+        }
+        writer.endDiv();
+    }
+
+    private static Map<String, PropertyDescriptor> getPropertyDescriptors(Object bean) {
         try {
-            return Introspector.getBeanInfo(bean.getClass()).getPropertyDescriptors();
+            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(bean.getClass())
+                    .getPropertyDescriptors();
+            Map<String, PropertyDescriptor> ret = new HashMap<String, PropertyDescriptor>();
+            for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                ret.put(propertyDescriptor.getName(), propertyDescriptor);
+            }
+            return ret;
         } catch (IntrospectionException e) {
             throw new RuntimeException("failed to get property descriptors of bean " + bean, e);
         }

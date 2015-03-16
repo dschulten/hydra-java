@@ -81,7 +81,7 @@ public class EventController {
 
     private void addAffordances(Event event) {
         event.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
-                .updateEvent(event.id, null))
+                .updateEvent(event.id, event))
                 .and(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
                         .deleteEvent(event.id)))
                 .withSelfRel());

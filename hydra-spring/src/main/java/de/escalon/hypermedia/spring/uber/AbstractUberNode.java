@@ -67,7 +67,7 @@ public abstract class AbstractUberNode implements Iterable<UberNode> {
 	/**
 	 * Gets first child of this uber node having the given rel attribute.
 	 *
-	 * @param name to look up
+	 * @param rel to look up
 	 * @return found child or null
 	 */
 	public UberNode getFirstByRel(String rel) {

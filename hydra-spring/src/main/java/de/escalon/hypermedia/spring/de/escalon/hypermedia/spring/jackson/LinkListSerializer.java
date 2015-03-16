@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import de.escalon.hypermedia.DataType;
+import de.escalon.hypermedia.PropertyUtil;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.spring.Affordance;
@@ -218,7 +219,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                         propertyDescriptor.getWriteMethod(),
                         propertyDescriptor.getName());
 
-                Object propertyValue = getPropertyValue(currentCallValue, propertyDescriptor);
+                Object propertyValue = PropertyUtil.getPropertyValue(currentCallValue, propertyDescriptor);
 
                 ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
                         new MethodParameter(propertyDescriptor.getWriteMethod(), 0), propertyValue);
@@ -244,7 +245,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty");
 
-                Object propertyValue = getPropertyValue(currentCallValue, propertyDescriptor);
+                Object propertyValue = PropertyUtil.getPropertyValue(currentCallValue, propertyDescriptor);
 
                 recurseSupportedProperties(jgen, currentVocab, propertyType, actionDescriptor,
                         actionInputParameter, propertyValue);
@@ -254,18 +255,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeEndObject();
             }
         }
-    }
-
-    private Object getPropertyValue(Object currentCallValue, PropertyDescriptor propertyDescriptor) {
-        Object propertyValue = null;
-        if (currentCallValue != null && propertyDescriptor.getReadMethod() != null) {
-            try {
-                propertyValue = propertyDescriptor.getReadMethod().invoke(currentCallValue);
-            } catch (Exception e) {
-                throw new RuntimeException("failed to read property from call value", e);
-            }
-        }
-        return propertyValue;
     }
 
     /**

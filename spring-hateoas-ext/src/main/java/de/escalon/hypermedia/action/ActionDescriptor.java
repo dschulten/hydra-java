@@ -85,6 +85,10 @@ public class ActionDescriptor {
         return requestBody;
     }
 
+    public boolean hasRequestBody() {
+        return requestBody != null;
+    }
+
     public void setRequestBody(ActionInputParameter requestBody) {
         this.requestBody = requestBody;
     }

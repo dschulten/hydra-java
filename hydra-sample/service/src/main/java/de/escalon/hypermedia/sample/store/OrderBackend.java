@@ -15,11 +15,19 @@ public class OrderBackend {
     public static int counter;
     public List<OrderModel> orderModels = new ArrayList<OrderModel>();
 
-    public int createOrder() {
+    public OrderModel createOrder() {
         OrderModel orderModel = new OrderModel();
-        orderModel.setId(counter);
+        orderModel.setId(counter++);
         orderModels.add(orderModel);
-        return counter++;
+        counter++;
+        return orderModel;
+    }
+
+    public OrderModel addOrderedItem(int id, ProductModel productModel) {
+        OrderModel orderModel = orderModels.get(id);
+        List<ProductModel> products = orderModel.getProducts();
+        products.add(productModel);
+        return orderModel;
     }
 
     public OrderModel getOrder(int id) {

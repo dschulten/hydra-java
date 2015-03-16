@@ -1,6 +1,7 @@
 package de.escalon.hypermedia.sample.store;
 
 import de.escalon.hypermedia.sample.beans.Order;
+import de.escalon.hypermedia.sample.beans.Product;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -28,9 +29,11 @@ public class OrderController {
 
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Void> makeOrder(@RequestBody Order order) {
-        int id = orderBackend.createOrder();
-        AffordanceBuilder location = linkTo(methodOn(this.getClass()).getOrder(id));
+    public ResponseEntity<Void> makeOrder(@RequestBody Product product) {
+        OrderModel orderModel = orderBackend.createOrder();
+        orderModel = orderBackend.addOrderedItem(orderModel.getId(),
+                new ProductModel(product.name, product.getProductID()));
+        AffordanceBuilder location = linkTo(methodOn(this.getClass()).getOrder(orderModel.getId()));
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(location.toUri());
         return new ResponseEntity<Void>(headers, HttpStatus.CREATED);

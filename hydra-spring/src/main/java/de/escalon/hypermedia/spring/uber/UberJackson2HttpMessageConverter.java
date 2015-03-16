@@ -104,10 +104,11 @@ public class UberJackson2HttpMessageConverter extends AbstractHttpMessageConvert
 	 * is used.
 	 * <p>
 	 * Setting a custom-configured {@code ObjectMapper} is one way to take further control of the JSON serialization
-	 * process. For example, an extended {@link org.codehaus.jackson.map.SerializerFactory} can be configured that
+	 * process. For example, an extended {@link com.fasterxml.jackson.databind.ser.SerializerFactory} can be configured that
 	 * provides custom serializers for specific types. The other option for refining the serialization process is to use
 	 * Jackson's provided annotations on the types to be serialized, in which case a custom-configured ObjectMapper is
 	 * unnecessary.
+     * @param objectMapper used for json mapping
 	 */
 	public void setObjectMapper(ObjectMapper objectMapper) {
 		Assert.notNull(objectMapper, "ObjectMapper must not be null");

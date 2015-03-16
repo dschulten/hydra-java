@@ -7,17 +7,18 @@ import org.springframework.hateoas.ResourceSupport;
  */
 public class Product extends ResourceSupport {
     public final String name;
-    private String productId;
+
+    private String productID;
 
     public Product(String name) {
         this.name = name;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setProductID(String productId) {
+        this.productID = productId;
     }
 
-    public String getProductId() {
-        return productId;
+    public String getProductID() {
+        return productID;
     }
 }

@@ -3,6 +3,7 @@ package de.escalon.hypermedia.sample;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.spring.HydraMessageConverter;
+import de.escalon.hypermedia.spring.xhtml.HtmlResourceMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -51,8 +52,12 @@ public class Config extends WebMvcConfigurerAdapter {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(hydraMessageConverter());
         converters.add(halConverter());
-//        converters.add(htmlMessageConverter());
+        converters.add(htmlMessageConverter());
         converters.add(jsonConverter());
+    }
+
+    private HttpMessageConverter<?> htmlMessageConverter() {
+        return new HtmlResourceMessageConverter();
     }
 
     @Override
