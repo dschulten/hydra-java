@@ -393,7 +393,7 @@ public class XhtmlWriter extends Writer {
         // TODO duplicate on HtmlResourceMessageConverter
         Constructor constructor = null;
         for (Constructor ctor : constructors) {
-            if (ctor.getParameterCount() == 0) {
+            if (ctor.getParameterTypes().length == 0) {
                 constructor = ctor;
             }
         }
@@ -433,7 +433,7 @@ public class XhtmlWriter extends Writer {
                     constructor = findJsonCreator(constructors);
                 }
                 Assert.notNull(constructor, "no default constructor or JsonCreator found");
-                int parameterCount = constructor.getParameterCount();
+                int parameterCount = constructor.getParameterTypes().length;
                 if (parameterCount > 0) {
                     Annotation[][] annotationsOnParameters = constructor.getParameterAnnotations();
 

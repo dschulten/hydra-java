@@ -157,7 +157,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
                     constructor = findJsonCreator(constructors);
                 }
                 Assert.notNull(constructor, "no default constructor or JsonCreator found");
-                int parameterCount = constructor.getParameterCount();
+                int parameterCount = constructor.getParameterTypes().length;
                 Object[] args = new Object[parameterCount];
                 if (parameterCount > 0) {
                     Annotation[][] annotationsOnParameters = constructor.getParameterAnnotations();
@@ -221,7 +221,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
         // TODO duplicate on XhtmlWriter
         Constructor constructor = null;
         for (Constructor ctor : constructors) {
-            if (ctor.getParameterCount() == 0) {
+            if (ctor.getParameterTypes().length == 0) {
                 constructor = ctor;
             }
         }
