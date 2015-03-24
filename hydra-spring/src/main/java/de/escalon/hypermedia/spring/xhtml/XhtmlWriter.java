@@ -353,7 +353,6 @@ public class XhtmlWriter extends Writer {
             for (String requestParamName : requestParams) {
                 ActionInputParameter actionInputParameter = actionDescriptor.getActionInputParameter(requestParamName);
                 // TODO support list and matrix parameters?
-                // TODO support valid value ranges, possible values, value constraints?
                 Object[] possibleValues = actionInputParameter.getPossibleValues(actionDescriptor);
                 if (possibleValues.length > 0) {
                     if (actionInputParameter.isArrayOrCollection()) {
@@ -392,7 +391,7 @@ public class XhtmlWriter extends Writer {
     }
 
     private Constructor findDefaultCtor(Constructor[] constructors) {
-        // TODO duplicate on XhtmlWriter
+        // TODO duplicate on HtmlResourceMessageConverter
         Constructor constructor = null;
         for (Constructor ctor : constructors) {
             if (ctor.getParameterCount() == 0) {
@@ -403,7 +402,7 @@ public class XhtmlWriter extends Writer {
     }
 
     private Constructor findJsonCreator(Constructor[] constructors) {
-        // TODO duplicate on XhtmlWriter
+        // TODO duplicate on HtmlResourceMessageConverter
         Constructor constructor = null;
         for (Constructor ctor : constructors) {
             if (AnnotationUtils.getAnnotation(ctor, JsonCreator.class) != null) {
@@ -445,20 +444,11 @@ public class XhtmlWriter extends Writer {
                             if (JsonProperty.class == annotation.annotationType()) {
                                 JsonProperty jsonProperty = (JsonProperty) annotation;
                                 String paramName = jsonProperty.value();
-//                                List<String> formValue = formValues.get(paramName);
                                 Parameter parameter = parameters[paramIndex];
                                 Class<?> parameterType = parameter.getType();
 
-                                // TODO instead of the above write input fields:
-
-                                // TODO replace PropertyDescriptor by ctor param info
                                 // TODO duplicate below for PropertyDecriptors
                                 if (DataType.isSingleValueType(parameterType)) {
-
-//                                    final Property property = new Property(beanType,
-//                                            propertyDescriptor.getReadMethod(),
-//                                            propertyDescriptor.getWriteMethod(),
-//                                            propertyDescriptor.getName());
 
                                     Object propertyValue = null;
                                     if (currentCallValue != null) {
@@ -469,8 +459,13 @@ public class XhtmlWriter extends Writer {
                                             new ActionInputParameter(
                                                     new MethodParameter(constructor, paramIndex), propertyValue);
 
-                                    // TODO possible values for ctor param
                                     final Object[] possibleValues = new Object[0];
+                                    // TODO possible values for ctor param
+//                                    final Property property = new Property(beanType,
+//                                            propertyDescriptor.getReadMethod(),
+//                                            propertyDescriptor.getWriteMethod(),
+//                                            propertyDescriptor.getName());
+
 //                                            actionInputParameter.getPossibleValues(property, actionDescriptor);
                                     if (possibleValues.length > 0) {
                                         if (actionInputParameter.isArrayOrCollection()) {
@@ -509,13 +504,12 @@ public class XhtmlWriter extends Writer {
                                             actionInputParameter, propertyValue);
                                     endDiv();
                                 }
-                                paramIndex++;
+                                paramIndex++; // increase for each @JsonProperty
                             }
                         }
                     }
-                    // TODO check @JsonCreator
-//                    Assert.isTrue(defaultValues.length == paramIndex,
-//                            "not all constructor arguments of @JsonCreator are annotated with @JsonProperty");
+                    Assert.isTrue(parameters.length == paramIndex,
+                            "not all constructor arguments of @JsonCreator are annotated with @JsonProperty");
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to write input fields for constructor", e);
