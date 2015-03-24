@@ -161,7 +161,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
                 Object[] args = new Object[parameterCount];
                 if (parameterCount > 0) {
                     Annotation[][] annotationsOnParameters = constructor.getParameterAnnotations();
-                    Parameter[] parameters = constructor.getParameters();
+                    Class[] parameters = constructor.getParameterTypes();
                     int paramIndex = 0;
                     for (Annotation[] annotationsOnParameter : annotationsOnParameters) {
                         for (Annotation annotation : annotationsOnParameter) {
@@ -169,8 +169,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
                                 JsonProperty jsonProperty = (JsonProperty) annotation;
                                 String paramName = jsonProperty.value();
                                 List<String> formValue = formValues.get(paramName);
-                                Parameter parameter = parameters[paramIndex];
-                                Class<?> parameterType = parameter.getType();
+                                Class<?> parameterType = parameters[paramIndex];
                                 if (DataType.isSingleValueType(parameterType)) {
                                     if (formValue != null) {
                                         if (formValue.size() == 1) {

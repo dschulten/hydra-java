@@ -29,7 +29,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -437,15 +436,15 @@ public class XhtmlWriter extends Writer {
                 int parameterCount = constructor.getParameterCount();
                 if (parameterCount > 0) {
                     Annotation[][] annotationsOnParameters = constructor.getParameterAnnotations();
-                    Parameter[] parameters = constructor.getParameters();
+
+                    Class[] parameters = constructor.getParameterTypes();
                     int paramIndex = 0;
                     for (Annotation[] annotationsOnParameter : annotationsOnParameters) {
                         for (Annotation annotation : annotationsOnParameter) {
                             if (JsonProperty.class == annotation.annotationType()) {
                                 JsonProperty jsonProperty = (JsonProperty) annotation;
                                 String paramName = jsonProperty.value();
-                                Parameter parameter = parameters[paramIndex];
-                                Class<?> parameterType = parameter.getType();
+                                Class parameterType = parameters[paramIndex];
 
                                 // TODO duplicate below for PropertyDecriptors
                                 if (DataType.isSingleValueType(parameterType)) {
