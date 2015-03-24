@@ -21,17 +21,17 @@ public class DataTypeTest {
 
     @Test
     public void testIsScalarPrimitive() throws Exception {
-        Assert.assertTrue(DataType.isScalar(int.class));
+        Assert.assertTrue(DataType.isSingleValueType(int.class));
     }
 
     @Test
     public void testIsScalarNumber() throws Exception {
-        Assert.assertTrue(DataType.isScalar(Integer.class));
+        Assert.assertTrue(DataType.isSingleValueType(Integer.class));
     }
 
     @Test
     public void testIsScalarBigDecimal() throws Exception {
-        Assert.assertTrue(DataType.isScalar(BigDecimal.class));
+        Assert.assertTrue(DataType.isSingleValueType(BigDecimal.class));
     }
 
     @Test

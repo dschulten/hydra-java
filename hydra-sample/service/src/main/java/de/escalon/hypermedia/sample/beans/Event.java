@@ -1,5 +1,7 @@
 package de.escalon.hypermedia.sample.beans;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.sample.model.CreativeWork;
 import de.escalon.hypermedia.sample.model.EventStatusType;
 import org.springframework.hateoas.Resource;
@@ -16,6 +18,18 @@ public class Event extends ResourceSupport {
     private EventStatusType eventStatus;
     public final Resource<CreativeWork> workPerformed;
 
+    @JsonCreator
+    public Event(@JsonProperty("performer") String performer,
+                 @JsonProperty("workPerformed") CreativeWork workPerformed,
+                 @JsonProperty("location") String location,
+                 @JsonProperty("eventStatus") EventStatusType eventStatus) {
+        this.id = 0;
+        this.performer = performer;
+        this.location = location;
+        this.workPerformed = new Resource<CreativeWork>(workPerformed);
+        this.eventStatus = eventStatus;
+    }
+
     public Event(int id, String performer, CreativeWork workPerformed, String location, EventStatusType eventStatus) {
         this.id = id;
         this.performer = performer;
@@ -26,6 +40,7 @@ public class Event extends ResourceSupport {
 
     /**
      * Presence of setter makes de.escalon.hypermedia.sample.event status writable by default.
+     *
      * @param eventStatus
      */
     public void setEventStatus(EventStatusType eventStatus) {

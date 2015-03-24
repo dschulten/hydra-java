@@ -212,7 +212,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             final Class<?> propertyType = propertyDescriptor.getPropertyType();
             // TODO: the property name must be a valid URI - need to check context for terms?
             String propertyName = getWritableExposedPropertyOrPropertyName(propertyDescriptor);
-            if (DataType.isScalar(propertyType)) {
+            if (DataType.isSingleValueType(propertyType)) {
 
                 final Property property = new Property(beanType,
                         propertyDescriptor.getReadMethod(),
@@ -352,7 +352,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 Object[] callValues = actionInputParameter.getCallValues();
                 Class<?> componentType = callValues.getClass().getComponentType();
                 // only write defaultValue for array of scalars
-                if (DataType.isScalar(componentType)) {
+                if (DataType.isSingleValueType(componentType)) {
                     jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "defaultValue",
                             JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
                     jgen.writeStartArray();
@@ -365,7 +365,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "defaultValue",
                         JacksonHydraSerializer.HTTP_SCHEMA_ORG, "schema:"));
 
-                writeScalarValue(jgen, actionInputParameter.getCallValueFormatted(), actionInputParameter
+                writeScalarValue(jgen, actionInputParameter.getCallValue(), actionInputParameter
                         .getNestedParameterType());
             }
         }

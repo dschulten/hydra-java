@@ -48,7 +48,7 @@ public class ReviewController {
             final Resources<Review> reviewResources = new Resources<Review>(reviews);
 
             reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
-                    .getEvent(null)) // passing null requires that method takes Integer, not int
+                    .getEvent(eventId)) // passing null requires that method takes Integer, not int
                     .withRel("hydra:search"));
             reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass()).addReview
                     (eventId, null)).withSelfRel());

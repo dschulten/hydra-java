@@ -10,32 +10,33 @@
 
 package de.escalon.hypermedia.spring.xhtml;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import de.escalon.hypermedia.action.Type;
-import de.escalon.hypermedia.action.ActionDescriptor;
-import de.escalon.hypermedia.action.ActionInputParameter;
-import de.escalon.hypermedia.spring.HypermediaTypes;
-import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson.JacksonHydraModule;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import de.escalon.hypermedia.DataType;
 import de.escalon.hypermedia.spring.uber.NullValueSerializer;
-import org.springframework.hateoas.*;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
+import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
-import org.springframework.util.FileCopyUtils;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.util.*;
 
+import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Field;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -63,112 +64,14 @@ import java.util.Map.Entry;
  *
  * @author Dietrich Schulten
  */
-public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object> {
+public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object>
+        implements GenericHttpMessageConverter<Object> {
 
-    /**
-     * expects title
-     */
-    public static final String HTML_START = "" + //
-            // "<?xml version='1.0' encoding='UTF-8' ?>" + // formatter
-            "<!DOCTYPE html>" + //
-            "<html xmlns='http://www.w3.org/1999/xhtml'>" + //
-            "  <head>" + //
-            "    <title>%s</title>" + //
-            "  </head>" + //
-            "  <body>";
-
-    public static final String DIV_START = "" + //
-            "    <div>";
-
-    public static final String DIV_END = "" + //
-            "    </div>";
-
-    /**
-     * expects action url, form name, form method, form h1
-     */
-    public static final String FORM_START = "" + //
-            "    <form action='%s' name='%s' method='%s'>" + //
-            "      <h1>%s</h1>"; //
-
-    /**
-     * expects input field label, type, name and value
-     */
-    public static final String FORM_INPUT_LABELED = "" + //
-            "      <label>%s<input type='%s' name='%s' value='%s' /></label>";
-
-    /**
-     * expects input field label, type and name
-     */
-    public static final String FORM_INPUT_LABELED_START = "" + //
-            "      <label>%s<input type='%s' name='%s'";
-
-    /**
-     * expects attribute name and value
-     */
-    public static final String FORM_INPUT_ATTRIBUTE = "" + //
-            " %s='%s'";
-
-    /**
-     * expects input field value
-     */
-    public static final String FORM_INPUT_LABELED_END = "" + //
-            " value='%s' /></label>";
-
-    /**
-     * expects input field type, name and value
-     */
-    public static final String FORM_INPUT = "" + //
-            "      <input type='%s' name='%s' value='%s' />";
-
-    /**
-     * expects the name of the field the label is for and the label caption
-     */
-    public static final String FORM_LABEL_FOR = "" + //
-            "      <label for='%s'>%s</label>";
-
-    /**
-     * expects select field name, id and size
-     */
-    public static final String FORM_SELECT_ONE_START = "" + //
-            "      <select name='%s' id='%s' size='%d' >";
-
-    /**
-     * expects select field name, id and size
-     */
-    public static final String FORM_SELECT_MULTI_START = "" + //
-            "      <select name='%s' id='%s' size='%d' multiple='multiple'>";
-
-    /**
-     * expects select value
-     */
-    public static final String FORM_SELECT_OPTION = "" + //
-            "      <option>%s</option>";
-
-    /**
-     * expects select value
-     */
-    public static final String FORM_SELECT_OPTION_SELECTED = "" + //
-            "      <option selected='selected'>%s</option>";
-
-    /**
-     * closes a select
-     */
-    public static final String FORM_SELECT_END = "" + //
-            "      </select>";
-
-    /**
-     * closes the form
-     */
-    public static final String FORM_END = "" + //
-            "      <input type='submit' value='Submit' />" + //
-            "    </form>";
-    public static final String HTML_END = "" + //
-            "  </body>" + //
-            "</html>";
+    private Charset charset = Charset.forName("UTF-8");
 
     public HtmlResourceMessageConverter() {
         this.setSupportedMediaTypes(
-                Arrays.asList(MediaType.TEXT_HTML));
+                Arrays.asList(MediaType.TEXT_HTML, MediaType.APPLICATION_FORM_URLENCODED));
     }
 
     @Override
@@ -176,10 +79,166 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
         return true;
     }
 
+    public Object read(java.lang.reflect.Type type, Class<?> contextClass, HttpInputMessage inputMessage)
+            throws IOException, HttpMessageNotReadableException {
+
+        final Class clazz;
+        if (type instanceof Class) {
+            clazz = (Class) type;
+        } else if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+            Type rawType = parameterizedType.getRawType();
+            if (rawType instanceof Class) {
+                clazz = (Class) rawType;
+            } else {
+                throw new IllegalArgumentException("unexpected raw type " + rawType);
+            }
+        } else {
+            throw new IllegalArgumentException("unexpected type " + type);
+        }
+        return readInternal(clazz, inputMessage);
+
+    }
+
+
     @Override
-    protected Object readInternal(Class<? extends Object> clazz, HttpInputMessage inputMessage) throws IOException,
-            HttpMessageNotReadableException {
-        return new Object();
+    protected Object readInternal(Class<? extends Object> clazz, HttpInputMessage inputMessage)
+            throws IOException, HttpMessageNotReadableException {
+
+        return readRequestBody(clazz, inputMessage);
+
+    }
+
+    private Object readRequestBody(Class<? extends Object> clazz, HttpInputMessage inputMessage)
+            throws IOException {
+
+        MediaType contentType = inputMessage.getHeaders()
+                .getContentType();
+        Charset charset =
+                contentType.getCharSet() != null ?
+                        contentType.getCharSet() : this.charset;
+        String body = StreamUtils.copyToString(inputMessage.getBody(), charset);
+
+        String[] pairs = StringUtils.tokenizeToStringArray(body, "&");
+
+        MultiValueMap<String, String> formValues =
+                new LinkedMultiValueMap<String, String>(pairs.length);
+
+        for (String pair : pairs) {
+            int idx = pair.indexOf('=');
+            if (idx == -1) {
+                formValues.add(URLDecoder.decode(pair, charset.name()), null);
+            } else {
+                String name =
+                        URLDecoder.decode(pair.substring(0, idx), charset.name());
+                String value =
+                        URLDecoder.decode(pair.substring(idx + 1), charset.name());
+                formValues.add(name, value);
+            }
+        }
+
+        return recursivelyCreateObject(clazz, formValues);
+
+
+    }
+
+    private Object recursivelyCreateObject(Class<? extends Object> clazz,
+                                           MultiValueMap<String, String> formValues) {
+
+        if (Map.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Map not supported");
+        } else if (Collection.class.isAssignableFrom(clazz)) {
+            throw new IllegalArgumentException("Collection not supported");
+        } else {
+            try {
+                Constructor[] constructors = clazz.getConstructors();
+                Constructor constructor = findDefaultCtor(constructors);
+                if (constructor == null) {
+                    constructor = findJsonCreator(constructors);
+                }
+                Assert.notNull(constructor, "no default constructor or JsonCreator found");
+                int parameterCount = constructor.getParameterCount();
+                Object[] args = new Object[parameterCount];
+                if (parameterCount > 0) {
+                    Annotation[][] annotationsOnParameters = constructor.getParameterAnnotations();
+                    Parameter[] parameters = constructor.getParameters();
+                    int paramIndex = 0;
+                    for (Annotation[] annotationsOnParameter : annotationsOnParameters) {
+                        for (Annotation annotation : annotationsOnParameter) {
+                            if (JsonProperty.class == annotation.annotationType()) {
+                                JsonProperty jsonProperty = (JsonProperty) annotation;
+                                String paramName = jsonProperty.value();
+                                List<String> formValue = formValues.get(paramName);
+                                Parameter parameter = parameters[paramIndex];
+                                Class<?> parameterType = parameter.getType();
+                                if (DataType.isSingleValueType(parameterType)) {
+                                    if (formValue != null) {
+                                        if (formValue.size() == 1) {
+                                            args[paramIndex++] =
+                                                    DataType.asType(parameterType, formValue.get(0));
+                                        } else {
+//                                        // TODO create proper collection type
+                                            throw new IllegalArgumentException("variable list not supported");
+//                                        List<Object> listValue = new ArrayList<Object>();
+//                                        for (String item : formValue) {
+//                                            listValue.add(DataType.asType(parameterType, formValue.get(0)));
+//                                        }
+//                                        args[paramIndex++] = listValue;
+                                        }
+                                    } else {
+                                        args[paramIndex++] = null;
+                                    }
+                                } else {
+                                    args[paramIndex++] = recursivelyCreateObject(parameterType, formValues);
+                                }
+                            }
+                        }
+                    }
+                    Assert.isTrue(args.length == paramIndex,
+                            "not all constructor arguments of @JsonCreator are annotated with @JsonProperty");
+                }
+                Object ret = constructor.newInstance(args);
+                BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
+                PropertyDescriptor[] propertyDescriptors =
+                        beanInfo.getPropertyDescriptors();
+                for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                    Method writeMethod = propertyDescriptor.getWriteMethod();
+                    String name = propertyDescriptor.getName();
+                    List<String> strings = formValues.get(name);
+                    if (writeMethod != null && strings != null && strings.size() == 1) {
+                        writeMethod.invoke(ret, DataType.asType(propertyDescriptor.getPropertyType(),
+                                strings.get(0))); // TODO lists, consume values from ctor
+                    }
+                }
+                return ret;
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to instantiate bean " + clazz.getName(),
+                        e);
+            }
+        }
+    }
+
+    private Constructor findDefaultCtor(Constructor[] constructors) {
+        // TODO duplicate on XhtmlWriter
+        Constructor constructor = null;
+        for (Constructor ctor : constructors) {
+            if (ctor.getParameterCount() == 0) {
+                constructor = ctor;
+            }
+        }
+        return constructor;
+    }
+
+    private Constructor findJsonCreator(Constructor[] constructors) {
+        // TODO duplicate on XhtmlWriter
+        Constructor constructor = null;
+        for (Constructor ctor : constructors) {
+            if (AnnotationUtils.getAnnotation(ctor, JsonCreator.class) != null) {
+                constructor = ctor;
+                break;
+            }
+        }
+        return constructor;
     }
 
     @Override
@@ -187,50 +246,23 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
             HttpMessageNotWritableException {
 
         XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody()));
-
-        xhtmlWriter.write(String.format(HTML_START, "Input Data"));
+        xhtmlWriter.beginHtml("Input Data");
         writeResource(xhtmlWriter, t);
-        xhtmlWriter.write(HTML_END);
+        xhtmlWriter.endHtml();
         xhtmlWriter.flush();
-
-//        StringBuilder sb = new StringBuilder();
-//        sb.append(String.format(HTML_START, "Input Data"));
-//
-//        if (t instanceof ActionDescriptor[]) {
-//            ActionDescriptor[] descriptors = (ActionDescriptor[]) t;
-//            for (ActionDescriptor actionDescriptor : descriptors) {
-//                appendForm(sb, actionDescriptor);
-//            }
-//        } else {
-//            ActionDescriptor actionDescriptor = (ActionDescriptor) t;
-//            appendForm(sb, actionDescriptor);
-//        }
-//        sb.append(HTML_END);
-//        FileCopyUtils.copy(sb.toString()
-//                .getBytes("UTF-8"), outputMessage.getBody());
 
     }
 
     static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
     static final Set<String> FILTER_BEAN = new HashSet<String>(Arrays.asList("class"));
 
-
-//    public static class XhtmlOutput {
-//
-//        public void addLinks(List<Link> links) {
-//        }
-//
-//        public void addData(Object itemNode) {
-//
-//        }
-//    }
     /**
      * Recursively converts object to nodes of uber data.
      *
      * @param object to convert
      * @param writer to write to
      */
-    public static void writeResource(XhtmlWriter writer, Object object) {
+    private void writeResource(XhtmlWriter writer, Object object) {
         Set<String> filtered = FILTER_RESOURCE_SUPPORT;
         if (object == null) {
             return;
@@ -289,7 +321,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
                 Field[] fields = aClass.getFields();
                 for (Field field : fields) {
                     String name = field.getName();
-                    if(!propertyDescriptors.containsKey(name)) {
+                    if (!propertyDescriptors.containsKey(name)) {
                         Object content = field.get(object);
                         writeAttribute(writer, name, content);
                     }
@@ -299,7 +331,8 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
                     if (filtered.contains(name)) {
                         continue;
                     }
-                    Object content = propertyDescriptor.getReadMethod().invoke(object);
+                    Object content = propertyDescriptor.getReadMethod()
+                            .invoke(object);
                     writeAttribute(writer, name, content);
                 }
 
@@ -311,7 +344,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
 
     }
 
-    private static void writeAttribute(XhtmlWriter writer, String name, Object content) throws IOException {
+    private void writeAttribute(XhtmlWriter writer, String name, Object content) throws IOException {
         Object value = getContentAsScalarValue(content);
 
         writer.beginDiv();
@@ -339,6 +372,15 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
         }
     }
 
+    @Override
+    public boolean canRead(java.lang.reflect.Type type, Class<?> contextClass, MediaType mediaType) {
+        if (MediaType.APPLICATION_FORM_URLENCODED == mediaType) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     static class NullValue {
 
     }
@@ -359,181 +401,5 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
         return value;
     }
 
-//    /**
-//     * Converts link to uber node.
-//     *
-//     * @param link to convert
-//     * @return uber link
-//     */
-//    public static UberNode toUberLink(Link link) {
-//        UberNode uberLink = new UberNode();
-//        uberLink.setRel(Arrays.asList(link.getRel()));
-//        uberLink.setUrl(getUrlProperty(link));
-//        uberLink.setModel(getModelProperty(link));
-////		uberLink.setAction(UberAction.forRequestMethod(link.getRequestMethod()));
-//        if (true) throw new UnsupportedOperationException();
-//        return uberLink;
-//    }
-
-    private static String getModelProperty(Link link) {
-        if (true) throw new UnsupportedOperationException();
-        RequestMethod httpMethod = RequestMethod.DELETE;// link.getRequestMethod();
-        UriTemplate uriTemplate = new UriTemplate(link.getHref());
-        final String model;
-        switch (httpMethod) {
-            case GET:
-            case DELETE: {
-                model = buildModel(uriTemplate.getVariables(), "{?", ",", "}", "%s");
-                break;
-            }
-            case POST:
-            case PUT:
-            case PATCH: {
-                model = buildModel(uriTemplate.getVariables(), "", "&", "", "%s={%s}");
-                break;
-            }
-            default:
-                model = null;
-        }
-        return StringUtils.isEmpty(model) ? null : model;
-    }
-
-    private static String getUrlProperty(Link link) {
-        throw new UnsupportedOperationException();
-//		return UriComponentsBuilder.fromUriString(link.getBaseUri()).build().normalize().toString();
-    }
-
-    private static String buildModel(List<TemplateVariable> variables, String prefix, String separator, String suffix,
-                                     String parameterTemplate) {
-        StringBuilder sb = new StringBuilder();
-        for (TemplateVariable variable : variables) {
-            if (sb.length() == 0) {
-                sb.append(prefix);
-            } else {
-                sb.append(separator);
-            }
-            String parameterName = variable.getName();
-            sb.append(String.format(parameterTemplate, parameterName, parameterName));
-
-        }
-        if (sb.length() > 0) {
-            sb.append(suffix);
-        }
-        return sb.toString();
-    }
-
-    private void appendForm(StringBuilder sb, ActionDescriptor actionDescriptor) {
-        if(true) {
-            throw new UnsupportedOperationException("converter only suitable for action descriptor as return value");
-        }
-        String action = ""; // TODO: was actionDescriptor.getActionLink();
-        String formName = actionDescriptor.getActionName();
-
-        String formH1 = "Form " + formName;
-        sb.append(String.format(FORM_START, action, formName, actionDescriptor.getHttpMethod()
-                .toString(), formH1));
-
-        // build the form
-        Collection<String> requestParams = actionDescriptor.getRequestParamNames();
-        for (String requestParamName : requestParams) {
-            ActionInputParameter actionInputParameter = actionDescriptor.getActionInputParameter(requestParamName);
-            // TODO support list and matrix parameters?
-            // TODO support RequestBody mapped by object marshaler? Look at bean properties in that case instead of
-            // RequestParam arguments.
-            // TODO support valid value ranges, possible values, value constraints?
-            Object[] possibleValues = actionInputParameter.getPossibleValues(actionDescriptor);
-            if (possibleValues.length > 0) {
-                if (actionInputParameter.isArrayOrCollection()) {
-                    appendSelectMulti(sb, requestParamName, possibleValues, actionInputParameter.getCallValues());
-                } else {
-                    appendSelectOne(sb, requestParamName, possibleValues, actionInputParameter.getCallValue());
-                }
-            } else {
-                if (actionInputParameter.isArrayOrCollection()) {
-                    Object[] callValues = actionInputParameter.getCallValues();
-                    int items = callValues.length;
-                    for (int i = 0; i < items; i++) {
-                        Object value;
-                        if (i < callValues.length) {
-                            value = callValues[i];
-                        } else {
-                            value = null;
-                        }
-                        appendInput(sb, requestParamName, actionInputParameter, value);
-                    }
-                } else {
-                    String callValueFormatted = actionInputParameter.getCallValueFormatted();
-                    appendInput(sb, requestParamName, actionInputParameter, callValueFormatted);
-                }
-            }
-        }
-        sb.append(FORM_END);
-    }
-
-    private void appendInput(StringBuilder sb, String requestParamName, ActionInputParameter actionInputParameter,
-                             Object value) {
-        String fieldLabel = requestParamName + ": ";
-        Type inputFieldType = actionInputParameter.getHtmlInputFieldType();
-        String val = value == null ? "" : value.toString();
-        if (!actionInputParameter.isRequestBody()) {
-            sb.append(DIV_START);
-            if (Type.HIDDEN == inputFieldType) {
-                sb.append(String.format(FORM_INPUT, inputFieldType, requestParamName, val));
-            } else {
-                if (actionInputParameter.hasInputConstraints()) {
-                    sb.append(String.format(FORM_INPUT_LABELED_START, fieldLabel, inputFieldType, requestParamName));
-                    for (Entry<String, Object> entry : actionInputParameter.getInputConstraints()
-                            .entrySet()) {
-                        sb.append(String.format(FORM_INPUT_ATTRIBUTE, entry.getKey(), entry.getValue()));
-                    }
-                    sb.append(String.format(FORM_INPUT_LABELED_END, val));
-                } else {
-                    sb.append(String.format(FORM_INPUT_LABELED, fieldLabel, inputFieldType, requestParamName, val));
-                }
-            }
-            sb.append(DIV_END);
-        }
-    }
-
-    private void appendSelectOne(StringBuilder sb, String requestParamName, Object[] possibleValues, Object callValue) {
-        sb.append(DIV_START);
-        sb.append(String.format(FORM_LABEL_FOR, requestParamName, requestParamName + ": "));
-        sb.append(String.format(FORM_SELECT_ONE_START, requestParamName, requestParamName, possibleValues.length));
-        for (Object possibleValue : possibleValues) {
-            if (possibleValue.equals(callValue)) {
-                sb.append(String.format(FORM_SELECT_OPTION_SELECTED, possibleValue.toString()));
-            } else {
-                sb.append(String.format(FORM_SELECT_OPTION, possibleValue.toString()));
-            }
-        }
-        sb.append(FORM_SELECT_END);
-        sb.append(DIV_END);
-    }
-
-    private void appendSelectMulti(StringBuilder sb, String requestParamName, Object[] possibleValues,
-                                   Object[] actualValues) {
-        sb.append(DIV_START);
-        sb.append(String.format(FORM_LABEL_FOR, requestParamName, requestParamName + ": "));
-        sb.append(String.format(FORM_SELECT_MULTI_START, requestParamName, requestParamName, possibleValues.length));
-        for (Object possibleValue : possibleValues) {
-            if (arrayContains(actualValues, possibleValue)) {
-                sb.append(String.format(FORM_SELECT_OPTION_SELECTED, possibleValue.toString()));
-            } else {
-                sb.append(String.format(FORM_SELECT_OPTION, possibleValue.toString()));
-            }
-        }
-        sb.append(FORM_SELECT_END);
-        sb.append(DIV_END);
-    }
-
-    private boolean arrayContains(Object[] values, Object value) {
-        for (int i = 0; i < values.length; i++) {
-            Object item = values[i];
-            if (item.equals(value)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
 }

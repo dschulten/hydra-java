@@ -65,9 +65,8 @@ public class Affordance extends Link {
 
     private Affordance(String uriTemplate, MultiValueMap<String, String> linkParams,
                        List<ActionDescriptor> actionDescriptors) {
-        super(uriTemplate);
-        this.linkParams = linkParams;
-        this.actionDescriptors = actionDescriptors;
+        this(new PartialUriTemplate(uriTemplate), actionDescriptors); // no rels to pass
+        this.linkParams = linkParams; // takes care of rels
     }
 
 
