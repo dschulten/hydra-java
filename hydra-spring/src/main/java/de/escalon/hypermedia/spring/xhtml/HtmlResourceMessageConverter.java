@@ -325,14 +325,18 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
                         writeAttribute(writer, name, content);
                     }
                 }
+                // TODO public fields
                 for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
                     String name = propertyDescriptor.getName();
                     if (filtered.contains(name)) {
                         continue;
                     }
-                    Object content = propertyDescriptor.getReadMethod()
-                            .invoke(object);
-                    writeAttribute(writer, name, content);
+                    Method readMethod = propertyDescriptor.getReadMethod();
+                    if (readMethod != null) {
+                        Object content = readMethod
+                                .invoke(object);
+                        writeAttribute(writer, name, content);
+                    }
                 }
 
 
@@ -346,6 +350,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
     private void writeAttribute(XhtmlWriter writer, String name, Object content) throws IOException {
         Object value = getContentAsScalarValue(content);
 
+        // TODO use label here instead of simple span
         writer.beginDiv();
         writer.writeSpan(name);
         writer.write(": ");

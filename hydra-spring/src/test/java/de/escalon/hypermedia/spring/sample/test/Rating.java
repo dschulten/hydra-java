@@ -8,7 +8,7 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring.sample;
+package de.escalon.hypermedia.spring.sample.test;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,7 +23,7 @@ public class Rating {
     private Integer ratingValue;
 
     @JsonCreator
-    public Rating(@JsonProperty("ratingValue") Integer ratingValue) {
+    public Rating(@JsonProperty("ratingValue") @Input(min = 1, max = 5, step = 1) Integer ratingValue) {
         this.ratingValue = ratingValue;
     }
 

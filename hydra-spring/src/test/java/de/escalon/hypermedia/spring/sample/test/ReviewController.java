@@ -8,7 +8,7 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring.sample;
+package de.escalon.hypermedia.spring.sample.test;
 
 import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
@@ -39,7 +39,7 @@ public class ReviewController {
     @ResponseBody
     public Resources<Review> getReviews(@PathVariable int eventId) {
         final Resources<Review> reviewResources = new Resources<Review>(reviews.get(eventId));
-        reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
+        reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyEventController.class)
                 .getEvent((Integer) null)) // pass null to create template
                 .withRel("hydra:search"));
         return reviewResources;

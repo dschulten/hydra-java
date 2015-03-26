@@ -8,8 +8,10 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring.sample;
+package de.escalon.hypermedia.spring.sample.test;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.hateoas.Resource;
 
 /**
@@ -31,6 +33,17 @@ public class Event {
         this.eventStatus = eventStatus;
     }
 
+    @JsonCreator
+    public Event(@JsonProperty("performer") String performer,
+                 @JsonProperty("workPerformed") CreativeWork workPerformed,
+                 @JsonProperty("location") String location,
+                 @JsonProperty("eventStatus") EventStatusType eventStatus) {
+        this.id = 0;
+        this.performer = performer;
+        this.location = location;
+        this.workPerformed = new Resource<CreativeWork>(workPerformed);
+        this.eventStatus = eventStatus;
+    }
 
     public void setEventStatus(EventStatusType eventStatus) {
         this.eventStatus = eventStatus;

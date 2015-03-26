@@ -8,7 +8,7 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring.sample;
+package de.escalon.hypermedia.spring.sample.test;
 
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.spring.Affordance;
@@ -36,12 +36,19 @@ import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
  */
 @Controller
 @RequestMapping("/events")
-public class EventController {
+public class DummyEventController {
 
     final List<EventResource> eventResources = Arrays.asList(new EventResource(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden"),
             new EventResource(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn"));
 
-    @RequestMapping
+
+    @RequestMapping(method=RequestMethod.POST)
+    public
+    ResponseEntity<Void> addEvent(@RequestBody Event event) {
+        return new ResponseEntity(HttpStatus.CREATED);
+    }
+
+    @RequestMapping(method=RequestMethod.GET)
     public
     @ResponseBody
     Resources<Resource<Event>> getResourcesOfResourceOfEvent() {
@@ -70,10 +77,10 @@ public class EventController {
                 .withRel("hydra:search");
         final Affordance eventWithRegexAffordance = linkTo(
                 methodOn(this.getClass()).getEventWithRegexPathVariableMapping(null)).withRel("ex:regex");
-
+        final Affordance postEventAffordance = linkTo(methodOn(this.getClass()).addEvent(null)).withSelfRel();
 
         return new Resources<Resource<Event>>(eventResourcesList,
-                eventByNameAffordance, eventWithRegexAffordance);
+                eventByNameAffordance, eventWithRegexAffordance, postEventAffordance);
     }
 
 

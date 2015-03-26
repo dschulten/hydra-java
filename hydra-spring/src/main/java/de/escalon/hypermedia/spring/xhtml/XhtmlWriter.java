@@ -8,6 +8,8 @@ import de.escalon.hypermedia.action.ActionDescriptor;
 import de.escalon.hypermedia.action.ActionInputParameter;
 import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.spring.Affordance;
+import de.escalon.hypermedia.spring.PartialUriTemplate;
+import de.escalon.hypermedia.spring.UriTemplateComponents;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.core.MethodParameter;
@@ -29,10 +31,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static de.escalon.hypermedia.spring.xhtml.XhtmlWriter.OptionalAttributes.attr;
 
@@ -179,34 +178,34 @@ public class XhtmlWriter extends Writer {
                     writeLinkWithoutActionDescriptor(affordance);
                 } else {
                     if (affordance.isTemplated()) {
-                        // strip optional and unsatisfied variables:
-                        Affordance expanded = affordance.expand();
+                        // html does not allow templated action attr for POST or GET
+                        if (!(new PartialUriTemplate(affordance.getHref()).
+                                expand(Collections.<String, Object>emptyMap())
+                                .isBaseUriTemplated())) {
 
-                        for (ActionDescriptor actionDescriptor : actionDescriptors) {
-                            RequestMethod httpMethod = actionDescriptor.getHttpMethod();
-                            switch (httpMethod) {
-                                case GET:
-                                    // TODO use appendForm here?
-                                    beginForm(OptionalAttributes.attr("action", expanded.getHref())
-                                            .and("method", "GET"));
-                                    List<TemplateVariable> variables = link.getVariables();
-                                    for (TemplateVariable variable : variables) {
-                                        String variableName = variable.getName();
-                                        String label = variable.hasDescription() ?
-                                                variable.getDescription() : variableName;
-                                        beginLabel(label);
-
-                                        writeInput(variableName, Type.TEXT);
-                                        endLabel();
-                                    }
-                                    input(Type.SUBMIT, "Query");
-                                    endForm();
-                                    break;
-                            }
-
+                            Affordance expanded = affordance.expand();
                             // GET form for template
-                            // html does not allow templated action for POST
-
+                            for (ActionDescriptor actionDescriptor : actionDescriptors) {
+                                RequestMethod httpMethod = actionDescriptor.getHttpMethod();
+                                switch (httpMethod) {
+                                    case GET:
+                                        // TODO use appendForm here?
+                                        beginForm(OptionalAttributes.attr("action", expanded.getHref())
+                                                .and("method", "GET"));
+                                        List<TemplateVariable> variables = link.getVariables();
+                                        for (TemplateVariable variable : variables) {
+                                            String variableName = variable.getName();
+                                            String label = variable.hasDescription() ?
+                                                    variable.getDescription() : variableName;
+                                            beginLabel(label);
+                                            writeInput(variableName, Type.TEXT);
+                                            endLabel();
+                                        }
+                                        input(Type.SUBMIT, "Query");
+                                        endForm();
+                                        break;
+                                }
+                            }
                         }
                         // TODO write human-readable description of additional methods?
                     } else {
@@ -297,6 +296,7 @@ public class XhtmlWriter extends Writer {
     private void beginForm(OptionalAttributes attrs) throws IOException {
         write("<form ");
         writeAttributes(attrs);
+        write(">");
     }
 
     private void writeAttributes(OptionalAttributes attrs) throws IOException {
@@ -412,6 +412,14 @@ public class XhtmlWriter extends Writer {
         return constructor;
     }
 
+    /**
+     * Renders input fields for bean properties of bean to add or update or patch.
+     * @param beanType to render
+     * @param actionDescriptor which describes the method
+     * @param actionInputParameter which requires the bean
+     * @param currentCallValue sample call value
+     * @throws IOException
+     */
     private void recurseBeanProperties(Class<?> beanType, ActionDescriptor actionDescriptor,
                                        ActionInputParameter actionInputParameter, Object currentCallValue)
             throws IOException {
@@ -536,13 +544,16 @@ public class XhtmlWriter extends Writer {
                     Object propertyValue = null;
                     if (currentCallValue != null) {
                         try {
-
+                            // TODO public fields
                             BeanInfo info = Introspector.getBeanInfo(currentCallValue.getClass());
                             PropertyDescriptor[] pds = info.getPropertyDescriptors();
                             for (PropertyDescriptor pd : pds) {
                                 if (propertyName.equals(pd.getName())) {
-                                    propertyValue = pd.getReadMethod()
-                                            .invoke(currentCallValue);
+                                    Method readMethod = pd.getReadMethod();
+                                    if(readMethod != null) {
+                                        propertyValue = readMethod
+                                                .invoke(currentCallValue);
+                                    }
                                     break;
                                 }
                             }
@@ -648,6 +659,7 @@ public class XhtmlWriter extends Writer {
                 } else {
                     beginLabel(fieldLabel);
                     input(requestParamName, inputFieldType, attr("value", val));
+                    endLabel();
                 }
             }
             endDiv();
@@ -668,6 +680,7 @@ public class XhtmlWriter extends Writer {
             }
         }
         endSelect();
+        endLabel();
         endDiv();
     }
 

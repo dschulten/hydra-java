@@ -41,6 +41,10 @@ public class UriTemplateComponents {
         this.fragmentIdentifier = fragmentIdentifier;
     }
 
+    public boolean isBaseUriTemplated() {
+        return baseUri.matches(".*\\{.+\\}.*");
+    }
+
     public String getBaseUri() {
         return baseUri;
     }

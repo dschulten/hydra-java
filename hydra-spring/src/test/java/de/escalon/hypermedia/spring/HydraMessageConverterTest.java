@@ -13,8 +13,8 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.spring.sample.EventController;
-import de.escalon.hypermedia.spring.sample.ReviewController;
+import de.escalon.hypermedia.spring.sample.test.DummyEventController;
+import de.escalon.hypermedia.spring.sample.test.ReviewController;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,8 +65,8 @@ public class HydraMessageConverterTest {
         }
 
         @Bean
-        public EventController eventController() {
-            return new EventController();
+        public DummyEventController eventController() {
+            return new DummyEventController();
         }
 
         @Override
