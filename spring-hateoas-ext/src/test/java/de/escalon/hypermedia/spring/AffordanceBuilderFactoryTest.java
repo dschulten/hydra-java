@@ -10,7 +10,7 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.spring.sample.EventController;
+import de.escalon.hypermedia.spring.sample.DummyEventController;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,8 +23,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
-
-import static org.junit.Assert.*;
 
 public class AffordanceBuilderFactoryTest {
 
@@ -42,7 +40,7 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToMethod() throws Exception {
-        final Method getEventMethod = ReflectionUtils.findMethod(EventController.class, "getEvent", String.class);
+        final Method getEventMethod = ReflectionUtils.findMethod(DummyEventController.class, "getEvent", String.class);
         final Affordance affordance = factory.linkTo(getEventMethod, new Object[0])
                 .build("foo");
         Assert.assertEquals("http://example.com/events/{eventId}", affordance.getHref());
@@ -50,8 +48,8 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToMethodInvocation() throws Exception {
-        final Method getEventMethod = ReflectionUtils.findMethod(EventController.class, "getEvent", String.class);
-        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventController.class)
+        final Method getEventMethod = ReflectionUtils.findMethod(DummyEventController.class, "getEvent", String.class);
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(DummyEventController.class)
                 .getEvent((String) null))
                 .build("foo");
         Assert.assertEquals("http://example.com/events/{eventId}", affordance.getHref());
@@ -59,7 +57,7 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToControllerClass() throws Exception {
-        final Affordance affordance = factory.linkTo(EventController.class, new Object[0])
+        final Affordance affordance = factory.linkTo(DummyEventController.class, new Object[0])
                 .build("foo");
         Assert.assertEquals("http://example.com/events", affordance.getHref());
     }

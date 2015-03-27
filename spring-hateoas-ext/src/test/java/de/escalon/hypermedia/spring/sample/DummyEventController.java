@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  */
 @Controller
 @RequestMapping("/events")
-public class EventController {
+public class DummyEventController {
     @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
     public
     @ResponseBody

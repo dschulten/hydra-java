@@ -55,6 +55,13 @@
         <url-pattern>/hypermedia-api/*</url-pattern>
     </servlet-mapping>
 
-    
+    <filter>
+        <filter-name>HiddenHttpMethodFilter</filter-name>
+        <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>HiddenHttpMethodFilter</filter-name>
+        <servlet-name>hypermedia-api</servlet-name>
+    </filter-mapping>
 
 </web-app>

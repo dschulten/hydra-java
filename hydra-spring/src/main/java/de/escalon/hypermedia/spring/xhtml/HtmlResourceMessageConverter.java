@@ -25,17 +25,19 @@ import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.util.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.Map.Entry;
@@ -68,6 +70,8 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
         implements GenericHttpMessageConverter<Object> {
 
     private Charset charset = Charset.forName("UTF-8");
+    private String methodParam = "_method";
+
 
     public HtmlResourceMessageConverter() {
         this.setSupportedMediaTypes(
@@ -105,19 +109,68 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
     protected Object readInternal(Class<? extends Object> clazz, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
 
-        return readRequestBody(clazz, inputMessage);
+        // this is necessary to support HiddenHttpMethodFilter
+        // thanks to https://www.w3.org/html/wg/tracker/issues/195
+        // TODO recognize this more safely or make the filter mandatory
+        InputStream is;
+        if (inputMessage instanceof ServletServerHttpRequest) {
+            MediaType contentType = inputMessage.getHeaders()
+                    .getContentType();
+            Charset charset =
+                    contentType.getCharSet() != null ?
+                            contentType.getCharSet() : this.charset;
+            ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) inputMessage;
+            HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
+            is = getBodyFromServletRequestParameters(servletRequest, charset.displayName(Locale.US));
+        } else {
+            is = inputMessage.getBody();
+        }
+        return readRequestBody(clazz, is, charset);
 
     }
 
-    private Object readRequestBody(Class<? extends Object> clazz, HttpInputMessage inputMessage)
+    /**
+     * From {@link ServletServerHttpRequest}:
+     * Use {@link javax.servlet.ServletRequest#getParameterMap()} to reconstruct the
+     * body of a form 'POST' providing a predictable outcome as opposed to reading
+     * from the body, which can fail if any other code has used ServletRequest
+     * to access a parameter thus causing the input stream to be "consumed".
+     */
+    private InputStream getBodyFromServletRequestParameters(HttpServletRequest request, String charset) throws IOException {
+
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
+        Writer writer = new OutputStreamWriter(bos, charset);
+
+        Map<String, String[]> form = request.getParameterMap();
+        for (Iterator<String> nameIterator = form.keySet()
+                .iterator(); nameIterator.hasNext(); ) {
+            String name = nameIterator.next();
+            List<String> values = Arrays.asList(form.get(name));
+            for (Iterator<String> valueIterator = values.iterator(); valueIterator.hasNext(); ) {
+                String value = valueIterator.next();
+                writer.write(URLEncoder.encode(name, charset));
+                if (value != null) {
+                    writer.write('=');
+                    writer.write(URLEncoder.encode(value, charset));
+                    if (valueIterator.hasNext()) {
+                        writer.write('&');
+                    }
+                }
+            }
+            if (nameIterator.hasNext()) {
+                writer.append('&');
+            }
+        }
+        writer.flush();
+
+        return new ByteArrayInputStream(bos.toByteArray());
+    }
+
+    private Object readRequestBody(Class<? extends Object> clazz, InputStream inputStream, Charset charset)
             throws IOException {
 
-        MediaType contentType = inputMessage.getHeaders()
-                .getContentType();
-        Charset charset =
-                contentType.getCharSet() != null ?
-                        contentType.getCharSet() : this.charset;
-        String body = StreamUtils.copyToString(inputMessage.getBody(), charset);
+        String body = StreamUtils.copyToString(inputStream, charset);
 
         String[] pairs = StringUtils.tokenizeToStringArray(body, "&");
 
@@ -245,6 +298,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
             HttpMessageNotWritableException {
 
         XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody()));
+        xhtmlWriter.setMethodParam(methodParam);
         xhtmlWriter.beginHtml("Input Data");
         writeResource(xhtmlWriter, t);
         xhtmlWriter.endHtml();
@@ -383,6 +437,16 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
         } else {
             return false;
         }
+    }
+
+    /**
+     * Sets method param name for HTML PUT/DELETE/PATCH workaround.
+     *
+     * @param methodParam to use
+     * @see org.springframework.web.filter.HiddenHttpMethodFilter
+     */
+    public void setMethodParam(String methodParam) {
+        this.methodParam = methodParam;
     }
 
     static class NullValue {

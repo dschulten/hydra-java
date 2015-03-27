@@ -52,9 +52,15 @@ public class XhtmlWriter extends Writer {
             "  </body>" + //
             "</html>";
 
+    private String methodParam = "_method";
+
 
     public XhtmlWriter(Writer writer) {
         this.writer = writer;
+    }
+
+    public void setMethodParam(String methodParam) {
+        this.methodParam = methodParam;
     }
 
     public void beginHtml(String title) throws IOException {
@@ -175,6 +181,11 @@ public class XhtmlWriter extends Writer {
                     writeLinkWithoutActionDescriptor(affordance);
                 } else {
                     if (affordance.isTemplated()) {
+                        // TODO using appendForm here requires to calculate the baseUri in appendForm
+                        // so that it is no longer templated
+                        // (strip optional params and resolve plain base uri,
+                        // partial uritemplate query must become hidden field
+                        // can't render the form if base uri isn't plain)
                         // html does not allow templated action attr for POST or GET
                         if (!(new PartialUriTemplate(affordance.getHref()).
                                 expand(Collections.<String, Object>emptyMap())
@@ -184,23 +195,20 @@ public class XhtmlWriter extends Writer {
                             // GET form for template
                             for (ActionDescriptor actionDescriptor : actionDescriptors) {
                                 RequestMethod httpMethod = actionDescriptor.getHttpMethod();
-                                switch (httpMethod) {
-                                    case GET:
-                                        // TODO use appendForm here?
-                                        beginForm(OptionalAttributes.attr("action", expanded.getHref())
-                                                .and("method", "GET"));
-                                        List<TemplateVariable> variables = link.getVariables();
-                                        for (TemplateVariable variable : variables) {
-                                            String variableName = variable.getName();
-                                            String label = variable.hasDescription() ?
-                                                    variable.getDescription() : variableName;
-                                            beginLabel(label);
-                                            writeInput(variableName, Type.TEXT);
-                                            endLabel();
-                                        }
-                                        input(Type.SUBMIT, "Query");
-                                        endForm();
-                                        break;
+                                if (RequestMethod.GET == httpMethod) {
+                                    beginForm(OptionalAttributes.attr("action", expanded.getHref())
+                                            .and("method", "GET"));
+                                    List<TemplateVariable> variables = link.getVariables();
+                                    for (TemplateVariable variable : variables) {
+                                        String variableName = variable.getName();
+                                        String label = variable.hasDescription() ?
+                                                variable.getDescription() : variableName;
+                                        beginLabel(label);
+                                        input(variableName, Type.TEXT);
+                                        endLabel();
+                                    }
+                                    inputButton(Type.SUBMIT, "Query");
+                                    endForm();
                                 }
                             }
                         }
@@ -230,7 +238,7 @@ public class XhtmlWriter extends Writer {
                 String label = variable.hasDescription() ? variable.getDescription() : variableName;
                 beginLabel(label);
 
-                writeInput(variableName, Type.TEXT);
+                input(variableName, Type.TEXT);
                 endLabel();
             }
         } else {
@@ -240,11 +248,6 @@ public class XhtmlWriter extends Writer {
         }
     }
 
-
-    private void writeInput(String name, Type type) throws IOException {
-        input(name, type, OptionalAttributes.attr(null, null));
-    }
-
     /**
      * Classic submit or reset button.
      *
@@ -252,7 +255,7 @@ public class XhtmlWriter extends Writer {
      * @param value caption on the button
      * @throws IOException
      */
-    private void input(Type type, String value) throws IOException {
+    private void inputButton(Type type, String value) throws IOException {
         write("<input type=\"");
         write(type.toString());
         write("\" ");
@@ -264,14 +267,18 @@ public class XhtmlWriter extends Writer {
         write("/>");
     }
 
-    private void input(String name, Type type, OptionalAttributes attributes) throws IOException {
+    private void input(String fieldName, Type type, OptionalAttributes attributes) throws IOException {
         write("<input name=\"");
-        write(name);
+        write(fieldName);
         write("\" type=\"");
         write(type.toString());
         write("\" ");
         writeAttributes(attributes);
         write("/>");
+    }
+
+    private void input(String fieldName, Type type) throws IOException {
+        input(fieldName, type, OptionalAttributes.attr());
     }
 
     private void beginLabel(String label) throws IOException {
@@ -324,20 +331,30 @@ public class XhtmlWriter extends Writer {
         write("</a>");
     }
 
+    /**
+     * Appends form and squashes non-GET or POST to _method field for handling by an appropriate filter such as Spring's HiddenHttpMethodFilter
+     *
+     * @param affordance       to make into a form
+     * @param actionDescriptor describing the form action
+     * @throws IOException
+     * @see <a href="http://docs.spring.io/spring/docs/3.0.x/javadoc-api/org/springframework/web/filter/HiddenHttpMethodFilter.html">Spring MVC HiddenHttpMethodFilter</a>
+     */
     private void appendForm(Affordance affordance, ActionDescriptor actionDescriptor) throws IOException {
         // TODO DELETE and PUT affordances as POST?
         // see http://stackoverflow.com/questions/13629653/using-put-and-delete-methods-in-spring-mvc
-        // see http://docs.spring.io/spring/docs/3.0.x/javadoc-api/org/springframework/web/filter/HiddenHttpMethodFilter.html
+
         String formName = actionDescriptor.getActionName();
+        RequestMethod httpMethod = actionDescriptor.getHttpMethod();
 
         beginForm(OptionalAttributes.attr("action", affordance.getHref())
-                .and("method", actionDescriptor.getHttpMethod()
-                        .name())
+                .and("method", getHtmlConformingHttpMethod(httpMethod))
                 .and("name", formName));
         write("<h1>");
         String formH1 = "Form " + formName;
         write(formH1);
         write("</h1>");
+
+        writeHiddenHttpMethodField(httpMethod);
 
         // build the form
         if (actionDescriptor.hasRequestBody()) {
@@ -379,11 +396,33 @@ public class XhtmlWriter extends Writer {
             }
         }
 
-        input(Type.SUBMIT, StringUtils.capitalize(
-                actionDescriptor.getHttpMethod()
-                        .name()
+        inputButton(Type.SUBMIT, StringUtils.capitalize(
+                httpMethod.name()
                         .toLowerCase()));
         endForm();
+    }
+
+    private void writeHiddenHttpMethodField(RequestMethod httpMethod) throws IOException {
+        switch (httpMethod) {
+            case GET:
+            case POST:
+                break;
+            default:
+                input(methodParam, Type.HIDDEN, OptionalAttributes.attr("value", httpMethod.name()));
+        }
+    }
+
+    private String getHtmlConformingHttpMethod(RequestMethod requestMethod) {
+        String ret;
+        switch (requestMethod) {
+            case GET:
+            case POST:
+                ret = requestMethod.name();
+                break;
+            default:
+                ret = RequestMethod.POST.name();
+        }
+        return ret;
     }
 
     private Constructor findDefaultCtor(Constructor[] constructors) {
