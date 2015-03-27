@@ -22,6 +22,7 @@ public class Event {
     public final int id;
     public final String performer;
     public final String location;
+
     private EventStatusType eventStatus;
     private final Resource<CreativeWork> workPerformed;
 
@@ -51,5 +52,9 @@ public class Event {
 
     public Resource<CreativeWork> getWorkPerformed() {
         return workPerformed;
+    }
+
+    public EventStatusType getEventStatus() {
+        return eventStatus;
     }
 }

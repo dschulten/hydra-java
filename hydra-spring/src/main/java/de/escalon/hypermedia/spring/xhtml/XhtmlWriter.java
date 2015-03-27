@@ -9,15 +9,12 @@ import de.escalon.hypermedia.action.ActionInputParameter;
 import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.spring.Affordance;
 import de.escalon.hypermedia.spring.PartialUriTemplate;
-import de.escalon.hypermedia.spring.UriTemplateComponents;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.Property;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
-import org.springframework.http.HttpMethod;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -29,7 +26,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -414,10 +411,11 @@ public class XhtmlWriter extends Writer {
 
     /**
      * Renders input fields for bean properties of bean to add or update or patch.
-     * @param beanType to render
-     * @param actionDescriptor which describes the method
+     *
+     * @param beanType             to render
+     * @param actionDescriptor     which describes the method
      * @param actionInputParameter which requires the bean
-     * @param currentCallValue sample call value
+     * @param currentCallValue     sample call value
      * @throws IOException
      */
     private void recurseBeanProperties(Class<?> beanType, ActionDescriptor actionDescriptor,
@@ -454,13 +452,10 @@ public class XhtmlWriter extends Writer {
                                 String paramName = jsonProperty.value();
                                 Class parameterType = parameters[paramIndex];
 
-                                // TODO duplicate below for PropertyDecriptors
+                                // TODO duplicate below for PropertyDescriptors
                                 if (DataType.isSingleValueType(parameterType)) {
 
-                                    Object propertyValue = null;
-                                    if (currentCallValue != null) {
-                                        propertyValue = getPropertyValue(currentCallValue, paramName);
-                                    }
+                                    Object propertyValue = getPropertyOrFieldValue(currentCallValue, paramName);
 
                                     ActionInputParameter constructorParamInputParameter =
                                             new ActionInputParameter(
@@ -503,10 +498,7 @@ public class XhtmlWriter extends Writer {
                                 } else {
                                     beginDiv();
                                     write(paramName + ":");
-                                    Object propertyValue = null;
-                                    if (currentCallValue != null) {
-                                        propertyValue = getPropertyValue(currentCallValue, paramName);
-                                    }
+                                    Object propertyValue = getPropertyOrFieldValue(currentCallValue, paramName);
                                     recurseBeanProperties(parameterType, actionDescriptor,
                                             actionInputParameter, propertyValue);
                                     endDiv();
@@ -541,26 +533,7 @@ public class XhtmlWriter extends Writer {
                             propertyDescriptor.getWriteMethod(),
                             propertyDescriptor.getName());
 
-                    Object propertyValue = null;
-                    if (currentCallValue != null) {
-                        try {
-                            // TODO public fields
-                            BeanInfo info = Introspector.getBeanInfo(currentCallValue.getClass());
-                            PropertyDescriptor[] pds = info.getPropertyDescriptors();
-                            for (PropertyDescriptor pd : pds) {
-                                if (propertyName.equals(pd.getName())) {
-                                    Method readMethod = pd.getReadMethod();
-                                    if(readMethod != null) {
-                                        propertyValue = readMethod
-                                                .invoke(currentCallValue);
-                                    }
-                                    break;
-                                }
-                            }
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    Object propertyValue = getPropertyOrFieldValue(currentCallValue, propertyName);
                     ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
                             new MethodParameter(propertyDescriptor.getWriteMethod(), 0), propertyValue);
                     final Object[] possibleValues =
@@ -595,7 +568,6 @@ public class XhtmlWriter extends Writer {
                 } else {
                     beginDiv();
                     write(propertyName + ":");
-
                     Object propertyValue = PropertyUtil.getPropertyValue(currentCallValue, propertyDescriptor);
 
 
@@ -607,24 +579,63 @@ public class XhtmlWriter extends Writer {
         }
     }
 
-    private Object getPropertyValue(Object currentCallValue, String paramName) {
+    // TODO move to PropertyUtil and remove current method for propertyDescriptors, cache search results
+    private Object getPropertyOrFieldValue(Object currentCallValue, String propertyOrFieldName) {
+        if (currentCallValue == null) {
+            return null;
+        }
+        Object propertyValue = getBeanPropertyValue(currentCallValue, propertyOrFieldName);
+        if (propertyValue == null) {
+            propertyValue = getFieldValue(currentCallValue, propertyOrFieldName);
+        }
+        return propertyValue;
+    }
+
+    private Object getFieldValue(Object currentCallValue, String fieldName) {
+        try {
+            Class<?> beanType = currentCallValue.getClass();
+            Object propertyValue = null;
+            Field[] fields = beanType.getFields();
+            for (Field field : fields) {
+                if (fieldName.equals(field.getName())) {
+                    propertyValue = field.get(currentCallValue);
+                    break;
+                }
+            }
+            return propertyValue;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read field " + fieldName
+                    + " from " + currentCallValue.toString(), e);
+        }
+    }
+
+
+    // TODO move to PropertyUtil and remove current method for propertyDescriptors
+    private Object getBeanPropertyValue(Object currentCallValue, String paramName) {
+        if (currentCallValue == null) {
+            return null;
+        }
         try {
             Object propertyValue = null;
             BeanInfo info = Introspector.getBeanInfo(currentCallValue.getClass());
             PropertyDescriptor[] pds = info.getPropertyDescriptors();
             for (PropertyDescriptor pd : pds) {
                 if (paramName.equals(pd.getName())) {
-                    propertyValue = pd.getReadMethod()
-                            .invoke(currentCallValue);
+                    Method readMethod = pd.getReadMethod();
+                    if (readMethod != null) {
+                        propertyValue = readMethod
+                                .invoke(currentCallValue);
+                    }
                     break;
                 }
             }
             return propertyValue;
         } catch (Exception e) {
             throw new RuntimeException("Failed to read property " + paramName
-                    + " from " + currentCallValue.toString());
+                    + " from " + currentCallValue.toString(), e);
         }
     }
+
 
     private BeanInfo getBeanInfo(Class<?> beanType) {
         try {
@@ -671,6 +682,7 @@ public class XhtmlWriter extends Writer {
                                  Object callValue) throws IOException {
         beginDiv();
         beginLabel(requestParamName, attr("for", requestParamName));
+        endLabel();
         beginSelect(requestParamName, requestParamName, possibleValues.length);
         for (Object possibleValue : possibleValues) {
             if (possibleValue.equals(callValue)) {
@@ -680,7 +692,7 @@ public class XhtmlWriter extends Writer {
             }
         }
         endSelect();
-        endLabel();
+
         endDiv();
     }
 
@@ -737,6 +749,7 @@ public class XhtmlWriter extends Writer {
                                    Object[] actualValues) throws IOException {
         beginDiv();
         beginLabel(requestParamName, attr("for", requestParamName));
+        endLabel();
         beginSelect(requestParamName, requestParamName, possibleValues.length, attr("multiple", "multiple"));
         for (Object possibleValue : possibleValues) {
             if (arrayContains(actualValues, possibleValue)) {
