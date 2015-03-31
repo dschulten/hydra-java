@@ -171,7 +171,7 @@ public class HtmlResourceMessageConverterTest {
     @Ignore
     public void testCreatesHiddenInputField() throws Exception {
 
-        this.mockMvc.perform(get("/people/customer/123/editor").accept(MediaType.TEXT_HTML))
+        this.mockMvc.perform(get("/events").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content()
                         .contentType(MediaType.TEXT_HTML))
@@ -240,15 +240,13 @@ public class HtmlResourceMessageConverterTest {
      * @throws Exception
      */
     @Test
-    public void testCreatesSelectFieldForListOfPossibleValues() throws Exception {
-
+    public void testCreatesSelectFieldForOptionBasedPossibleValues() throws Exception {
         MvcResult result = this.mockMvc.perform(get("/events").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
-//                .andExpect(xpath("//h:select[@name='mood']", namespaces).exists())
-//                .andExpect(xpath("//h:select[@name='mood' and @multiple]", namespaces).doesNotExist())
-//                .andExpect(xpath("//h:select[@name='mood']/h:option", namespaces).nodeCount(5))
-//                .andExpect(xpath("(//h:select[@name='mood']/h:option)[@selected]", namespaces).string("angry"))
+                .andExpect(xpath("//h:form[@name='updateEventWithRequestBody']/h:div/h:select[@name='typicalAgeRange']", namespaces).exists())
+                .andExpect(xpath("//h:form[@name='updateEventWithRequestBody']/h:div/h:select[@name='typicalAgeRange']/h:option[1]", namespaces).string("7-10"))
+                .andExpect(xpath("//h:form[@name='updateEventWithRequestBody']/h:div/h:select[@name='typicalAgeRange']/h:option[2]", namespaces).string("11-"))
                 .andReturn();
         LOG.debug(result.getResponse()
                 .getContentAsString());
@@ -292,23 +290,6 @@ public class HtmlResourceMessageConverterTest {
 
     }
 
-    /**
-     * Tests List<String> parameter with a list of numbers.
-     *
-     * @throws Exception
-     */
-    @Test
-    @Ignore
-    public void testCreatesMultipleInputWithDefaultForIntegerList() throws Exception {
-
-        String defaultValue = "42";
-        this.mockMvc.perform(get("/people/customer/123/numbers").accept(MediaType.TEXT_HTML))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andExpect(xpath("//h:input[@name='number']", namespaces).nodeCount(3))
-                .andExpect(xpath("(//h:input[@name='number'])[1]/@value", namespaces).string(defaultValue));
-
-    }
 
     /**
      * Tests List<String> parameter with a list of numbers.

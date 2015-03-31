@@ -12,6 +12,7 @@ package de.escalon.hypermedia.spring.sample.test;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import de.escalon.hypermedia.action.Select;
 import org.springframework.hateoas.Resource;
 
 /**
@@ -25,6 +26,7 @@ public class Event {
 
     private EventStatusType eventStatus;
     private final Resource<CreativeWork> workPerformed;
+    private String typicalAgeRange;
 
     public Event(int id, String performer, CreativeWork workPerformed, String location, EventStatusType eventStatus) {
         this.id = id;
@@ -56,5 +58,13 @@ public class Event {
 
     public EventStatusType getEventStatus() {
         return eventStatus;
+    }
+
+    public String getTypicalAgeRange() {
+        return typicalAgeRange;
+    }
+
+    public void setTypicalAgeRange(@Select({"7-10", "11-"}) String typicalAgeRange) {
+        this.typicalAgeRange = typicalAgeRange;
     }
 }

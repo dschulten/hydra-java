@@ -221,10 +221,11 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
                 Object propertyValue = PropertyUtil.getPropertyValue(currentCallValue, propertyDescriptor);
 
+                MethodParameter methodParameter = new MethodParameter(propertyDescriptor.getWriteMethod(), 0);
                 ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
-                        new MethodParameter(propertyDescriptor.getWriteMethod(), 0), propertyValue);
+                        methodParameter, propertyValue);
                 final Object[] possiblePropertyValues =
-                        actionInputParameter.getPossibleValues(property, actionDescriptor);
+                        actionInputParameter.getPossibleValues(methodParameter, actionDescriptor);
 
                 writeSupportedProperty(jgen, currentVocab, propertySetterInputParameter,
                         propertyName, property, possiblePropertyValues);
