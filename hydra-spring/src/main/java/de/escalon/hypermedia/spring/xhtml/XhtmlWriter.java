@@ -365,6 +365,7 @@ public class XhtmlWriter extends Writer {
             Collection<String> requestParams = actionDescriptor.getRequestParamNames();
             for (String requestParamName : requestParams) {
                 ActionInputParameter actionInputParameter = actionDescriptor.getActionInputParameter(requestParamName);
+
                 // TODO support list and matrix parameters?
                 Object[] possibleValues = actionInputParameter.getPossibleValues(actionDescriptor);
                 if (possibleValues.length > 0) {
@@ -500,14 +501,8 @@ public class XhtmlWriter extends Writer {
                                             new ActionInputParameter(
                                                     new MethodParameter(constructor, paramIndex), propertyValue);
 
-                                    final Object[] possibleValues = new Object[0];
-                                    // TODO possible values for ctor param
-//                                    final Property property = new Property(beanType,
-//                                            propertyDescriptor.getReadMethod(),
-//                                            propertyDescriptor.getWriteMethod(),
-//                                            propertyDescriptor.getName());
-
-//                                            actionInputParameter.getPossibleValues(property, actionDescriptor);
+                                    final Object[] possibleValues = actionInputParameter.getPossibleValues(
+                                            new MethodParameter(constructor, paramIndex), actionDescriptor);
                                     if (possibleValues.length > 0) {
                                         if (actionInputParameter.isArrayOrCollection()) {
                                             // TODO multiple formatted callvalues
@@ -573,10 +568,11 @@ public class XhtmlWriter extends Writer {
                             propertyDescriptor.getName());
 
                     Object propertyValue = getPropertyOrFieldValue(currentCallValue, propertyName);
+                    MethodParameter methodParameter = new MethodParameter(propertyDescriptor.getWriteMethod(), 0);
                     ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
-                            new MethodParameter(propertyDescriptor.getWriteMethod(), 0), propertyValue);
+                            methodParameter, propertyValue);
                     final Object[] possibleValues =
-                            actionInputParameter.getPossibleValues(property, actionDescriptor);
+                            actionInputParameter.getPossibleValues(methodParameter, actionDescriptor);
                     if (possibleValues.length > 0) {
                         if (actionInputParameter.isArrayOrCollection()) {
                             // TODO multiple formatted callvalues

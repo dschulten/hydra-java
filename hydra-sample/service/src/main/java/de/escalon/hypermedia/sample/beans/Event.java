@@ -2,6 +2,7 @@ package de.escalon.hypermedia.sample.beans;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import de.escalon.hypermedia.action.Select;
 import de.escalon.hypermedia.sample.model.CreativeWork;
 import de.escalon.hypermedia.sample.model.EventStatusType;
 import org.springframework.hateoas.Resource;
@@ -22,7 +23,7 @@ public class Event extends ResourceSupport {
     public Event(@JsonProperty("performer") String performer,
                  @JsonProperty("workPerformed") CreativeWork workPerformed,
                  @JsonProperty("location") String location,
-                 @JsonProperty("eventStatus") EventStatusType eventStatus) {
+                 @JsonProperty("eventStatus") @Select() EventStatusType eventStatus) {
         this.id = 0;
         this.performer = performer;
         this.location = location;
@@ -50,5 +51,6 @@ public class Event extends ResourceSupport {
     public EventStatusType getEventStatus() {
         return eventStatus;
     }
+
 
 }

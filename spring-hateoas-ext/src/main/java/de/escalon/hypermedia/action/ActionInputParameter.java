@@ -165,8 +165,48 @@ public class ActionInputParameter {
     }
 
     public Object[] getPossibleValues(ActionDescriptor actionDescriptor) {
+        return getPossibleValues(methodParameter, actionDescriptor);
+//        try {
+//            Class<?> parameterType = getParameterType();
+//            Object[] possibleValues;
+//            Class<?> nested;
+//            if (Enum[].class.isAssignableFrom(parameterType)) {
+//                possibleValues = parameterType.getComponentType()
+//                        .getEnumConstants();
+//            } else if (Enum.class.isAssignableFrom(parameterType)) {
+//                possibleValues = parameterType.getEnumConstants();
+//            } else if (Collection.class.isAssignableFrom(parameterType)
+//                    && Enum.class.isAssignableFrom(nested = TypeDescriptor.nested(methodParameter, 1)
+//                    .getType())) {
+//                possibleValues = nested.getEnumConstants();
+//            } else {
+//                Select select = methodParameter.getParameterAnnotation(Select.class);
+//                if (select != null) {
+//                    Class<? extends Options> options = select.options();
+//                    Options instance = options.newInstance();
+//                    List<Object> from = new ArrayList<Object>();
+//                    for (String paramName : select.args()) {
+//                        ActionInputParameter parameterValue = actionDescriptor.getActionInputParameter(paramName);
+//                        if (parameterValue != null) {
+//                            from.add(parameterValue.getCallValue());
+//                        }
+//                    }
+//
+//                    Object[] args = from.toArray();
+//                    possibleValues = instance.get(select.value(), args);
+//                } else {
+//                    possibleValues = new Object[0];
+//                }
+//            }
+//            return possibleValues;
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+    }
+
+    public Object[] getPossibleValues(MethodParameter methodParameter, ActionDescriptor actionDescriptor) {
         try {
-            Class<?> parameterType = getParameterType();
+            Class<?> parameterType = methodParameter.getNestedParameterType();
             Object[] possibleValues;
             Class<?> nested;
             if (Enum[].class.isAssignableFrom(parameterType)) {
@@ -180,49 +220,6 @@ public class ActionInputParameter {
                 possibleValues = nested.getEnumConstants();
             } else {
                 Select select = methodParameter.getParameterAnnotation(Select.class);
-                if (select != null) {
-                    Class<? extends Options> options = select.options();
-                    Options instance = options.newInstance();
-                    List<Object> from = new ArrayList<Object>();
-                    for (String paramName : select.args()) {
-                        ActionInputParameter parameterValue = actionDescriptor.getActionInputParameter(paramName);
-                        if (parameterValue != null) {
-                            from.add(parameterValue.getCallValue());
-                        }
-                    }
-
-                    Object[] args = from.toArray();
-                    possibleValues = instance.get(select.value(), args);
-                } else {
-                    possibleValues = new Object[0];
-                }
-            }
-            return possibleValues;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    public Object[] getPossibleValues(Property property, ActionDescriptor actionDescriptor) {
-        // TODO remove code duplication of getPossibleValues
-        try {
-            Class<?> parameterType = property.getType();
-            Object[] possibleValues;
-            Class<?> nested;
-            if (Enum[].class.isAssignableFrom(parameterType)) {
-                possibleValues = parameterType.getComponentType()
-                        .getEnumConstants();
-            } else if (Enum.class.isAssignableFrom(parameterType)) {
-                possibleValues = parameterType.getEnumConstants();
-            } else if (Collection.class.isAssignableFrom(parameterType)
-                    && Enum.class.isAssignableFrom(nested = TypeDescriptor.nested(property, 1)
-                    .getType())) {
-                possibleValues = nested.getEnumConstants();
-            } else {
-                Annotation[][] parameterAnnotations = property.getWriteMethod().getParameterAnnotations();
-                // setter has exactly one param
-                Select select = getSelectAnnotationFromFirstParam(parameterAnnotations[0]);
                 if (select != null) {
                     Class<? extends Options> optionsClass = select.options();
                     Options options = optionsClass.newInstance();

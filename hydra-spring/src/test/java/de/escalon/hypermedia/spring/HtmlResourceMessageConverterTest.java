@@ -1,5 +1,6 @@
 package de.escalon.hypermedia.spring;
 
+import de.escalon.hypermedia.action.Select;
 import de.escalon.hypermedia.spring.sample.test.DummyEventController;
 import de.escalon.hypermedia.spring.sample.test.ReviewController;
 import de.escalon.hypermedia.spring.xhtml.HtmlResourceMessageConverter;
@@ -110,6 +111,8 @@ public class HtmlResourceMessageConverterTest {
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
                 .andExpect(xpath("h:html/h:body/h:form[@method='POST']/@action", namespaces).string("http://localhost/events"))
                 .andExpect(xpath("//h:form[@method='POST']/@name", namespaces).string("addEvent"))
+                .andExpect(xpath("//h:form[@name='addEvent']/h:div/h:select[@name='eventStatus']", namespaces).exists())
+                .andExpect(xpath("//h:form[@name='addEvent']/h:div/h:select[@name='typicalAgeRange']", namespaces).exists())
                 .andReturn();
         LOG.debug(result.getResponse()
                 .getContentAsString());
@@ -171,7 +174,7 @@ public class HtmlResourceMessageConverterTest {
     @Ignore
     public void testCreatesHiddenInputField() throws Exception {
 
-        this.mockMvc.perform(get("/people/customer/123/editor").accept(MediaType.TEXT_HTML))
+        this.mockMvc.perform(get("/events").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content()
                         .contentType(MediaType.TEXT_HTML))
@@ -205,6 +208,25 @@ public class HtmlResourceMessageConverterTest {
     }
 
     /**
+     * Tests a list of possible values defined with {@link Select#options()} annotation.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testCreatesSelectFieldForSelectOptionsBasedPossibleValues() throws Exception {
+        MvcResult result = this.mockMvc.perform(get("/events").accept(MediaType.TEXT_HTML))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.TEXT_HTML))
+                .andExpect(xpath("//h:form[@name='updateEventWithRequestBody']/h:div/h:select[@name='typicalAgeRange']", namespaces).exists())
+                .andExpect(xpath("//h:form[@name='updateEventWithRequestBody']/h:div/h:select[@name='typicalAgeRange']/h:option[1]", namespaces).string("7-10"))
+                .andExpect(xpath("//h:form[@name='updateEventWithRequestBody']/h:div/h:select[@name='typicalAgeRange']/h:option[2]", namespaces).string("11-"))
+                .andReturn();
+        LOG.debug(result.getResponse()
+                .getContentAsString());
+    }
+
+
+    /**
      * Tests if the form contains a multiselect field with three preselected items, matching the person having id 123.
      *
      * @throws Exception
@@ -233,98 +255,60 @@ public class HtmlResourceMessageConverterTest {
 //                .andExpect(xpath("//h:select[@name='gadgets']/h:option", namespaces).nodeCount(Gadget.values().length))
 //                .andExpect(xpath("(//h:select[@name='gadgets']/h:option)[@selected]", namespaces).nodeCount(0));
 //    }
-
-    /**
-     * Tests List<String> parameter with a list of possible values.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testCreatesSelectFieldForListOfPossibleValues() throws Exception {
-
-        MvcResult result = this.mockMvc.perform(get("/events").accept(MediaType.TEXT_HTML))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
-//                .andExpect(xpath("//h:select[@name='mood']", namespaces).exists())
-//                .andExpect(xpath("//h:select[@name='mood' and @multiple]", namespaces).doesNotExist())
-//                .andExpect(xpath("//h:select[@name='mood']/h:option", namespaces).nodeCount(5))
-//                .andExpect(xpath("(//h:select[@name='mood']/h:option)[@selected]", namespaces).string("angry"))
-                .andReturn();
-        LOG.debug(result.getResponse()
-                .getContentAsString());
-    }
-
-    /**
-     * Tests List<String> parameter with a list of possible values.
-     *
-     * @throws Exception
-     */
-    @Test
-    @Ignore
-    public void testCreatesMultiSelectFieldForListOfPossibleValuesFixed() throws Exception {
-
-        this.mockMvc.perform(get("/people/customerByAttribute").accept(MediaType.TEXT_HTML))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andExpect(xpath("//h:select[@name='attr' and @multiple]", namespaces).exists())
-                .andExpect(xpath("//h:select[@name='attr']/h:option", namespaces).nodeCount(3))
-                .andExpect(xpath("(//h:select[@name='attr']/h:option)[@selected]", namespaces).string("hungry"));
-
-    }
-
-    /**
-     * Tests List<String> parameter with a list of possible values.
-     *
-     * @throws Exception
-     */
-    @Test
-    @Ignore
-    public void testCreatesMultiSelectFieldForListOfPossibleValuesFromSpringBean() throws Exception {
-
-        this.mockMvc.perform(get("/people/customer/123/details").accept(MediaType.TEXT_HTML))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andExpect(xpath("//h:select[@name='detail' and @multiple]", namespaces).exists())
-                .andExpect(xpath("//h:select[@name='detail']/h:option", namespaces).nodeCount(3))
-                .andExpect(xpath("(//h:select[@name='detail']/h:option)[1]", namespaces).string("beard"))
-                .andExpect(xpath("(//h:select[@name='detail']/h:option)[2]", namespaces).string("afterShave"))
-                .andExpect(xpath("(//h:select[@name='detail']/h:option)[3]", namespaces).string("noseHairTrimmer"));
-
-    }
-
-    /**
-     * Tests List<String> parameter with a list of numbers.
-     *
-     * @throws Exception
-     */
-    @Test
-    @Ignore
-    public void testCreatesMultipleInputWithDefaultForIntegerList() throws Exception {
-
-        String defaultValue = "42";
-        this.mockMvc.perform(get("/people/customer/123/numbers").accept(MediaType.TEXT_HTML))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andExpect(xpath("//h:input[@name='number']", namespaces).nodeCount(3))
-                .andExpect(xpath("(//h:input[@name='number'])[1]/@value", namespaces).string(defaultValue));
-
-    }
-
-    /**
-     * Tests List<String> parameter with a list of numbers.
-     *
-     * @throws Exception
-     */
-    @Test
-    @Ignore("implement code on demand")
-    public void testCreatesOneInputForIntegerListWithInputUpToAny() throws Exception {
-
-        this.mockMvc.perform(get("/people/customer/123/numbers").accept(MediaType.TEXT_HTML))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andExpect(xpath("//h:input[@name='number']", namespaces).nodeCount(1));
-        // expect code-on-demand here
-
-    }
+//    /**
+//     * Tests List<String> parameter with a list of possible values.
+//     *
+//     * @throws Exception
+//     */
+//    @Test
+//    @Ignore
+//    public void testCreatesMultiSelectFieldForListOfPossibleValuesFixed() throws Exception {
+//
+//        this.mockMvc.perform(get("/people/customerByAttribute").accept(MediaType.TEXT_HTML))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentType(MediaType.TEXT_HTML))
+//                .andExpect(xpath("//h:select[@name='attr' and @multiple]", namespaces).exists())
+//                .andExpect(xpath("//h:select[@name='attr']/h:option", namespaces).nodeCount(3))
+//                .andExpect(xpath("(//h:select[@name='attr']/h:option)[@selected]", namespaces).string("hungry"));
+//
+//    }
+//
+//    /**
+//     * Tests List<String> parameter with a list of possible values.
+//     *
+//     * @throws Exception
+//     */
+//    @Test
+//    @Ignore
+//    public void testCreatesMultiSelectFieldForListOfPossibleValuesFromSpringBean() throws Exception {
+//
+//        this.mockMvc.perform(get("/people/customer/123/details").accept(MediaType.TEXT_HTML))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentType(MediaType.TEXT_HTML))
+//                .andExpect(xpath("//h:select[@name='detail' and @multiple]", namespaces).exists())
+//                .andExpect(xpath("//h:select[@name='detail']/h:option", namespaces).nodeCount(3))
+//                .andExpect(xpath("(//h:select[@name='detail']/h:option)[1]", namespaces).string("beard"))
+//                .andExpect(xpath("(//h:select[@name='detail']/h:option)[2]", namespaces).string("afterShave"))
+//                .andExpect(xpath("(//h:select[@name='detail']/h:option)[3]", namespaces).string("noseHairTrimmer"));
+//
+//    }
+//
+//
+//    /**
+//     * Tests List<String> parameter with a list of numbers.
+//     *
+//     * @throws Exception
+//     */
+//    @Test
+//    @Ignore("implement code on demand")
+//    public void testCreatesOneInputForIntegerListWithInputUpToAny() throws Exception {
+//
+//        this.mockMvc.perform(get("/people/customer/123/numbers").accept(MediaType.TEXT_HTML))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentType(MediaType.TEXT_HTML))
+//                .andExpect(xpath("//h:input[@name='number']", namespaces).nodeCount(1));
+//        // expect code-on-demand here
+//
+//    }
 
 }
