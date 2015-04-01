@@ -8,7 +8,7 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson;
+package de.escalon.hypermedia.spring.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JavaType;
@@ -17,24 +17,23 @@ import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.BeanSerializerFactory;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.springframework.hateoas.Resources;
+import com.fasterxml.jackson.databind.util.NameTransformer;
+import org.springframework.hateoas.Resource;
 
 import java.io.IOException;
 
 /**
- * Serializer for Resources.
+ * Serializer for json-ld representation of Resource.
  * Created by dschulten on 15.09.2014.
  */
-@SuppressWarnings("unused")
-public class ResourcesSerializer extends StdSerializer<Resources> {
+public class ResourceSerializer extends StdSerializer<Resource> {
 
-    @SuppressWarnings("unused")
-    public ResourcesSerializer() {
-        super(Resources.class);
+    public ResourceSerializer() {
+        super(Resource.class);
     }
 
     @Override
-    public void serialize(Resources value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    public void serialize(Resource value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
 
         final SerializationConfig config = provider.getConfig();
         JavaType javaType = config.constructType(value.getClass());
@@ -42,7 +41,18 @@ public class ResourcesSerializer extends StdSerializer<Resources> {
         JsonSerializer<Object> serializer = BeanSerializerFactory.instance.createSerializer(provider, javaType);
 
         jgen.writeStartObject();
-        serializer.serialize(value, jgen, provider);
+        serializer.unwrappingSerializer(NameTransformer.NOP)
+                .serialize(value, jgen, provider);
+
+//        // make a Link Serializer
+//        for (Link link : value.getLinks()) {
+//            final String rel = link.getRel();
+//            String linkFieldName = IanaRels.isIanaRel(rel) ? IANA_REL_PREFIX + rel : rel;
+//            jgen.writeFieldName(linkFieldName);
+//            jgen.writeStartObject();
+//            jgen.writeStringField("@id", link.getHref());
+//            jgen.writeEndObject();
+//        }
         jgen.writeEndObject();
 
     }

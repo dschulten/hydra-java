@@ -13,8 +13,7 @@ package de.escalon.hypermedia.spring;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import de.escalon.hypermedia.spring.de.escalon.hypermedia.spring.jackson.JacksonHydraModule;
-import org.springframework.http.MediaType;
+import de.escalon.hypermedia.spring.jackson.JacksonHydraModule;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import java.util.Arrays;
