@@ -13,6 +13,7 @@ package de.escalon.hypermedia.spring.xhtml;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.DataType;
+import de.escalon.hypermedia.PropertyUtil;
 import de.escalon.hypermedia.spring.uber.NullValueSerializer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.Resource;
@@ -307,7 +308,6 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
     }
 
     static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
-    static final Set<String> FILTER_BEAN = new HashSet<String>(Arrays.asList("class"));
 
     /**
      * Recursively converts object to nodes of uber data.
@@ -316,33 +316,24 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
      * @param writer to write to
      */
     private void writeResource(XhtmlWriter writer, Object object) {
-        Set<String> filtered = FILTER_RESOURCE_SUPPORT;
         if (object == null) {
             return;
         }
         try {
-            // TODO: move all returns to else branch of property descriptor handling
             if (object instanceof Resource) {
                 Resource<?> resource = (Resource<?>) object;
-                writer.addLinks(resource.getLinks());
                 writeResource(writer, resource.getContent());
-                return;
+                writer.addLinks(resource.getLinks());
             } else if (object instanceof Resources) {
                 Resources<?> resources = (Resources<?>) object;
-
                 // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
-                writer.addLinks(resources.getLinks());
-
                 Collection<?> content = resources.getContent();
                 writeResource(writer, content);
-                return;
+                writer.addLinks(resources.getLinks());
             } else if (object instanceof ResourceSupport) {
                 ResourceSupport resource = (ResourceSupport) object;
-
+                writeObject(writer, resource);
                 writer.addLinks(resource.getLinks());
-
-                // wrap object attributes below to avoid endless loop
-
             } else if (object instanceof Collection) {
                 Collection<?> collection = (Collection<?>) object;
                 writer.beginUnorderedList();
@@ -352,53 +343,57 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
                     writer.endListItem();
                 }
                 writer.endUnorderedList();
-                return;
-            }
-            if (object instanceof Map) {
-                Map<?, ?> map = (Map<?, ?>) object;
-                for (Entry<?, ?> entry : map.entrySet()) {
-                    String name = entry.getKey()
-                            .toString();
-                    Object content = entry.getValue();
-                    writeAttribute(writer, name, content);
-                }
-            } else if (object instanceof Enum) {
-                writer.writeSpan(((Enum) object).name());
-            } else if (object instanceof Currency) {
-                // TODO configurable classes which should be rendered with toString
-                // or use JsonSerializer?
-                writer.writeSpan(object.toString());
             } else {
-                Class<?> aClass = object.getClass();
-                Map<String, PropertyDescriptor> propertyDescriptors = getPropertyDescriptors(object);
-                Field[] fields = aClass.getFields();
-                for (Field field : fields) {
-                    String name = field.getName();
-                    if (!propertyDescriptors.containsKey(name)) {
-                        Object content = field.get(object);
-                        writeAttribute(writer, name, content);
-                    }
-                }
-                // TODO public fields
-                for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
-                    String name = propertyDescriptor.getName();
-                    if (filtered.contains(name)) {
-                        continue;
-                    }
-                    Method readMethod = propertyDescriptor.getReadMethod();
-                    if (readMethod != null) {
-                        Object content = readMethod
-                                .invoke(object);
-                        writeAttribute(writer, name, content);
-                    }
-                }
-
-
+                writeObject(writer, object);
             }
         } catch (Exception ex) {
             throw new RuntimeException("failed to transform object " + object, ex);
         }
 
+    }
+
+    private void writeObject(XhtmlWriter writer, Object object) throws IOException, IllegalAccessException, InvocationTargetException {
+        if (object instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) object;
+            for (Entry<?, ?> entry : map.entrySet()) {
+                String name = entry.getKey()
+                        .toString();
+                Object content = entry.getValue();
+                writeAttribute(writer, name, content);
+            }
+        } else if (object instanceof Enum) {
+            writer.writeSpan(((Enum) object).name());
+        } else if (object instanceof Currency) {
+            // TODO configurable classes which should be rendered with toString
+            // or use JsonSerializer?
+            writer.writeSpan(object.toString());
+        } else {
+            Class<?> aClass = object.getClass();
+            Map<String, PropertyDescriptor> propertyDescriptors = PropertyUtil.getPropertyDescriptors(object);
+            // getFields retrieves public only
+            Field[] fields = aClass.getFields();
+            for (Field field : fields) {
+                String name = field.getName();
+                if (!propertyDescriptors.containsKey(name)) {
+                    Object content = field.get(object);
+                    writeAttribute(writer, name, content);
+                }
+            }
+            for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
+                String name = propertyDescriptor.getName();
+                if (FILTER_RESOURCE_SUPPORT.contains(name)) {
+                    continue;
+                }
+                Method readMethod = propertyDescriptor.getReadMethod();
+                if (readMethod != null) {
+                    Object content = readMethod
+                            .invoke(object);
+                    writeAttribute(writer, name, content);
+                }
+            }
+
+
+        }
     }
 
     private void writeAttribute(XhtmlWriter writer, String name, Object content) throws IOException {
@@ -416,19 +411,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
         writer.endDiv();
     }
 
-    private static Map<String, PropertyDescriptor> getPropertyDescriptors(Object bean) {
-        try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(bean.getClass())
-                    .getPropertyDescriptors();
-            Map<String, PropertyDescriptor> ret = new HashMap<String, PropertyDescriptor>();
-            for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-                ret.put(propertyDescriptor.getName(), propertyDescriptor);
-            }
-            return ret;
-        } catch (IntrospectionException e) {
-            throw new RuntimeException("failed to get property descriptors of bean " + bean, e);
-        }
-    }
+
 
     @Override
     public boolean canRead(java.lang.reflect.Type type, Class<?> contextClass, MediaType mediaType) {

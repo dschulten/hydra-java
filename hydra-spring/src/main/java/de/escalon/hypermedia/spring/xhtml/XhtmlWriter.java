@@ -181,7 +181,7 @@ public class XhtmlWriter extends Writer {
                     writeLinkWithoutActionDescriptor(affordance);
                 } else {
                     if (affordance.isTemplated()) {
-                        // TODO using appendForm here requires to calculate the baseUri in appendForm
+                        // TODO using appendForm here would require to calculate the baseUri in appendForm
                         // so that it is no longer templated
                         // (strip optional params and resolve plain base uri,
                         // partial uritemplate query must become hidden field
@@ -244,6 +244,7 @@ public class XhtmlWriter extends Writer {
         } else {
             String rel = link.getRel();
             String title = (rel != null ? rel : link.getHref());
+            // TODO: write link instead of anchor here?
             writeAnchor(OptionalAttributes.attr("href", link.getHref()), title);
         }
     }
