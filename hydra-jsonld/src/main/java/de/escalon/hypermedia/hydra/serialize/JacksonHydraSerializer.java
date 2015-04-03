@@ -140,7 +140,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             final Class<?> mixInClass = config.findMixInClassFor(bean.getClass());
 
             final LdContext parentContext = contextStack.peek();
-            LdContext currentContext = new LdContext(getVocab(config, bean, mixInClass), getTerms(config, bean, mixInClass));
+            LdContext currentContext = new LdContext(parentContext, getVocab(config, bean, mixInClass), getTerms(config, bean, mixInClass));
             contextStack.push(currentContext);
             // check if we need to write a context for the current bean at all
             // If it is in the same vocab: no context
@@ -157,15 +157,6 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             } else {
                 mustWriteContext = false;
             }
-//            else {
-//                if (currentContext.terms.isEmpty()) {
-//                    // do not write context if bean has no terms
-//                    mustWriteContext = false;
-//                } else {
-//                    // TODO collect terms from nested beans in top-level context?
-//                    mustWriteContext = true;
-//                }
-//            }
 
             if (mustWriteContext) {
                 // begin context
