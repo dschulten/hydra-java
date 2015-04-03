@@ -350,7 +350,7 @@ public class XhtmlWriter extends Writer {
     }
 
     /**
-     * Appends form and squashes non-GET or POST to _method field for handling by an appropriate filter such as Spring's HiddenHttpMethodFilter
+     * Appends form and squashes non-GET or POST to _method field for handling by an appropriate filter such as Spring's
      *
      * @param affordance       to make into a form
      * @param actionDescriptor describing the form action
@@ -372,9 +372,8 @@ public class XhtmlWriter extends Writer {
         write(formH1);
         write("</h3>");
 
-        // do this only for text/html?
-        writeHiddenHttpMethodField(httpMethod);
-
+        // always write "real" method so rest clients can rely on it
+        input(methodParam, Type.HIDDEN, OptionalAttributes.attr("value", httpMethod.name()));
         // build the form
         if (actionDescriptor.hasRequestBody()) {
             ActionInputParameter requestBody = actionDescriptor.getRequestBody();
@@ -420,16 +419,6 @@ public class XhtmlWriter extends Writer {
                 httpMethod.name()
                         .toLowerCase()));
         endForm();
-    }
-
-    private void writeHiddenHttpMethodField(RequestMethod httpMethod) throws IOException {
-        switch (httpMethod) {
-            case GET:
-            case POST:
-                break;
-            default:
-                input(methodParam, Type.HIDDEN, OptionalAttributes.attr("value", httpMethod.name()));
-        }
     }
 
     private String getHtmlConformingHttpMethod(RequestMethod requestMethod) {
