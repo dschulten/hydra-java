@@ -3,7 +3,7 @@ package de.escalon.hypermedia.sample;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
-import de.escalon.hypermedia.spring.xhtml.HtmlResourceMessageConverter;
+import de.escalon.hypermedia.spring.xhtml.XhtmlResourceMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -57,12 +57,12 @@ public class Config extends WebMvcConfigurerAdapter {
     }
 
     private HttpMessageConverter<?> htmlMessageConverter() {
-        HtmlResourceMessageConverter htmlResourceMessageConverter = new HtmlResourceMessageConverter();
-        htmlResourceMessageConverter.setStylesheets(
+        XhtmlResourceMessageConverter xhtmlResourceMessageConverter = new XhtmlResourceMessageConverter();
+        xhtmlResourceMessageConverter.setStylesheets(
                 Arrays.asList(
                         "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"
                 ));
-        return htmlResourceMessageConverter;
+        return xhtmlResourceMessageConverter;
     }
 
     @Override

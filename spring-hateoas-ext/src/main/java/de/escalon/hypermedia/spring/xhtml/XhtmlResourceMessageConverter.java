@@ -42,30 +42,16 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * Message converter which converts one ActionDescriptor or an array of ActionDescriptor items to an HTML page
- * containing one form per ActionDescriptor.
- * <p>
- * Add the following to your spring configuration to enable this converter:
- * </p>
- * <pre>
- *   &lt;bean
- *     class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"&gt;
- *     &lt;property name="messageConverters"&gt;
- *       &lt;list&gt;
- *         &lt;ref bean="jsonConverter" /&gt;
- *         &lt;ref bean="htmlFormMessageConverter" /&gt;
- *       &lt;/list&gt;
- *     &lt;/property&gt;
- *   &lt;/bean&gt;
- *
- *   &lt;bean id="htmlFormMessageConverter" class="de.escalon.hypermedia.spring.xhtml.HtmlResourceMessageConverter"&gt;
- *     &lt;property name="supportedMediaTypes" value="text/html" /&gt;
- *   &lt;/bean&gt;
- * </pre>
+ * Message converter which represents a restful API as xhtml which can be used by the browser or a rest client.
+ * Converts java beans and spring-hateoas Resources to xhtml and maps the body of x-www-form-urlencoded
+ * requests to RequestBody method parameters.
+ * The media-type xhtml does not officially support methods other than GET or POST, therefore we must &quot;tunnel&quot;
+ * other methods when this converter is used with the browser.
+ * Spring's {@link org.springframework.web.filter.HiddenHttpMethodFilter} allows to do that with relative ease.
  *
  * @author Dietrich Schulten
  */
-public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object>
+public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object>
         implements GenericHttpMessageConverter<Object> {
 
     private Charset charset = Charset.forName("UTF-8");
@@ -73,7 +59,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
     private List<String> stylesheets = Collections.emptyList();
 
 
-    public HtmlResourceMessageConverter() {
+    public XhtmlResourceMessageConverter() {
         this.setSupportedMediaTypes(
                 Arrays.asList(MediaType.TEXT_HTML, MediaType.APPLICATION_FORM_URLENCODED));
     }

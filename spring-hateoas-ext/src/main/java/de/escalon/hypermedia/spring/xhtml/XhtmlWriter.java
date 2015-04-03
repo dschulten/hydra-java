@@ -48,7 +48,7 @@ public class XhtmlWriter extends Writer {
 
 
     public static final String HTML_STYLESHEET = "" + //
-            "    <link rel=\"stylesheets\" href=\"%s\"  />";
+            "    <link rel=\"stylesheet\" href=\"%s\"  />";
 
     public static final String HTML_HEAD_END = "" + //
             "  </head>" + //

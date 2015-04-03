@@ -38,9 +38,9 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class HtmlResourceMessageConverterTest {
+public class XhtmlResourceMessageConverterTest {
 
-    public static final Logger LOG = LoggerFactory.getLogger(HtmlResourceMessageConverterTest.class);
+    public static final Logger LOG = LoggerFactory.getLogger(XhtmlResourceMessageConverterTest.class);
 
     @Autowired
     private WebApplicationContext wac;
@@ -70,7 +70,7 @@ public class HtmlResourceMessageConverterTest {
         @Override
         public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
             super.configureMessageConverters(converters);
-            converters.add(new HtmlResourceMessageConverter());
+            converters.add(new XhtmlResourceMessageConverter());
         }
 
         @Override
@@ -96,6 +96,7 @@ public class HtmlResourceMessageConverterTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
                 .andExpect(xpath("h:html/h:body/h:form[@method='GET']/@action", namespaces).string("http://localhost/events"))
+                .andExpect(xpath("//h:form[@name='addEvent']/h:input[@name='_method']/@value", namespaces).string("POST"))
                 .andExpect(xpath("//h:form[@method='GET']/h:label/h:input/@name", namespaces).string("eventName"))
                 .andReturn();
         LOG.debug(result.getResponse()
@@ -109,6 +110,7 @@ public class HtmlResourceMessageConverterTest {
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
                 .andExpect(xpath("//h:form[@name='addEvent']/@action", namespaces).string("http://localhost/events"))
                 .andExpect(xpath("//h:form[@name='addEvent']/@method", namespaces).string("POST"))
+                .andExpect(xpath("//h:form[@name='addEvent']/h:input[@name='_method']/@value", namespaces).string("POST"))
                 .andExpect(xpath("//h:form[@name='addEvent']/h:div/h:select[@name='eventStatus']", namespaces).exists())
                 .andExpect(xpath("//h:form[@name='addEvent']/h:div/h:select[@name='typicalAgeRange']", namespaces).exists())
                 .andReturn();
