@@ -10,14 +10,19 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.spring.sample.DummyEventController;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.hateoas.Resource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -30,6 +35,22 @@ public class AffordanceBuilderFactoryTest {
 
     private MockHttpServletRequest request;
 
+    /**
+     * Sample controller.
+     * Created by dschulten on 11.09.2014.
+     */
+    @Controller
+    @RequestMapping("/events")
+    class EventControllerSample {
+        @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
+        public
+        @ResponseBody
+        Resource<Object> getEvent(@PathVariable String eventId) {
+            return null;
+        }
+
+    }
+
     @Before
     public void setUp() {
         request = MockMvcRequestBuilders.get("http://example.com/")
@@ -40,7 +61,7 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToMethod() throws Exception {
-        final Method getEventMethod = ReflectionUtils.findMethod(DummyEventController.class, "getEvent", String.class);
+        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
         final Affordance affordance = factory.linkTo(getEventMethod, new Object[0])
                 .build("foo");
         Assert.assertEquals("http://example.com/events/{eventId}", affordance.getHref());
@@ -48,8 +69,8 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToMethodInvocation() throws Exception {
-        final Method getEventMethod = ReflectionUtils.findMethod(DummyEventController.class, "getEvent", String.class);
-        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(DummyEventController.class)
+        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
                 .getEvent((String) null))
                 .build("foo");
         Assert.assertEquals("http://example.com/events/{eventId}", affordance.getHref());
@@ -57,7 +78,7 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToControllerClass() throws Exception {
-        final Affordance affordance = factory.linkTo(DummyEventController.class, new Object[0])
+        final Affordance affordance = factory.linkTo(EventControllerSample.class, new Object[0])
                 .build("foo");
         Assert.assertEquals("http://example.com/events", affordance.getHref());
     }

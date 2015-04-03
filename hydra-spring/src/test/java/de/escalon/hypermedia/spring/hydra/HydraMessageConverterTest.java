@@ -11,9 +11,10 @@
  * the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring;
+package de.escalon.hypermedia.spring.hydra;
 
-import de.escalon.hypermedia.spring.sample.test.DummyEventController;
+import de.escalon.hypermedia.spring.HypermediaTypes;
+import de.escalon.hypermedia.spring.sample.test.DummyEventControllerExposed;
 import de.escalon.hypermedia.spring.sample.test.ReviewController;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,8 +66,8 @@ public class HydraMessageConverterTest {
         }
 
         @Bean
-        public DummyEventController eventController() {
-            return new DummyEventController();
+        public DummyEventControllerExposed eventController() {
+            return new DummyEventControllerExposed();
         }
 
         @Override

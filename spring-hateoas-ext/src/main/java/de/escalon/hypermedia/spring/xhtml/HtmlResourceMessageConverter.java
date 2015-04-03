@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.DataType;
 import de.escalon.hypermedia.PropertyUtil;
-import de.escalon.hypermedia.spring.uber.NullValueSerializer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
@@ -434,7 +433,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
 
     /**
      * Sets css stylesheets to apply to the form.
-     * @param stylesheets
+     * @param stylesheets urls of css stylesheets to include, e.g. &quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css&quot;
      */
     public void setStylesheets(List<String> stylesheets) {
         Assert.notNull(stylesheets);
@@ -445,9 +444,6 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
 
     }
 
-    /**
-     * Uses {@link NullValueSerializer} to render undefined values as null.
-     */
     public static final NullValue NULL_VALUE = new NullValue();
 
     private static Object getContentAsScalarValue(Object content) {

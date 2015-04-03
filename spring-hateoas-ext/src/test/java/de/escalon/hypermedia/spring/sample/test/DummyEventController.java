@@ -10,7 +10,6 @@
 
 package de.escalon.hypermedia.spring.sample.test;
 
-import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.spring.Affordance;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
@@ -37,10 +36,6 @@ import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
 @Controller
 @RequestMapping("/events")
 public class DummyEventController {
-
-    final List<EventResource> eventResources = Arrays.asList(new EventResource(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden"),
-            new EventResource(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn"));
-
 
     @RequestMapping(method=RequestMethod.POST)
     public
@@ -113,7 +108,7 @@ public class DummyEventController {
     @RequestMapping(value = "/regex/{eventId:.+}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Resource<Event> getEventWithRegexPathVariableMapping(@PathVariable @Expose("ex:eventId") Integer eventId) {
+    Resource<Event> getEventWithRegexPathVariableMapping(@PathVariable Integer eventId) {
         Resource<Event> resource = new Resource<Event>(getEvents().get(eventId));
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
@@ -122,7 +117,7 @@ public class DummyEventController {
     @RequestMapping(method = RequestMethod.GET, params = {"eventName"})
     public
     @ResponseBody
-    Resource<Event> getEvent(@RequestParam @Expose("http://schema.org/name") String eventName) {
+    Resource<Event> getEvent(@RequestParam String eventName) {
         Resource<Event> ret = null;
         for (Event event : getEvents()) {
             if (event.getWorkPerformed()
@@ -140,7 +135,7 @@ public class DummyEventController {
     public
     @ResponseBody
     EventResource getResourceSupportEvent(@PathVariable int eventId) {
-        EventResource resource = eventResources.get(eventId);
+        EventResource resource = getEventResources().get(eventId);
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
@@ -158,9 +153,14 @@ public class DummyEventController {
     }
 
 
-    private List<Event> getEvents() {
+    protected List<Event> getEvents() {
         return Arrays.asList(new Event(1, "Walk off the Earth", new CreativeWork("Gang of Rhythm Tour"), "Wiesbaden", EventStatusType.EVENT_SCHEDULED),
                 new Event(2, "Cornelia Bielefeldt", new CreativeWork("Mein letzter Film"), "Heilbronn", EventStatusType.EVENT_SCHEDULED));
+    }
+
+    protected List<? extends EventResource> getEventResources() {
+        return Arrays.asList(new EventResource(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden"),
+                new EventResource(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn"));
     }
 
 }

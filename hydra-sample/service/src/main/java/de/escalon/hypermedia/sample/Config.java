@@ -2,7 +2,7 @@ package de.escalon.hypermedia.sample;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.escalon.hypermedia.spring.HydraMessageConverter;
+import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
 import de.escalon.hypermedia.spring.xhtml.HtmlResourceMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

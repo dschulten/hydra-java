@@ -40,8 +40,8 @@ public class Affordance extends Link {
 
     /**
      * Creates affordance, action descriptors and link param values may be added later.
-     * @param uriTemplate
-     * @param rels
+     * @param uriTemplate uri or uritemplate of the affordance
+     * @param rels describing the link relation type
      */
     public Affordance(String uriTemplate, String... rels) {
         this(new PartialUriTemplate(uriTemplate), new ArrayList<ActionDescriptor>(),rels);
@@ -50,8 +50,8 @@ public class Affordance extends Link {
     /**
      * Creates affordance, action descriptors and link header params may be added later.
      *
-     * @param uriTemplate
-     * @param rels
+     * @param uriTemplate uri or uritemplate of the affordance
+     * @param rels describing the link relation type
      */
     public Affordance(PartialUriTemplate uriTemplate, List<ActionDescriptor> actionDescriptors, String... rels) {
         super(uriTemplate.stripOptionalVariables(actionDescriptors)); // keep only required and expanded variables
@@ -82,7 +82,7 @@ public class Affordance extends Link {
     public List<ActionDescriptor> getActionDescriptors() {
         return Collections.unmodifiableList(actionDescriptors);
     }
-    
+
 
     /**
      * The relation type of the link.

@@ -8,27 +8,24 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring.jackson;
+package de.escalon.hypermedia.spring.sample.test;
 
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 
-import java.util.List;
-
 /**
- * Mixin for json-ld serialization of ResourceSupport.
- * Created by dschulten on 14.09.2014.
+ * Sample Event derived from ResourceSupport.
+ * Created by dschulten on 13.09.2014.
  */
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+public class EventResource extends ResourceSupport {
+    public int id;
+    public String performer;
+    public String name;
+    public String location;
 
-public class ResourceSupportMixin extends ResourceSupport {
-    @Override
-    @JsonSerialize(using = LinkListSerializer.class)
-    @JsonUnwrapped
-    public List<Link> getLinks() {
-        return super.getLinks();
+    public EventResource(int id, String performer, String name, String location) {
+        this.id = id;
+        this.performer = performer;
+        this.name = name;
+        this.location = location;
     }
-
 }

@@ -92,7 +92,8 @@ public class AffordanceBuilder implements LinkBuilder {
      * Creates a new {@link AffordanceBuilder} pointing to this server, but without ActionDescriptor.
      */
     AffordanceBuilder() {
-        this(new PartialUriTemplate(getBuilder().build().toString()).expand(Collections.<String, Object>emptyMap()),
+        this(new PartialUriTemplate(getBuilder().build()
+                        .toString()).expand(Collections.<String, Object>emptyMap()),
                 Collections.<ActionDescriptor>emptyList());
 
     }
@@ -124,6 +125,23 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
 
+    /**
+     * Builds affordance with multiple rels. According to rfc-5988, a link can have multiple link relation types.
+     *
+     * &quot;Note that link-values can convey multiple links between the same
+     * target and context IRIs; for example:
+     * <pre>
+     * Link: &lt;http://example.org/&gt;
+     *       rel="start http://example.net/relation/other"
+     * </pre>
+     * Here, the link to 'http://example.org/' has the registered relation
+     * type 'start' and the extension relation type
+     * 'http://example.net/relation/other'.&quot;
+     *
+     * @param rels link relation types
+     * @return affordance
+     * @see <a href="https://tools.ietf.org/html/rfc5988#section-5.5">Web Linking Examples</a>
+     */
     public Affordance build(String... rels) {
         Assert.notEmpty(rels);
         final Affordance affordance;
@@ -151,7 +169,8 @@ public class AffordanceBuilder implements LinkBuilder {
 
     /**
      * Allows to define link header params (not UriTemplate variables).
-     * @param name of the link header param
+     *
+     * @param name  of the link header param
      * @param value of the link header param
      * @return builder
      */
@@ -207,12 +226,15 @@ public class AffordanceBuilder implements LinkBuilder {
         final UriTemplateComponents urlPartComponents = new PartialUriTemplate(urlPart).expand(Collections.<String, Object>emptyMap());
         final UriTemplateComponents affordanceComponents = uriTemplateComponents;
 
-        final String path = !affordanceComponents.getBaseUri().endsWith("/") && !urlPartComponents.getBaseUri().startsWith("/") ?
+        final String path = !affordanceComponents.getBaseUri()
+                .endsWith("/") && !urlPartComponents.getBaseUri()
+                .startsWith("/") ?
                 affordanceComponents.getBaseUri() + "/" + urlPartComponents.getBaseUri() :
                 affordanceComponents.getBaseUri() + urlPartComponents.getBaseUri();
         final String queryHead = affordanceComponents.getQueryHead() +
                 (StringUtils.hasText(urlPartComponents.getQueryHead()) ?
-                        "&" + urlPartComponents.getQueryHead().substring(1) :
+                        "&" + urlPartComponents.getQueryHead()
+                                .substring(1) :
                         "");
         final String queryTail = affordanceComponents.getQueryTail() +
                 (StringUtils.hasText(urlPartComponents.getQueryTail()) ?

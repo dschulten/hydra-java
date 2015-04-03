@@ -8,12 +8,12 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring;
+package de.escalon.hypermedia.spring.hydra;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import de.escalon.hypermedia.spring.jackson.JacksonHydraModule;
+import de.escalon.hypermedia.spring.HypermediaTypes;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import java.util.Arrays;

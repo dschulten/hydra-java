@@ -33,6 +33,14 @@
         </dependency>
 
         <dependency>
+            <groupId>de.escalon.hypermedia</groupId>
+            <artifactId>spring-hateoas-ext</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
         </dependency>
