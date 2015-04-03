@@ -31,7 +31,6 @@ import org.springframework.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.*;
@@ -72,6 +71,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
 
     private Charset charset = Charset.forName("UTF-8");
     private String methodParam = "_method";
+    private List<String> stylesheets = Collections.emptyList();
 
 
     public HtmlResourceMessageConverter() {
@@ -300,6 +300,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
 
         XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody()));
         xhtmlWriter.setMethodParam(methodParam);
+        xhtmlWriter.setStylesheets(stylesheets);
         xhtmlWriter.beginHtml("Input Data");
         writeResource(xhtmlWriter, t);
         xhtmlWriter.endHtml();
@@ -365,7 +366,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
             writer.writeSpan(((Enum) object).name());
         } else if (object instanceof Currency) {
             // TODO configurable classes which should be rendered with toString
-            // or use JsonSerializer?
+            // or use JsonSerializer or DataType?
             writer.writeSpan(object.toString());
         } else {
             Class<?> aClass = object.getClass();
@@ -378,7 +379,7 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
                     Object content = field.get(object);
                     writeAttribute(writer, name, content);
                 }
-            }
+            } // TODO build local filter from written fields
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
                 String name = propertyDescriptor.getName();
                 if (FILTER_RESOURCE_SUPPORT.contains(name)) {
@@ -412,7 +413,6 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
     }
 
 
-
     @Override
     public boolean canRead(java.lang.reflect.Type type, Class<?> contextClass, MediaType mediaType) {
         if (MediaType.APPLICATION_FORM_URLENCODED == mediaType) {
@@ -430,6 +430,15 @@ public class HtmlResourceMessageConverter extends AbstractHttpMessageConverter<O
      */
     public void setMethodParam(String methodParam) {
         this.methodParam = methodParam;
+    }
+
+    /**
+     * Sets css stylesheets to apply to the form.
+     * @param stylesheets
+     */
+    public void setStylesheets(List<String> stylesheets) {
+        Assert.notNull(stylesheets);
+        this.stylesheets = stylesheets;
     }
 
     static class NullValue {

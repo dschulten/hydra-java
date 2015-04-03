@@ -13,6 +13,7 @@ package de.escalon.hypermedia.spring.jackson;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.escalon.hypermedia.hydra.mapping.ContextProvider;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.mapping.Term;
 import org.springframework.hateoas.Link;
@@ -32,6 +33,7 @@ public abstract class ResourcesMixin<T> extends Resources<T> {
 
     @Override
     @JsonProperty("hydra:member")
+    @ContextProvider
     public Collection<T> getContent() {
         return super.getContent();
     }

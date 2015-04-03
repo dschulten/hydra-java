@@ -1,5 +1,7 @@
 package de.escalon.hypermedia.sample.event;
 
+import de.escalon.hypermedia.sample.beans.Rating;
+import de.escalon.hypermedia.sample.beans.Review;
 import de.escalon.hypermedia.sample.model.*;
 import org.springframework.stereotype.Component;
 

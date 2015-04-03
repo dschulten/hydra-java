@@ -37,16 +37,22 @@ import static de.escalon.hypermedia.spring.xhtml.XhtmlWriter.OptionalAttributes.
  */
 public class XhtmlWriter extends Writer {
     private Writer writer;
+    private List<String> stylesheets = Collections.emptyList();
 
-    public static final String HTML_START = "" + //
+    public static final String HTML_HEAD_START = "" + //
             //"<?xml version='1.0' encoding='UTF-8' ?>" + // formatter
             "<!DOCTYPE html>" + //
             "<html xmlns='http://www.w3.org/1999/xhtml'>" + //
             "  <head>" + //
-            "    <title>%s</title>" + //
+            "    <title>%s</title>";
+
+
+    public static final String HTML_STYLESHEET = "" + //
+            "    <link rel=\"stylesheets\" href=\"%s\"  />";
+
+    public static final String HTML_HEAD_END = "" + //
             "  </head>" + //
             "  <body>";
-
 
     public static final String HTML_END = "" + //
             "  </body>" + //
@@ -64,8 +70,14 @@ public class XhtmlWriter extends Writer {
     }
 
     public void beginHtml(String title) throws IOException {
-        write(String.format(HTML_START, title));
+        write(String.format(HTML_HEAD_START, title));
+        for (String stylesheet : stylesheets) {
+            write(String.format(HTML_STYLESHEET, stylesheet));
+        }
+        write(String.format(HTML_HEAD_END, title));
     }
+
+
 
     public void endHtml() throws IOException {
         write(HTML_END);
@@ -124,6 +136,11 @@ public class XhtmlWriter extends Writer {
         writer.write(value.toString());
         endSpan();
 
+    }
+
+    public void setStylesheets(List<String> stylesheets) {
+        Assert.notNull(stylesheets);
+        this.stylesheets = stylesheets;
     }
 
     public static class OptionalAttributes {
@@ -350,11 +367,12 @@ public class XhtmlWriter extends Writer {
         beginForm(OptionalAttributes.attr("action", affordance.getHref())
                 .and("method", getHtmlConformingHttpMethod(httpMethod))
                 .and("name", formName));
-        write("<h1>");
+        write("<h3>");
         String formH1 = "Form " + formName;
         write(formH1);
-        write("</h1>");
+        write("</h3>");
 
+        // do this only for text/html?
         writeHiddenHttpMethodField(httpMethod);
 
         // build the form

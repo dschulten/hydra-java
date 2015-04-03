@@ -127,8 +127,8 @@ public class HtmlResourceMessageConverterTest {
         MvcResult result = this.mockMvc.perform(get("/events").accept(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
-                .andExpect(xpath("h:html/h:body/h:ul/h:li/h:form[@name='updateEventWithRequestBody']/@action", namespaces).string("http://localhost/events/1"))
-                .andExpect(xpath("h:html/h:body/h:ul/h:li/h:form[@name='updateEventWithRequestBody']/h:input[@name='_method']/@value", namespaces).string("PUT"))
+                .andExpect(xpath("//h:form[@name='updateEventWithRequestBody']/@action", namespaces).string("http://localhost/events/1"))
+                .andExpect(xpath("//h:form[@name='updateEventWithRequestBody']/h:input[@name='_method']/@value", namespaces).string("PUT"))
                 .andReturn();
 
         LOG.debug(result.getResponse()

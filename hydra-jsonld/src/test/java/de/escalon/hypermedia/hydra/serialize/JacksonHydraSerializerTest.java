@@ -252,6 +252,7 @@ public class JacksonHydraSerializerTest {
         BUY
     }
 
+    @Term(define = "gr", as="http://purl.org/goodrelations/v1#")
     class UnitPriceSpecification {
         public BigDecimal price = BigDecimal.valueOf(3.99);
         public String priceCurrency = "USD";

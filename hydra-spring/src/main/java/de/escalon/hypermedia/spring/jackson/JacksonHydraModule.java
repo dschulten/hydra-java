@@ -31,8 +31,6 @@ public class JacksonHydraModule extends SimpleModule {
 
     public JacksonHydraModule() {
         super("json-hydra-module", new Version(1, 0, 0, null, "de.escalon.hypermedia", "hydra-spring"));
-
-
         setMixInAnnotation(ResourceSupport.class, ResourceSupportMixin.class);
         setMixInAnnotation(Resources.class, ResourcesMixin.class);
         setMixInAnnotation(Resource.class, ResourceMixin.class);

@@ -57,7 +57,12 @@ public class Config extends WebMvcConfigurerAdapter {
     }
 
     private HttpMessageConverter<?> htmlMessageConverter() {
-        return new HtmlResourceMessageConverter();
+        HtmlResourceMessageConverter htmlResourceMessageConverter = new HtmlResourceMessageConverter();
+        htmlResourceMessageConverter.setStylesheets(
+                Arrays.asList(
+                        "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"
+                ));
+        return htmlResourceMessageConverter;
     }
 
     @Override

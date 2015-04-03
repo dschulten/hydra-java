@@ -18,10 +18,7 @@ import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
 import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.fasterxml.jackson.databind.util.NameTransformer;
-import de.escalon.hypermedia.hydra.mapping.Expose;
-import de.escalon.hypermedia.hydra.mapping.Term;
-import de.escalon.hypermedia.hydra.mapping.Terms;
-import de.escalon.hypermedia.hydra.mapping.Vocab;
+import de.escalon.hypermedia.hydra.mapping.*;
 import org.apache.commons.lang3.text.WordUtils;
 
 import java.beans.BeanInfo;
@@ -31,13 +28,11 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class JacksonHydraSerializer extends BeanSerializerBase {
 
+    public static final String KEY_LD_VOCAB = "de.escalon.hypermedia.ld-vocab";
     public static final String KEY_LD_CONTEXT = "de.escalon.hypermedia.ld-context";
     public static final String AT_VOCAB = "@vocab";
     public static final String AT_TYPE = "@type";
@@ -100,21 +95,21 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         }
         // TODO use serializerProvider.getAttributes to hold a stack of contexts
 
-        Deque<String> vocabStack = (Deque<String>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
-        if (vocabStack == null) {
-            vocabStack = new ArrayDeque<String>();
-            serializerProvider.setAttribute(KEY_LD_CONTEXT, vocabStack);
+        Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
+        if (contextStack == null) {
+            contextStack = new ArrayDeque<LdContext>();
+            serializerProvider.setAttribute(KEY_LD_CONTEXT, contextStack);
         }
 
-        serializeContext(bean, jgen, serializerProvider, vocabStack);
+        serializeContext(bean, jgen, serializerProvider, contextStack);
         serializeType(bean, jgen, serializerProvider);
         serializeFields(bean, jgen, serializerProvider);
         if (!isUnwrappingSerializer()) {
             jgen.writeEndObject();
         }
-        vocabStack = (Deque<String>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
-        if (!vocabStack.isEmpty()) {
-            vocabStack.pop();
+        contextStack = (Deque<LdContext>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
+        if (!contextStack.isEmpty()) {
+            contextStack.pop();
         }
     }
 
@@ -139,42 +134,50 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     }
 
     private void serializeContext(Object bean, JsonGenerator jgen,
-                                  SerializerProvider serializerProvider, Deque<String> vocabStack) throws IOException {
+                                  SerializerProvider serializerProvider, Deque<LdContext> contextStack) throws IOException {
         try {
             SerializationConfig config = serializerProvider.getConfig();
             final Class<?> mixInClass = config.findMixInClassFor(bean.getClass());
 
-            String vocab = getVocab(bean, mixInClass);
-            Map<String, Object> terms = getTerms(bean, mixInClass);
-
-            final String currentVocab = vocabStack.peek();
-            vocabStack.push(vocab);
+            final LdContext parentContext = contextStack.peek();
+            LdContext currentContext = new LdContext(getVocab(config, bean, mixInClass), getTerms(config, bean, mixInClass));
+            contextStack.push(currentContext);
             // check if we need to write a context for the current bean at all
             // If it is in the same vocab: no context
             // If the terms are already defined in the context: no context
             boolean mustWriteContext;
-            if (currentVocab == null || !vocab.equals(currentVocab)) {
+            // not contained: vocab is not equal or current terms are not in parent
+            // TODO prob: subcontexts only check their immediate parent
+            // TODO merge parent and beanlocal context to become the current context on stack?
+            // TODO chain contexts so that they know their parent?
+            // TODO prob: the package context has no effect on Resource and Resources mixins
+            // @ContextProvider -> invoke and recursively find non-collection/map type using first collection/map item
+            if (parentContext == null || !parentContext.contains(currentContext)) {
                 mustWriteContext = true;
             } else {
-                if (terms.isEmpty()) {
-                    // do not write context if bean has no terms
-                    mustWriteContext = false;
-                } else {
-                    // TODO collect terms from nested beans in top-level context?
-                    mustWriteContext = true;
-                }
+                mustWriteContext = false;
             }
+//            else {
+//                if (currentContext.terms.isEmpty()) {
+//                    // do not write context if bean has no terms
+//                    mustWriteContext = false;
+//                } else {
+//                    // TODO collect terms from nested beans in top-level context?
+//                    mustWriteContext = true;
+//                }
+//            }
 
             if (mustWriteContext) {
                 // begin context
                 // default context: schema.org vocab or vocab package annotation
                 jgen.writeObjectFieldStart("@context");
                 // do not repeat vocab if already defined in current context
-                if (currentVocab == null || !vocab.equals(currentVocab)) {
-                    jgen.writeStringField(AT_VOCAB, vocab);
+                if (parentContext == null || parentContext.vocab == null ||
+                        (currentContext.vocab != null && !currentContext.vocab.equals(parentContext.vocab))) {
+                    jgen.writeStringField(AT_VOCAB, currentContext.vocab);
                 }
 
-                for (Map.Entry<String, Object> termEntry : terms.entrySet()) {
+                for (Map.Entry<String, Object> termEntry : currentContext.terms.entrySet()) {
                     if (termEntry.getValue() instanceof String) {
                         jgen.writeStringField(termEntry.getKey(), termEntry.getValue()
                                 .toString());
@@ -205,10 +208,10 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
      * Gets vocab for given bean.
      *
      * @param bean       to inspect for vocab
-     * @param mixInClass for bean which might define a vocab
+     * @param mixInClass for bean which might define a vocab or has a context provider
      * @return explicitly defined vocab or http://schema.org
      */
-    private String getVocab(Object bean, Class<?> mixInClass) {
+    private String getVocab(SerializationConfig config, Object bean, Class<?> mixInClass) {
         // determine vocab in context
         final Vocab packageVocab = getAnnotation(bean.getClass()
                 .getPackage(), Vocab.class);
@@ -216,23 +219,30 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
 
         final Vocab mixinVocab = getAnnotation(mixInClass, Vocab.class);
 
+        Object nestedContextProviderFromMixin = getNestedContextProviderFromMixin(config, bean, mixInClass);
+        String contextProviderVocab = null;
+        if (nestedContextProviderFromMixin != null) {
+            contextProviderVocab = getVocab(config, nestedContextProviderFromMixin, null);
+        }
+
         String vocab;
         if (mixinVocab != null) {
             vocab = mixinVocab.value(); // wins over class
         } else if (classVocab != null) {
             vocab = classVocab.value(); // wins over package
         } else if (packageVocab != null) {
-            vocab = packageVocab.value();
+            vocab = packageVocab.value(); // wins over context provider
+        } else if (contextProviderVocab != null) {
+            vocab = contextProviderVocab; // wins over last resort
         } else {
             vocab = HTTP_SCHEMA_ORG;
         }
         return vocab;
     }
 
-    private Map<String, Object> getTerms(Object bean,
-                                         Class<?> mixInClass) throws IntrospectionException, IllegalAccessException,
-            NoSuchFieldException, InvocationTargetException {
-        // define terms from package or type in context
+    private Map<String, Object> getTerms(SerializationConfig config, Object bean,
+                                         Class<?> mixInClass) throws IllegalAccessException, NoSuchFieldException, IntrospectionException, InvocationTargetException {
+
         final Class<?> beanClass = bean.getClass();
         Map<String, Object> termsMap = getAnnotatedTerms(beanClass.getPackage(), beanClass.getPackage()
                 .getName());
@@ -245,6 +255,11 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         termsMap.putAll(classTermsMap);
         // mixin terms override class terms
         termsMap.putAll(mixinTermsMap);
+
+        Object nestedContextProviderFromMixin = getNestedContextProviderFromMixin(config, bean, mixInClass);
+        if (nestedContextProviderFromMixin != null) {
+            termsMap.putAll(getTerms(config, nestedContextProviderFromMixin, null));
+        }
 
         final Field[] fields = beanClass
                 .getDeclaredFields();
@@ -278,6 +293,62 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         }
         return termsMap;
     }
+
+    private Object getNestedContextProviderFromMixin(SerializationConfig config, Object bean, Class<?> mixinClass) {
+        if (mixinClass == null) {
+            return null;
+        }
+        try {
+            Method mixinContextProvider = getContextProvider(mixinClass);
+            if (mixinContextProvider == null) {
+                return null;
+            }
+            Class<?> beanClass = bean.getClass();
+            Object contextual = beanClass.getMethod(mixinContextProvider.getName()).invoke(bean);
+            Object ret = null;
+            if (contextual instanceof Collection) {
+                Collection collection = (Collection) contextual;
+                if (!collection.isEmpty()) {
+                    Object item = collection.iterator()
+                            .next();
+                    final Class<?> mixInClass = config.findMixInClassFor(item.getClass());
+                    if (mixInClass == null) {
+                        ret = item;
+                    } else {
+                        ret = getNestedContextProviderFromMixin(config, item, mixInClass);
+                    }
+                }
+            } else if (contextual instanceof Map) {
+                Map map = (Map) contextual;
+                if (!map.isEmpty()) {
+                    Object item = map.values()
+                            .iterator()
+                            .next();
+                    final Class<?> mixInClass = config.findMixInClassFor(item.getClass());
+                    if (mixInClass == null) {
+                        ret = item;
+                    } else {
+                        ret = getNestedContextProviderFromMixin(config, item, mixInClass);
+                    }
+                }
+            } else {
+                ret = contextual;
+            }
+            return ret;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Method getContextProvider(Class<?> beanClass) {
+        Class<? extends Annotation> annotation = ContextProvider.class;
+        Method contextProvider = getAnnotatedMethod(beanClass, annotation);
+        if (contextProvider.getParameterTypes().length > 0) {
+            throw new IllegalStateException("the context provider method " + contextProvider.getName() + " must not have arguments");
+        }
+        return contextProvider;
+    }
+
 
     private void addEnumTerms(Map<String, Object> termsMap, Expose expose, String name,
                               Enum value) throws NoSuchFieldException {
@@ -340,6 +411,18 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             ret = null;
         } else {
             ret = annotated.getAnnotation(annotationClass);
+        }
+        return ret;
+    }
+
+    private static Method getAnnotatedMethod(Class<?> clazz, Class<? extends Annotation> annotation) {
+        Method[] methods = clazz.getMethods();
+        Method ret = null;
+        for (Method method : methods) {
+            if (method.getAnnotation(annotation) != null) {
+                ret = method;
+                break;
+            }
         }
         return ret;
     }

@@ -12,6 +12,7 @@ package de.escalon.hypermedia.spring.jackson;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import de.escalon.hypermedia.hydra.mapping.ContextProvider;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 
@@ -33,10 +34,17 @@ public abstract class ResourceMixin<T> extends Resource<T> {
     public ResourceMixin(T content, Iterable<Link> links) {
         super(content, links);
     }
+
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped
     public List<Link> getLinks() {
         return super.getLinks();
+    }
+
+    @ContextProvider
+    @Override
+    public T getContent() {
+        return super.getContent();
     }
 }

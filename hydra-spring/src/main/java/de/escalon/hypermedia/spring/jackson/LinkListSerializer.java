@@ -20,6 +20,7 @@ import de.escalon.hypermedia.DataType;
 import de.escalon.hypermedia.PropertyUtil;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
+import de.escalon.hypermedia.hydra.serialize.LdContext;
 import de.escalon.hypermedia.spring.Affordance;
 import de.escalon.hypermedia.action.ActionDescriptor;
 import de.escalon.hypermedia.action.ActionInputParameter;
@@ -115,9 +116,10 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeEndObject();
             }
 
-            Deque<String> vocabStack = (Deque<String>) serializerProvider.getAttribute(JacksonHydraSerializer
+            Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(JacksonHydraSerializer
                     .KEY_LD_CONTEXT);
-            String currentVocab = vocabStack != null ? vocabStack.peek() : null;
+            String currentVocab = (contextStack != null && !contextStack.isEmpty()) ?
+                    contextStack.peek().vocab : null;
 
             for (Affordance affordance : affordances) {
                 final String rel = affordance.getRel();
@@ -351,7 +353,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         if (actionInputParameter.hasCallValue()) {
             if (actionInputParameter.isArrayOrCollection()) {
                 Object[] callValues = actionInputParameter.getCallValues();
-                Class<?> componentType = callValues.getClass().getComponentType();
+                Class<?> componentType = callValues.getClass()
+                        .getComponentType();
                 // only write defaultValue for array of scalars
                 if (DataType.isSingleValueType(componentType)) {
                     jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "defaultValue",

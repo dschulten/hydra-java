@@ -1,9 +1,9 @@
 package de.escalon.hypermedia.sample.event;
 
 import de.escalon.hypermedia.sample.beans.Event;
-import de.escalon.hypermedia.sample.model.EventModel;
-import de.escalon.hypermedia.sample.model.Rating;
-import de.escalon.hypermedia.sample.model.Review;
+import de.escalon.hypermedia.sample.beans.Rating;
+import de.escalon.hypermedia.sample.beans.Review;
+import de.escalon.hypermedia.sample.model.*;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resources;
@@ -59,7 +59,7 @@ public class EventController {
         Resources<Event> eventResources = new Resources<Event>(matches);
 
         eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
-                .addEvent(null))
+                .addEvent(new Event(null, new CreativeWork(null), null, EventStatusType.EVENT_SCHEDULED)))
                 .withSelfRel());
 
         eventResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
