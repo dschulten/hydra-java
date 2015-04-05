@@ -51,6 +51,7 @@ public class Affordance extends Link {
      * Creates affordance, action descriptors and link header params may be added later.
      *
      * @param uriTemplate uri or uritemplate of the affordance
+     * @param actionDescriptors describing the possible http methods on the affordance
      * @param rels describing the link relation type
      */
     public Affordance(PartialUriTemplate uriTemplate, List<ActionDescriptor> actionDescriptors, String... rels) {

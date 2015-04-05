@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.Property;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ValueConstants;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Parameter;
 import java.util.*;
 
 /**
@@ -247,7 +245,7 @@ public class ActionInputParameter implements AnnotatedParameter {
         if (isRequestBody()) {
             ret = requestBody.required();
         } else if (isRequestParam()) {
-            ret = ValueConstants.DEFAULT_NONE != requestParam.defaultValue() || requestParam.required();
+            ret = !(ValueConstants.DEFAULT_NONE.equals(requestParam.defaultValue())) || requestParam.required();
         } else {
             ret = true;
         }
@@ -262,7 +260,8 @@ public class ActionInputParameter implements AnnotatedParameter {
     public String getDefaultValue() {
         String ret;
         if (isRequestParam()) {
-            ret = ValueConstants.DEFAULT_NONE != requestParam.defaultValue() ? requestParam.defaultValue() : null;
+            ret = !(ValueConstants.DEFAULT_NONE.equals(requestParam.defaultValue())) ?
+                    requestParam.defaultValue() : null;
         } else {
             ret = null;
         }

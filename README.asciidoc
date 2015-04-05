@@ -2,15 +2,11 @@
 :toc:
 :toc-placement: preamble
 
-
 Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[json-ld] with http://www.hydra-cg.com/spec/latest/core/[hydra].
 
 Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
 Latest release: 0.2.0-alpha7
-
-
-
 
 == Problem
 
