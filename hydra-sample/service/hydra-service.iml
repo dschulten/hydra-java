@@ -21,8 +21,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="hydra-spring" />
     <orderEntry type="module" module-name="hydra-jsonld" />
-    <orderEntry type="module" module-name="spring-hateoas-ext" />
     <orderEntry type="module" module-name="hydra-commons" />
+    <orderEntry type="module" module-name="spring-hateoas-ext" />
     <orderEntry type="library" name="Maven: org.springframework.hateoas:spring-hateoas:0.16.0.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.objenesis:objenesis:2.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.4.1" level="project" />

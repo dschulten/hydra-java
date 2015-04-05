@@ -1,5 +1,7 @@
-package de.escalon.hypermedia.sample.beans;
+package de.escalon.hypermedia.sample.beans.store;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.hateoas.ResourceSupport;
 
 /**
@@ -10,7 +12,8 @@ public class Product extends ResourceSupport {
 
     private String productID;
 
-    public Product(String name) {
+    @JsonCreator
+    public Product(@JsonProperty("name") String name) {
         this.name = name;
     }
 

@@ -1,6 +1,6 @@
 package de.escalon.hypermedia.sample.store;
 
-import de.escalon.hypermedia.sample.beans.Product;
+import de.escalon.hypermedia.sample.beans.store.Product;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
 

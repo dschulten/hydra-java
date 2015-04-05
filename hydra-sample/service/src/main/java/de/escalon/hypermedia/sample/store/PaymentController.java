@@ -1,6 +1,6 @@
 package de.escalon.hypermedia.sample.store;
 
-import de.escalon.hypermedia.sample.beans.Payment;
+import de.escalon.hypermedia.sample.beans.store.Payment;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

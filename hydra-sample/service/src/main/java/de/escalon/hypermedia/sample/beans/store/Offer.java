@@ -1,6 +1,5 @@
-package de.escalon.hypermedia.sample.beans;
+package de.escalon.hypermedia.sample.beans.store;
 
-import de.escalon.hypermedia.hydra.mapping.Expose;
 import org.springframework.hateoas.ResourceSupport;
 
 import java.math.BigDecimal;
@@ -17,13 +16,6 @@ public class Offer extends ResourceSupport {
     private BigDecimal price;
     private List<Offer> addOns = new ArrayList<Offer>();
     private Currency priceCurrency;
-    public Currency getPriceCurrency() {
-        return priceCurrency;
-    }
-
-    public void setPriceCurrency(Currency priceCurrency) {
-        this.priceCurrency = priceCurrency;
-    }
 
     public BigDecimal getPrice() {
         return price;
@@ -33,6 +25,13 @@ public class Offer extends ResourceSupport {
         this.price = price;
     }
 
+    public Currency getPriceCurrency() {
+        return priceCurrency;
+    }
+
+    public void setPriceCurrency(Currency priceCurrency) {
+        this.priceCurrency = priceCurrency;
+    }
 
     public Product getItemOffered() {
         return itemOffered;

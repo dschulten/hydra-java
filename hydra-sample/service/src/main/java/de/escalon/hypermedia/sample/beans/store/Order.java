@@ -1,4 +1,4 @@
-package de.escalon.hypermedia.sample.beans;
+package de.escalon.hypermedia.sample.beans.store;
 
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import org.springframework.hateoas.ResourceSupport;

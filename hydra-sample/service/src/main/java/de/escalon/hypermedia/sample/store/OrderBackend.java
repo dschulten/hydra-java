@@ -1,7 +1,5 @@
 package de.escalon.hypermedia.sample.store;
 
-import de.escalon.hypermedia.sample.beans.Order;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

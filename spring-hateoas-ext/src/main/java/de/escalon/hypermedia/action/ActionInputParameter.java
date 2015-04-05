@@ -13,8 +13,10 @@
 
 package de.escalon.hypermedia.action;
 
+import de.escalon.hypermedia.AnnotatedParameter;
 import de.escalon.hypermedia.DataType;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.Property;
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ValueConstants;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Parameter;
 import java.util.*;
 
 /**
@@ -33,7 +36,7 @@ import java.util.*;
  *
  * @author Dietrich Schulten
  */
-public class ActionInputParameter {
+public class ActionInputParameter implements AnnotatedParameter {
 
     public static final String MIN = "min";
     public static final String MAX = "max";
@@ -160,48 +163,14 @@ public class ActionInputParameter {
         return !inputConstraints.isEmpty();
     }
 
+    @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotation) {
         return methodParameter.getParameterAnnotation(annotation);
     }
 
+
     public Object[] getPossibleValues(ActionDescriptor actionDescriptor) {
         return getPossibleValues(methodParameter, actionDescriptor);
-//        try {
-//            Class<?> parameterType = getParameterType();
-//            Object[] possibleValues;
-//            Class<?> nested;
-//            if (Enum[].class.isAssignableFrom(parameterType)) {
-//                possibleValues = parameterType.getComponentType()
-//                        .getEnumConstants();
-//            } else if (Enum.class.isAssignableFrom(parameterType)) {
-//                possibleValues = parameterType.getEnumConstants();
-//            } else if (Collection.class.isAssignableFrom(parameterType)
-//                    && Enum.class.isAssignableFrom(nested = TypeDescriptor.nested(methodParameter, 1)
-//                    .getType())) {
-//                possibleValues = nested.getEnumConstants();
-//            } else {
-//                Select select = methodParameter.getParameterAnnotation(Select.class);
-//                if (select != null) {
-//                    Class<? extends Options> options = select.options();
-//                    Options instance = options.newInstance();
-//                    List<Object> from = new ArrayList<Object>();
-//                    for (String paramName : select.args()) {
-//                        ActionInputParameter parameterValue = actionDescriptor.getActionInputParameter(paramName);
-//                        if (parameterValue != null) {
-//                            from.add(parameterValue.getCallValue());
-//                        }
-//                    }
-//
-//                    Object[] args = from.toArray();
-//                    possibleValues = instance.get(select.value(), args);
-//                } else {
-//                    possibleValues = new Object[0];
-//                }
-//            }
-//            return possibleValues;
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
     }
 
     public Object[] getPossibleValues(MethodParameter methodParameter, ActionDescriptor actionDescriptor) {
@@ -324,7 +293,20 @@ public class ActionInputParameter {
     }
 
     public String getParameterName() {
-        return methodParameter.getParameterName();
+        String ret;
+        String parameterName = methodParameter.getParameterName();
+        if (parameterName == null) {
+            methodParameter.initParameterNameDiscovery(new LocalVariableTableParameterNameDiscoverer());
+            ret = methodParameter.getParameterName();
+        } else {
+            ret = parameterName;
+        }
+        return ret;
+    }
+
+    @Override
+    public Class<?> getDeclaringClass() {
+        return methodParameter.getDeclaringClass();
     }
 
     public Class<?> getParameterType() {

@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring.xhtml;
@@ -13,7 +16,7 @@ package de.escalon.hypermedia.spring.xhtml;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.DataType;
-import de.escalon.hypermedia.PropertyUtil;
+import de.escalon.hypermedia.PropertyUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
@@ -51,17 +54,18 @@ import java.util.Map.Entry;
  *
  * @author Dietrich Schulten
  */
-public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object>
-        implements GenericHttpMessageConverter<Object> {
+public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object> implements
+        GenericHttpMessageConverter<Object> {
 
     private Charset charset = Charset.forName("UTF-8");
     private String methodParam = "_method";
     private List<String> stylesheets = Collections.emptyList();
 
+    private DocumentationProvider documentationProvider = new DefaultDocumentationProvider();
+
 
     public XhtmlResourceMessageConverter() {
-        this.setSupportedMediaTypes(
-                Arrays.asList(MediaType.TEXT_HTML, MediaType.APPLICATION_FORM_URLENCODED));
+        this.setSupportedMediaTypes(Arrays.asList(MediaType.TEXT_HTML, MediaType.APPLICATION_FORM_URLENCODED));
     }
 
     @Override
@@ -69,8 +73,8 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         return true;
     }
 
-    public Object read(java.lang.reflect.Type type, Class<?> contextClass, HttpInputMessage inputMessage)
-            throws IOException, HttpMessageNotReadableException {
+    public Object read(java.lang.reflect.Type type, Class<?> contextClass, HttpInputMessage inputMessage) throws
+            IOException, HttpMessageNotReadableException {
 
         final Class clazz;
         if (type instanceof Class) {
@@ -92,19 +96,20 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
 
     @Override
-    protected Object readInternal(Class<? extends Object> clazz, HttpInputMessage inputMessage)
-            throws IOException, HttpMessageNotReadableException {
+    protected Object readInternal(Class<? extends Object> clazz, HttpInputMessage inputMessage) throws IOException,
+            HttpMessageNotReadableException {
 
-        // this is necessary to support HiddenHttpMethodFilter
-        // thanks to https://www.w3.org/html/wg/tracker/issues/195
-        // TODO recognize this more safely or make the filter mandatory
         InputStream is;
         if (inputMessage instanceof ServletServerHttpRequest) {
+            // this is necessary to support HiddenHttpMethodFilter
+            // thanks to https://www.w3.org/html/wg/tracker/issues/195
+            // but see http://dev.w3.org/html5/decision-policy/html5-2014-plan.html#issues
+            // and http://cameronjones.github.io/form-http-extensions/index.html
+            // and http://www.w3.org/TR/form-http-extensions/
+            // TODO recognize this more safely or make the filter mandatory
             MediaType contentType = inputMessage.getHeaders()
                     .getContentType();
-            Charset charset =
-                    contentType.getCharSet() != null ?
-                            contentType.getCharSet() : this.charset;
+            Charset charset = contentType.getCharSet() != null ? contentType.getCharSet() : this.charset;
             ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) inputMessage;
             HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
             is = getBodyFromServletRequestParameters(servletRequest, charset.displayName(Locale.US));
@@ -122,7 +127,8 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
      * from the body, which can fail if any other code has used ServletRequest
      * to access a parameter thus causing the input stream to be "consumed".
      */
-    private InputStream getBodyFromServletRequestParameters(HttpServletRequest request, String charset) throws IOException {
+    private InputStream getBodyFromServletRequestParameters(HttpServletRequest request, String charset) throws
+            IOException {
 
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
@@ -153,25 +159,22 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         return new ByteArrayInputStream(bos.toByteArray());
     }
 
-    private Object readRequestBody(Class<? extends Object> clazz, InputStream inputStream, Charset charset)
-            throws IOException {
+    private Object readRequestBody(Class<? extends Object> clazz, InputStream inputStream, Charset charset) throws
+            IOException {
 
         String body = StreamUtils.copyToString(inputStream, charset);
 
         String[] pairs = StringUtils.tokenizeToStringArray(body, "&");
 
-        MultiValueMap<String, String> formValues =
-                new LinkedMultiValueMap<String, String>(pairs.length);
+        MultiValueMap<String, String> formValues = new LinkedMultiValueMap<String, String>(pairs.length);
 
         for (String pair : pairs) {
             int idx = pair.indexOf('=');
             if (idx == -1) {
                 formValues.add(URLDecoder.decode(pair, charset.name()), null);
             } else {
-                String name =
-                        URLDecoder.decode(pair.substring(0, idx), charset.name());
-                String value =
-                        URLDecoder.decode(pair.substring(idx + 1), charset.name());
+                String name = URLDecoder.decode(pair.substring(0, idx), charset.name());
+                String value = URLDecoder.decode(pair.substring(idx + 1), charset.name());
                 formValues.add(name, value);
             }
         }
@@ -181,8 +184,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
     }
 
-    private Object recursivelyCreateObject(Class<? extends Object> clazz,
-                                           MultiValueMap<String, String> formValues) {
+    private Object recursivelyCreateObject(Class<? extends Object> clazz, MultiValueMap<String, String> formValues) {
 
         if (Map.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Map not supported");
@@ -212,8 +214,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                                 if (DataType.isSingleValueType(parameterType)) {
                                     if (formValue != null) {
                                         if (formValue.size() == 1) {
-                                            args[paramIndex++] =
-                                                    DataType.asType(parameterType, formValue.get(0));
+                                            args[paramIndex++] = DataType.asType(parameterType, formValue.get(0));
                                         } else {
 //                                        // TODO create proper collection type
                                             throw new IllegalArgumentException("variable list not supported");
@@ -232,26 +233,24 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                             }
                         }
                     }
-                    Assert.isTrue(args.length == paramIndex,
-                            "not all constructor arguments of @JsonCreator are annotated with @JsonProperty");
+                    Assert.isTrue(args.length == paramIndex, "not all constructor arguments of @JsonCreator are " +
+                            "annotated with @JsonProperty");
                 }
                 Object ret = constructor.newInstance(args);
                 BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-                PropertyDescriptor[] propertyDescriptors =
-                        beanInfo.getPropertyDescriptors();
+                PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
                 for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
                     Method writeMethod = propertyDescriptor.getWriteMethod();
                     String name = propertyDescriptor.getName();
                     List<String> strings = formValues.get(name);
                     if (writeMethod != null && strings != null && strings.size() == 1) {
-                        writeMethod.invoke(ret, DataType.asType(propertyDescriptor.getPropertyType(),
-                                strings.get(0))); // TODO lists, consume values from ctor
+                        writeMethod.invoke(ret, DataType.asType(propertyDescriptor.getPropertyType(), strings.get(0))
+                        ); // TODO lists, consume values from ctor
                     }
                 }
                 return ret;
             } catch (Exception e) {
-                throw new RuntimeException("Failed to instantiate bean " + clazz.getName(),
-                        e);
+                throw new RuntimeException("Failed to instantiate bean " + clazz.getName(), e);
             }
         }
     }
@@ -286,6 +285,9 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody()));
         xhtmlWriter.setMethodParam(methodParam);
         xhtmlWriter.setStylesheets(stylesheets);
+        xhtmlWriter.setDocumentationProvider(documentationProvider);
+
+
         xhtmlWriter.beginHtml("Input Data");
         writeResource(xhtmlWriter, t);
         xhtmlWriter.endHtml();
@@ -296,7 +298,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
     static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
 
     /**
-     * Recursively converts object to nodes of uber data.
+     * Recursively converts object to xhtml data.
      *
      * @param object to convert
      * @param writer to write to
@@ -309,17 +311,23 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             if (object instanceof Resource) {
                 Resource<?> resource = (Resource<?>) object;
                 writeResource(writer, resource.getContent());
-                writer.addLinks(resource.getLinks());
+                writer.writeLinks(resource.getLinks());
             } else if (object instanceof Resources) {
                 Resources<?> resources = (Resources<?>) object;
                 // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
                 Collection<?> content = resources.getContent();
                 writeResource(writer, content);
-                writer.addLinks(resources.getLinks());
+                writer.writeLinks(resources.getLinks());
             } else if (object instanceof ResourceSupport) {
                 ResourceSupport resource = (ResourceSupport) object;
+//                if(!DataType.isSingleValueType(object.getClass())) {
+//                    beginListGroupWithItem(writer);
+//                }
                 writeObject(writer, resource);
-                writer.addLinks(resource.getLinks());
+//                if(!DataType.isSingleValueType(object.getClass())) {
+//                    endListGroupItem(writer);
+//                }
+                writer.writeLinks(resource.getLinks());
             } else if (object instanceof Collection) {
                 Collection<?> collection = (Collection<?>) object;
                 writer.beginUnorderedList();
@@ -330,7 +338,13 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                 }
                 writer.endUnorderedList();
             } else {
+                if (!DataType.isSingleValueType(object.getClass())) {
+                    beginListGroupWithItem(writer);
+                }
                 writeObject(writer, object);
+                if (!DataType.isSingleValueType(object.getClass())) {
+                    endListGroupItem(writer);
+                }
             }
         } catch (Exception ex) {
             throw new RuntimeException("failed to transform object " + object, ex);
@@ -338,33 +352,56 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
     }
 
-    private void writeObject(XhtmlWriter writer, Object object) throws IOException, IllegalAccessException, InvocationTargetException {
+    private void beginListGroupWithItem(XhtmlWriter writer) throws IOException {
+        writer.beginUnorderedList();
+        writer.beginListItem();
+    }
+
+    private void endListGroupItem(XhtmlWriter writer) throws IOException {
+        writer.endListItem();
+        writer.endUnorderedList();
+    }
+
+    private void writeObject(XhtmlWriter writer, Object object) throws IOException, IllegalAccessException,
+            InvocationTargetException {
+        if (!DataType.isSingleValueType(object.getClass())) {
+            writer.beginDl();
+        }
         if (object instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) object;
             for (Entry<?, ?> entry : map.entrySet()) {
                 String name = entry.getKey()
                         .toString();
                 Object content = entry.getValue();
-                writeAttribute(writer, name, content);
+                String docUrl = documentationProvider.getDocumentationUrl(name, content);
+                writeObjectAttribute(writer, name, content, docUrl);
             }
         } else if (object instanceof Enum) {
-            writer.writeSpan(((Enum) object).name());
+            String name = ((Enum) object).name();
+            String docUrl = documentationProvider.getDocumentationUrl(name, object);
+//            writeDtWithDoc(writer, name, docUrl);
+            writeDdForScalarValue(writer, object);
         } else if (object instanceof Currency) {
             // TODO configurable classes which should be rendered with toString
             // or use JsonSerializer or DataType?
-            writer.writeSpan(object.toString());
+            String name = object.toString();
+            String docUrl = documentationProvider.getDocumentationUrl(name, object);
+//            writeDtWithDoc(writer, name, docUrl);
+            writeDdForScalarValue(writer, object);
         } else {
             Class<?> aClass = object.getClass();
-            Map<String, PropertyDescriptor> propertyDescriptors = PropertyUtil.getPropertyDescriptors(object);
+            Map<String, PropertyDescriptor> propertyDescriptors = PropertyUtils.getPropertyDescriptors(object);
             // getFields retrieves public only
             Field[] fields = aClass.getFields();
             for (Field field : fields) {
                 String name = field.getName();
                 if (!propertyDescriptors.containsKey(name)) {
                     Object content = field.get(object);
-                    writeAttribute(writer, name, content);
+                    String docUrl = documentationProvider.getDocumentationUrl(field, content);
+                    //<a href="http://schema.org/review">http://schema.org/performer</a>
+                    writeObjectAttribute(writer, name, content, docUrl);
                 }
-            } // TODO build local filter from written fields
+            }
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
                 String name = propertyDescriptor.getName();
                 if (FILTER_RESOURCE_SUPPORT.contains(name)) {
@@ -372,29 +409,55 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                 }
                 Method readMethod = propertyDescriptor.getReadMethod();
                 if (readMethod != null) {
-                    Object content = readMethod
-                            .invoke(object);
-                    writeAttribute(writer, name, content);
+                    Object content = readMethod.invoke(object);
+                    String docUrl = documentationProvider.getDocumentationUrl(readMethod, content);
+                    writeObjectAttribute(writer, name, content, docUrl);
                 }
             }
-
-
+        }
+        if (!DataType.isSingleValueType(object.getClass())) {
+            writer.endDl();
         }
     }
 
-    private void writeAttribute(XhtmlWriter writer, String name, Object content) throws IOException {
+    private void writeObjectAttribute(XhtmlWriter writer, String name, Object content, String documentationUrl)
+            throws IOException {
+        writeDtWithDoc(writer, name, documentationUrl);
         Object value = getContentAsScalarValue(content);
-
-        // TODO use label here instead of simple span
-        writer.beginDiv();
-        writer.writeSpan(name);
-        writer.write(": ");
-        if (value != null && value != NULL_VALUE) {
-            writer.writeSpan(value.toString());
+        if (value != null) {
+            if (value != NULL_VALUE) {
+                writeDdForScalarValue(writer, value);
+            }
+        } else if (DataType.isSingleValueType(content.getClass())) {
+            writeDdForScalarValue(writer, content.toString());
         } else {
+            writer.beginDd();
+            beginListGroupWithItem(writer);
             writeResource(writer, content);
+            endListGroupItem(writer);
+            writer.endDd();
         }
-        writer.endDiv();
+    }
+
+    private void writeDtWithDoc(XhtmlWriter writer, String name, String documentationUrl) throws IOException {
+        if (documentationUrl == null) {
+            writer.beginDt();
+            writer.write(name);
+            writer.endDt();
+        } else {
+            writer.beginDt();
+            writer.beginAnchor(XhtmlWriter.OptionalAttributes.attr("href", documentationUrl)
+                    .and("title", documentationUrl));
+            writer.write(name);
+            writer.endAnchor();
+            writer.endDt();
+        }
+    }
+
+    private void writeDdForScalarValue(XhtmlWriter writer, Object value) throws IOException {
+        writer.beginDd();
+        writer.write(value.toString());
+        writer.endDd();
     }
 
 
@@ -419,11 +482,17 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
     /**
      * Sets css stylesheets to apply to the form.
-     * @param stylesheets urls of css stylesheets to include, e.g. &quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css&quot;
+     *
+     * @param stylesheets urls of css stylesheets to include,
+     *                    e.g. &quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css&quot;
      */
     public void setStylesheets(List<String> stylesheets) {
         Assert.notNull(stylesheets);
         this.stylesheets = stylesheets;
+    }
+
+    public void setDocumentationProvider(DocumentationProvider documentationProvider) {
+        this.documentationProvider = documentationProvider;
     }
 
     static class NullValue {
@@ -437,7 +506,8 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
         if (content == null) {
             value = NULL_VALUE;
-        } else if (content instanceof String || content instanceof Number || content.equals(false) || content.equals(true)) {
+        } else if (content instanceof String || content instanceof Number || content.equals(false) || content.equals
+                (true)) {
             value = content;
         }
         return value;

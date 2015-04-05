@@ -9,9 +9,9 @@ import java.util.Map;
 /**
  * Created by Dietrich on 11.03.2015.
  */
-public class PropertyUtil {
+public class PropertyUtils {
 
-    private PropertyUtil() {
+    private PropertyUtils() {
 
     }
 
