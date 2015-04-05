@@ -183,7 +183,8 @@ The json-ld output written by hydra-java makes the GoodRelations url known under
 An affordance is a rich hyperlink. That means, it not only contains a URI or a URITemplate, but also information about the usage of the URI, such as suported http methods and expected parameters. The word is a neologism introduced by http://amundsen.com/blog/archives/1109[Mike Amundsen].
 A hydra-java `Affordance` can be used to render media-types which support this kind of information: first and foremost hydra, but it is quite easy to add message converters for other media types once the basic information is available.
 
-Version 0.2.0 provides an `AffordanceBuilder` class which is a drop-in replacement for the spring-hateoas `ControllerLinkBuilder`. It is used to build `Affordance` instances which inherit from the spring-hateoas `Link` but adds the following traits to it:
+Version 0.2.0 provides an `AffordanceBuilder` class which is a drop-in replacement for the spring-hateoas `ControllerLinkBuilder`. The `AffordanceBuilder` does not depend on hydra or json-ld. It lives in the standalone jar spring-hateoas-ext and can also be used to render other media types than json-ld. One example is the `XhtmlResourceMessageConverter` which allows you to render your API responses as HTML forms.
+Use the `AffordanceBuilder` to build `Affordance` instances which inherit from the spring-hateoas `Link` but add the following traits to it:
 
 * Full support for all attributes of a http Link header as described by the https://tools.ietf.org/html/rfc5988[web linking rfc 5988]
 * Support for templated link headers as described by the http://tools.ietf.org/html/draft-nottingham-link-template-01[Link-Template Header Internet draft]
@@ -283,6 +284,55 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
      ]
    }
 ----
+
+=== Rendering other media types (from V. 0.2.0-alpha8)
+
+Clients should be able to request a media-type they understand by means of content negotiation. Following this principle, the spring-hateoas-ext package provides the foundation to render hypermedia types which describe expected requests - not only as json-ld, but also as other media types. The `XhtmlResourceMessageConverter` is the second message converter in hydra-java which makes use of affordances built by `AffordanceBuilder`.
+
+If you add a `JsonLdDocumentationProvider` on the converter, it will render bean attributes as hyperlinks which point to their documentation on schema.org or other vocabularies, provided that your java beans are annotated with the necessary information.
+
+[source, Java]
+----
+
+@Configuration
+@EnableWebMvc
+public class Config extends WebMvcConfigurerAdapter {
+    ...
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.add(halConverter());
+        converters.add(xhtmlMessageConverter());
+        converters.add(jsonConverter());
+    }
+
+    private HttpMessageConverter<?> xhtmlMessageConverter() {
+        XhtmlResourceMessageConverter xhtmlResourceMessageConverter = new XhtmlResourceMessageConverter();
+        xhtmlResourceMessageConverter.setStylesheets(
+                Arrays.asList(
+                        "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"
+                ));
+        xhtmlResourceMessageConverter.setDocumentationProvider(new JsonLdDocumentationProvider());
+        return xhtmlResourceMessageConverter;
+    }
+    ...
+}
+
+----
+
+To make the API browsable, PUT and DELETE are tunneled through POST. This is necessary because the HTML media type does not support PUT or DELETE, the browser cannot handle a form which has other methods than GET or POST. Spring-MVC has a servlet filter which makes tunneling easy. The web.xml of the hydra-sample service shows how to enable that filter:
+
+[source, XML]
+----
+    <filter>
+        <filter-name>HiddenHttpMethodFilter</filter-name>
+        <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>HiddenHttpMethodFilter</filter-name>
+        <servlet-name>hypermedia-api</servlet-name>
+    </filter-mapping>
+----
+
 
 === Specifying Property Value Requirements (from V. 0.2.0)
 
@@ -442,6 +492,17 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
   <version>0.2.0-alpha7</version>
+</dependency>
+----
+
+If you only want to use the `XhtmlResourceMessageConverter` without the json-ld dependencies, use spring-hateoas-ext alone:
+
+[source, XML]
+----
+<dependency>
+  <groupId>de.escalon.hypermedia</groupId>
+  <artifactId>spring-hateoas-ext</artifactId>
+  <version>0.2.0-alpha8-SNAPSHOT</version>
 </dependency>
 ----
 
