@@ -1,4 +1,6 @@
 = hydra-java image:https://travis-ci.org/dschulten/hydra-java.svg?branch=master["Build Status", link="https://travis-ci.org/dschulten/hydra-java"]
+:toc:
+:toc-placement: preamble
 
 
 Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[json-ld] with http://www.hydra-cg.com/spec/latest/core/[hydra].
@@ -7,7 +9,7 @@ Status: Testing. Since the Hydra Specification is still a draft, expect incompat
 
 Latest release: 0.2.0-alpha7
 
-:toc:
+
 
 
 == Problem
