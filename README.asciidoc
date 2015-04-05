@@ -32,7 +32,7 @@ ____
 My interpretation of this famous http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven[rant by Roy Fielding]:
 
 A publicly available media-type should give clients all necessary means to interpret a server response, 
-and relation names for hyperlinks in the response must be recognizable based on standards, so that the client can act upon 
+and relation names for hyperlinks in the response must be recognizable based on public conventions, so that the client can act upon
 the responses it receives without knowing the details of a vendor-specific api.
 
 In other words: If a client is told to make a reservation for a concert ticket, it should be able to recognize what 
