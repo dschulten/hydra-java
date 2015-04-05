@@ -102,8 +102,8 @@ In a more complex scenario I want to use my own attribute names and object desig
 == First Steps
 It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC.
 
-Look into https://github.com/dschulten/hydra-java/blob/master/hydra-spring/src/test/java/de/escalon/hypermedia/spring/HydraMessageConverterTest.java[HydraMessageConverterTest] to see how you can set up the hydra message converter with Spring MVC.
-The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-core/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Terms`.
+Look into the https://github.com/dschulten/hydra-java/blob/master/hydra-sample/service/src/main/java/de/escalon/hypermedia/sample/Config.java[sample configuration] to see how you can set up the hydra message converter with Spring MVC.
+The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-jsonld/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Terms`.
 
 == Features of hydra-spring
 The conversion of a spring-hateoas Resource does the following:
