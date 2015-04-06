@@ -297,6 +297,12 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
     static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
 
+
+    private void writeNewResource(XhtmlWriter writer, Object object) throws IOException {
+        writer.beginUnorderedList();
+        writeResource(writer, object);
+        writer.endUnorderedList();
+    }
     /**
      * Recursively converts object to xhtml data.
      *
@@ -308,43 +314,48 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             return;
         }
         try {
+//            beginListGroupWithItem(writer);
             if (object instanceof Resource) {
                 Resource<?> resource = (Resource<?>) object;
+                writer.beginUnorderedList();
+                writer.beginListItem();
+
                 writeResource(writer, resource.getContent());
                 writer.writeLinks(resource.getLinks());
+
+                writer.endListItem();
+                writer.endUnorderedList();
             } else if (object instanceof Resources) {
                 Resources<?> resources = (Resources<?>) object;
                 // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
+
+                writer.beginUnorderedList();
+                writer.beginListItem();
+
                 Collection<?> content = resources.getContent();
                 writeResource(writer, content);
                 writer.writeLinks(resources.getLinks());
+
+                writer.endListItem();
+                writer.endUnorderedList();
             } else if (object instanceof ResourceSupport) {
                 ResourceSupport resource = (ResourceSupport) object;
-//                if(!DataType.isSingleValueType(object.getClass())) {
-//                    beginListGroupWithItem(writer);
-//                }
+                writer.beginUnorderedList();
+                writer.beginListItem();
+
                 writeObject(writer, resource);
-//                if(!DataType.isSingleValueType(object.getClass())) {
-//                    endListGroupItem(writer);
-//                }
                 writer.writeLinks(resource.getLinks());
+
+                writer.endListItem();
+                writer.endUnorderedList();
             } else if (object instanceof Collection) {
                 Collection<?> collection = (Collection<?>) object;
-                writer.beginUnorderedList();
                 for (Object item : collection) {
-                    writer.beginListItem();
                     writeResource(writer, item);
-                    writer.endListItem();
                 }
-                writer.endUnorderedList();
+
             } else {
-                if (!DataType.isSingleValueType(object.getClass())) {
-                    beginListGroupWithItem(writer);
-                }
                 writeObject(writer, object);
-                if (!DataType.isSingleValueType(object.getClass())) {
-                    endListGroupItem(writer);
-                }
             }
         } catch (Exception ex) {
             throw new RuntimeException("failed to transform object " + object, ex);
@@ -357,7 +368,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         writer.beginListItem();
     }
 
-    private void endListGroupItem(XhtmlWriter writer) throws IOException {
+    private void endListGroupWithItem(XhtmlWriter writer) throws IOException {
         writer.endListItem();
         writer.endUnorderedList();
     }
@@ -374,7 +385,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                         .toString();
                 Object content = entry.getValue();
                 String docUrl = documentationProvider.getDocumentationUrl(name, content);
-                writeObjectAttribute(writer, name, content, docUrl);
+                writeObjectAttributeRecursively(writer, name, content, docUrl);
             }
         } else if (object instanceof Enum) {
             String name = ((Enum) object).name();
@@ -399,7 +410,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                     Object content = field.get(object);
                     String docUrl = documentationProvider.getDocumentationUrl(field, content);
                     //<a href="http://schema.org/review">http://schema.org/performer</a>
-                    writeObjectAttribute(writer, name, content, docUrl);
+                    writeObjectAttributeRecursively(writer, name, content, docUrl);
                 }
             }
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
@@ -411,7 +422,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                 if (readMethod != null) {
                     Object content = readMethod.invoke(object);
                     String docUrl = documentationProvider.getDocumentationUrl(readMethod, content);
-                    writeObjectAttribute(writer, name, content, docUrl);
+                    writeObjectAttributeRecursively(writer, name, content, docUrl);
                 }
             }
         }
@@ -420,7 +431,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         }
     }
 
-    private void writeObjectAttribute(XhtmlWriter writer, String name, Object content, String documentationUrl)
+    private void writeObjectAttributeRecursively(XhtmlWriter writer, String name, Object content, String documentationUrl)
             throws IOException {
         writeDtWithDoc(writer, name, documentationUrl);
         Object value = getContentAsScalarValue(content);
@@ -432,9 +443,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             writeDdForScalarValue(writer, content.toString());
         } else {
             writer.beginDd();
-            beginListGroupWithItem(writer);
             writeResource(writer, content);
-            endListGroupItem(writer);
             writer.endDd();
         }
     }
