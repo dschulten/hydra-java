@@ -111,7 +111,6 @@ public class XhtmlResourceMessageConverterTest {
                 .andExpect(content().contentType(MediaType.TEXT_HTML))
                 .andExpect(xpath("//h:form[@name='addEvent']/@action", namespaces).string("http://localhost/events"))
                 .andExpect(xpath("//h:form[@name='addEvent']/@method", namespaces).string("POST"))
-                .andExpect(xpath("//h:form[@name='addEvent']/h:input[@name='_method']/@value", namespaces).string("POST"))
                 .andExpect(xpath("//h:form[@name='addEvent']/h:div/h:select[@name='eventStatus']", namespaces).exists())
                 .andExpect(xpath("//h:form[@name='addEvent']/h:div/h:select[@name='typicalAgeRange']", namespaces).exists())
                 .andReturn();
