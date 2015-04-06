@@ -437,8 +437,7 @@ public class XhtmlWriter extends Writer {
         write(formH1);
         write("</h4>");
 
-        // always write "real" method so rest clients can rely on it
-        input(methodParam, Type.HIDDEN, OptionalAttributes.attr("value", httpMethod.name()));
+        writeHiddenHttpMethodField(actionDescriptor.getHttpMethod());
         // build the form
         if (actionDescriptor.hasRequestBody()) {
             ActionInputParameter requestBody = actionDescriptor.getRequestBody();
@@ -482,6 +481,16 @@ public class XhtmlWriter extends Writer {
         inputButton(Type.SUBMIT, StringUtils.capitalize(httpMethod.name()
                 .toLowerCase()));
         endForm();
+    }
+
+    private void writeHiddenHttpMethodField(RequestMethod httpMethod) throws IOException {
+        switch (httpMethod) {
+            case GET:
+            case POST:
+                break;
+            default:
+                input(methodParam, Type.HIDDEN, OptionalAttributes.attr("value", httpMethod.name()));
+        }
     }
 
     private String getHtmlConformingHttpMethod(RequestMethod requestMethod) {

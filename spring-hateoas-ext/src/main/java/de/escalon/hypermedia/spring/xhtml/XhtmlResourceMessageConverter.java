@@ -289,7 +289,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
 
         xhtmlWriter.beginHtml("Input Data");
-        writeResource(xhtmlWriter, t);
+        writeNewResource(xhtmlWriter, t);
         xhtmlWriter.endHtml();
         xhtmlWriter.flush();
 
@@ -317,37 +317,34 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 //            beginListGroupWithItem(writer);
             if (object instanceof Resource) {
                 Resource<?> resource = (Resource<?>) object;
-                writer.beginUnorderedList();
                 writer.beginListItem();
 
                 writeResource(writer, resource.getContent());
                 writer.writeLinks(resource.getLinks());
 
                 writer.endListItem();
-                writer.endUnorderedList();
             } else if (object instanceof Resources) {
                 Resources<?> resources = (Resources<?>) object;
                 // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
 
-                writer.beginUnorderedList();
                 writer.beginListItem();
 
+                writer.beginUnorderedList();
                 Collection<?> content = resources.getContent();
                 writeResource(writer, content);
+                writer.endUnorderedList();
+
                 writer.writeLinks(resources.getLinks());
 
                 writer.endListItem();
-                writer.endUnorderedList();
             } else if (object instanceof ResourceSupport) {
                 ResourceSupport resource = (ResourceSupport) object;
-                writer.beginUnorderedList();
                 writer.beginListItem();
 
                 writeObject(writer, resource);
                 writer.writeLinks(resource.getLinks());
 
                 writer.endListItem();
-                writer.endUnorderedList();
             } else if (object instanceof Collection) {
                 Collection<?> collection = (Collection<?>) object;
                 for (Object item : collection) {
@@ -443,7 +440,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             writeDdForScalarValue(writer, content.toString());
         } else {
             writer.beginDd();
-            writeResource(writer, content);
+            writeNewResource(writer, content);
             writer.endDd();
         }
     }
