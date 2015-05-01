@@ -98,7 +98,7 @@ public class Config extends WebMvcConfigurerAdapter {
 
     @Bean
     public CurieProvider curieProvider() {
-        return new DefaultCurieProvider("evt", new UriTemplate("http://example.com/{rel}"));
+        return new DefaultCurieProvider("schema", new UriTemplate("http://schema.org/{rel}"));
     }
 
     @Bean

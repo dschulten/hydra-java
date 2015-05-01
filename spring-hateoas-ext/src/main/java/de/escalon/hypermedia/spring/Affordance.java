@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * Represents an http affordance for purposes of a ReST service as described by
- * <a href="http://tools.ietf.org/html/rfc5988">Web Linking rfc5988</a>. Additionally includes hints for the http method
+ * <a href="http://tools.ietf.org/html/rfc5988">Web Linking rfc5988</a>. Additionally includes {@link ActionDescriptor}s for the http method
  * and expected request body.
  * <p>Created by dschulten on 07.09.2014.</p>
  *
@@ -40,19 +40,20 @@ public class Affordance extends Link {
 
     /**
      * Creates affordance, action descriptors and link param values may be added later.
+     *
      * @param uriTemplate uri or uritemplate of the affordance
-     * @param rels describing the link relation type
+     * @param rels        describing the link relation type
      */
     public Affordance(String uriTemplate, String... rels) {
-        this(new PartialUriTemplate(uriTemplate), new ArrayList<ActionDescriptor>(),rels);
+        this(new PartialUriTemplate(uriTemplate), new ArrayList<ActionDescriptor>(), rels);
     }
 
     /**
      * Creates affordance, action descriptors and link header params may be added later.
      *
-     * @param uriTemplate uri or uritemplate of the affordance
+     * @param uriTemplate       uri or uritemplate of the affordance
      * @param actionDescriptors describing the possible http methods on the affordance
-     * @param rels describing the link relation type
+     * @param rels              describing the link relation type
      */
     public Affordance(PartialUriTemplate uriTemplate, List<ActionDescriptor> actionDescriptors, String... rels) {
         super(uriTemplate.stripOptionalVariables(actionDescriptors)); // keep only required and expanded variables
@@ -64,24 +65,20 @@ public class Affordance extends Link {
         this.actionDescriptors.addAll(actionDescriptors);
     }
 
+
     private Affordance(String uriTemplate, MultiValueMap<String, String> linkParams,
                        List<ActionDescriptor> actionDescriptors) {
         this(new PartialUriTemplate(uriTemplate), actionDescriptors); // no rels to pass
         this.linkParams = linkParams; // takes care of rels
     }
 
-
-    public Affordance(String href) {
-        super(href);
-    }
-
     /**
-     * Gets action descriptors.
-     * @return descriptors, never null
+     * Creates affordance. Rels, action descriptors and link header params may be added later.
+     *
+     * @param uriTemplate       uri or uritemplate of the affordance
      */
-    @JsonIgnore
-    public List<ActionDescriptor> getActionDescriptors() {
-        return Collections.unmodifiableList(actionDescriptors);
+    public Affordance(String uriTemplate) {
+        this(uriTemplate, new String[]{});
     }
 
 
@@ -308,12 +305,14 @@ public class Affordance extends Link {
 
     @Override
     public Affordance expand(Object... arguments) {
-        return new Affordance(super.expand(arguments).getHref(), linkParams, actionDescriptors);
+        return new Affordance(super.expand(arguments)
+                .getHref(), linkParams, actionDescriptors);
     }
 
     @Override
     public Affordance expand(Map<String, ? extends Object> arguments) {
-        return new Affordance(super.expand(arguments).getHref(), linkParams, actionDescriptors);
+        return new Affordance(super.expand(arguments)
+                .getHref(), linkParams, actionDescriptors);
     }
 
     @JsonIgnore
@@ -328,7 +327,21 @@ public class Affordance extends Link {
     }
 
 
+    /**
+     * Sets action descriptors.
+     * @param actionDescriptors
+     */
     public void setActionDescriptors(List<ActionDescriptor> actionDescriptors) {
         this.actionDescriptors = actionDescriptors;
+    }
+
+    /**
+     * Gets action descriptors.
+     *
+     * @return descriptors, never null
+     */
+    @JsonIgnore
+    public List<ActionDescriptor> getActionDescriptors() {
+        return Collections.unmodifiableList(actionDescriptors);
     }
 }

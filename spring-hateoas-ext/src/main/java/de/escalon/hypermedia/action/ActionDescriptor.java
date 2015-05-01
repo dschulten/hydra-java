@@ -17,7 +17,8 @@ import java.util.*;
 /**
  * Describes an HTTP method. Has knowledge about possible request data, e.g. which types and values
  * are suitable for an action. For example, an action descriptor can be used to create a form with select options and
- * typed input fields that calls a POST handler.
+ * typed input fields that calls a POST handler. It has {@link ActionInputParameter}s which represent method handler
+ * arguments annotated with {@link @RequestParam}, {@link @PathVariable} and {@link @RequestBody}.
  *
  * @author Dietrich Schulten
  */
@@ -111,6 +112,11 @@ public class ActionDescriptor {
         this.semanticActionType = semanticActionType;
     }
 
+    /**
+     * Determines action input parameters for required url variables.
+     *
+     * @return required url variables
+     */
     public Map<String, ActionInputParameter> getRequiredUrlVariables() {
         Map<String, ActionInputParameter> ret = new HashMap<String, ActionInputParameter>();
         for (Map.Entry<String, ActionInputParameter> entry : requestParams.entrySet()) {

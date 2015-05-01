@@ -47,9 +47,9 @@ public class Store extends ResourceSupport {
                 .setScale(2);
         offer.setPrice(price);
         offer.setPriceCurrency(Currency.getInstance("EUR"));
-        for (Offer addOn : addOns) {
-            offer.addOn(addOn);
-        }
+//        for (Offer addOn : addOns) {
+//            offer.addOn(addOn);
+//        }
 
         return offer;
     }
