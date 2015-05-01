@@ -25,11 +25,12 @@ import java.util.Map;
 
 /**
  * Represents an http affordance for purposes of a ReST service as described by
- * <a href="http://tools.ietf.org/html/rfc5988">Web Linking rfc5988</a>. Additionally includes {@link ActionDescriptor}s for the http method
- * and expected request body.
+ * <a href="http://tools.ietf.org/html/rfc5988">Web Linking rfc-5988</a>.
+ * Additionally includes {@link ActionDescriptor}s for http methods
+ * and expected request bodies.
+ * <p>Also supports templated affordances, in which case it is represented as a
+ * <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a></p>
  * <p>Created by dschulten on 07.09.2014.</p>
- *
- * @see <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a>
  */
 public class Affordance extends Link {
 
@@ -75,7 +76,7 @@ public class Affordance extends Link {
     /**
      * Creates affordance. Rels, action descriptors and link header params may be added later.
      *
-     * @param uriTemplate       uri or uritemplate of the affordance
+     * @param uriTemplate uri or uritemplate of the affordance
      */
     public Affordance(String uriTemplate) {
         this(uriTemplate, new String[]{});
@@ -143,6 +144,9 @@ public class Affordance extends Link {
         }
     }
 
+    /**
+     * Gets the 'title' link parameter
+     */
     public String getTitle() {
         return linkParams.getFirst("title");
     }
@@ -218,7 +222,7 @@ public class Affordance extends Link {
     }
 
     /**
-     * Adds link-extension params.
+     * Adds link-extension params, i.e. custom params which are not described in the web linking rfc.
      *
      * @param paramName of link-extension
      * @param values    one or more values to add
@@ -232,9 +236,11 @@ public class Affordance extends Link {
     }
 
     /**
-     * Gets header name of the affordance, either Link or Link-Header.
+     * Gets header name of the affordance, either Link or Link-Template depending on the presence of template variables.
      *
      * @return header name
+     * @see <a href="http://tools.ietf.org/html/rfc5988">Web Linking rfc-5988</a>
+     * @see <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a>
      */
     @JsonIgnore
     public String getHeaderName() {
@@ -247,6 +253,11 @@ public class Affordance extends Link {
         return headerName;
     }
 
+    /**
+     * Affordance represented as http link header value.
+     *
+     * @return
+     */
     public String asHeader() {
         StringBuilder result = new StringBuilder();
         for (Map.Entry<String, List<String>> linkParamEntry : linkParams.entrySet()) {
@@ -329,6 +340,7 @@ public class Affordance extends Link {
 
     /**
      * Sets action descriptors.
+     *
      * @param actionDescriptors
      */
     public void setActionDescriptors(List<ActionDescriptor> actionDescriptors) {
