@@ -13,7 +13,8 @@
  */
 @Terms({
         @Term(define = "gr", as = "http://purl.org/goodrelations/v1#"),
-        @Term(define = "dc", as = "http://purl.org/dc/elements/1.1/")
+        @Term(define = "dc", as = "http://purl.org/dc/elements/1.1/"),
+        @Term(define = "children", as = "http://example.com/vocab#parent", reverse = true)
 }) package de.escalon.hypermedia.hydra.beans.withterms;
 
 import de.escalon.hypermedia.hydra.mapping.Term;

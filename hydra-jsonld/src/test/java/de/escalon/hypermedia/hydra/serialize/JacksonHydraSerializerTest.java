@@ -135,6 +135,7 @@ public class JacksonHydraSerializerTest {
         assertEquals("{\"@context\":{\"@vocab\":\"http://schema.org/\"," +
                 "\"gr\":\"http://purl.org/goodrelations/v1#\"," +
                 "\"dc\":\"http://purl.org/dc/elements/1.1/\"," +
+                "\"children\":{\"@reverse\":\"http://example.com/vocab#parent\"}," +
                 "\"businessFunction\":{" +
                 "\"@type\":\"@vocab\"}," +
                 "\"RENT\":\"gr:LeaseOut\"," +
