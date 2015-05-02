@@ -33,4 +33,11 @@ public @interface Term {
      * @return definition of term
      */
     String as();
+
+    /**
+     * Whether the term is a reversed property. Default is false.
+     *
+     * @return true if reversed, false otherwise
+     */
+    boolean reverse() default false;
 }

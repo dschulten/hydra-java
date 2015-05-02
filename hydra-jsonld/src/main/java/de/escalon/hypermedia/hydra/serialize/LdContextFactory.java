@@ -1,5 +1,6 @@
 package de.escalon.hypermedia.hydra.serialize;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.AnnotationUtils;
 import de.escalon.hypermedia.hydra.mapping.*;
 import org.apache.commons.lang3.text.WordUtils;
@@ -107,6 +108,7 @@ public class LdContextFactory {
         }
     }
 
+
     /**
      * Gets explicitly defined terms, e.g. on package, class or mixin.
      *
@@ -127,10 +129,17 @@ public class LdContextFactory {
             for (Term term : terms) {
                 final String define = term.define();
                 final String as = term.as();
+                final boolean reverse = term.reverse();
                 if (annotatedTermsMap.containsKey(as)) {
                     throw new IllegalStateException("duplicate definition of term '" + define + "' in " + name);
                 }
-                annotatedTermsMap.put(define, as);
+                if (!reverse) {
+                    annotatedTermsMap.put(define, as);
+                } else {
+                    Map<String, String> reverseTerm = new LinkedHashMap<String, String>();
+                    reverseTerm.put("@reverse", as);
+                    annotatedTermsMap.put(define, reverseTerm);
+                }
             }
         }
         if (annotatedTerm != null) {
