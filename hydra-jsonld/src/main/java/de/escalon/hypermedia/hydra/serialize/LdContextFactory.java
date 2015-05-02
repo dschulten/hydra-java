@@ -1,5 +1,6 @@
 package de.escalon.hypermedia.hydra.serialize;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.AnnotationUtils;
 import de.escalon.hypermedia.hydra.mapping.*;
 import org.apache.commons.lang3.text.WordUtils;
