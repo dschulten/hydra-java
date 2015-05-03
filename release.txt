@@ -10,16 +10,17 @@ Add Sonatype password to server ossrh in local settings.xml
   </servers>
 </settings>
 
-Release to Sonatype with Github password:
+Release to Sonatype with Github password and gpg passphrase:
 mvn release:prepare release:perform -Dusername=XXX -Dpassword=XXX -Darguments="-Dgpg.passphrase=XXX"
 
-Should automatically release from staging repo https://oss.sonatype.org/
+The above command should automatically release from staging repo https://oss.sonatype.org/
 Details:
 http://central.sonatype.org/pages/releasing-the-deployment.html#locate-and-examine-your-staging-repository
 
 In case that signing failed and the build asks for the gpg passphrase over and over again, perform the release again:
 mvn release:perform -Darguments="-Dgpg.passphrase=XXX"
 
-Publish to openshift after release has become available in Central: http://search.maven.org/#search%7Cga%7C1%7Chydra-service
+Publish to openshift
+Check that new release has become available in Central: http://search.maven.org/#search%7Cga%7C1%7Chydra-service
 Adjust latest version in openshift project: ssh://549fcacc5973ca16e1000025@jbosswildfly-escalon.rhcloud.com/~/git/jbosswildfly.git/
 Run deployment build: https://jenkins-escalon.rhcloud.com/job/jbosswildfly-build/
