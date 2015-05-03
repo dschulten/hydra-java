@@ -49,6 +49,8 @@ public class AffordanceBuilder implements LinkBuilder {
     private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
 
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
+    private List<String> rels = new ArrayList<String>();
+    private List<String> reverseRels = new ArrayList<String>();
 
     /**
      * Creates a new {@link AffordanceBuilder} with a base of the mapping annotated to the given controller class.
@@ -126,10 +128,28 @@ public class AffordanceBuilder implements LinkBuilder {
 
 
     /**
-     * Builds affordance with multiple rels. According to rfc-5988, a link can have multiple link relation types.
+     * Builds affordance with one or multiple rels.
      *
+     * @param rels list of rels, must not be empty
+     * @return affordance
+     * @deprecated use {@link #rel(String, String...)} together with {@link #build()} instead
+     */
+    public Affordance build(String... rels) {
+        Assert.notEmpty(rels);
+        for (String rel : rels) {
+            if (!this.rels.contains(rel)) {
+                this.rels.add(rel);
+            }
+        }
+        return this.build();
+    }
+
+    /**
+     * Builds affordance with one or multiple rels which must have been defined previously using
+     * {@link #rel(String, String...)} or {@link #reverseRel(String, String...)}.
+     * <p>The motivation for multiple rels is this statement in the web linking rfc-5988:
      * &quot;Note that link-values can convey multiple links between the same
-     * target and context IRIs; for example:
+     * target and context IRIs; for example:</p>
      * <pre>
      * Link: &lt;http://example.org/&gt;
      *       rel="start http://example.net/relation/other"
@@ -138,22 +158,63 @@ public class AffordanceBuilder implements LinkBuilder {
      * type 'start' and the extension relation type
      * 'http://example.net/relation/other'.&quot;
      *
-     * @param rels link relation types
+     *
      * @return affordance
      * @see <a href="https://tools.ietf.org/html/rfc5988#section-5.5">Web Linking Examples</a>
      */
-    public Affordance build(String... rels) {
-        Assert.notEmpty(rels);
+    public Affordance build() {
+        Assert.state(!(rels.isEmpty() && reverseRels.isEmpty()),
+                "no rels or reverse rels found, call rel() or reverseRel() before building the affordance");
         final Affordance affordance;
-        affordance = new Affordance(new PartialUriTemplate(this.toString()), actionDescriptors, rels);
+        affordance = new Affordance(new PartialUriTemplate(this.toString()), actionDescriptors,
+                rels.toArray(new String[rels.size()]));
         for (Map.Entry<String, List<String>> linkParamEntry : linkParams.entrySet()) {
             final List<String> values = linkParamEntry.getValue();
             for (String value : values) {
                 affordance.addLinkParam(linkParamEntry.getKey(), value);
             }
         }
+        for (String reverseRel : reverseRels) {
+            affordance.addRev(reverseRel);
+        }
         //affordance.setActionDescriptors(actionDescriptors);
         return affordance;
+    }
+
+    /**
+     * Allows to define one or more reverse link relations (a "rev" in terms of rfc-5988).
+     * <p>E.g. if you had a rel ex:parent which connects a child to its father,
+     * you could also use ex:parent on the father to point to the child
+     * by reverting the direction of ex:parent.
+     * This is mainly useful when you have no other way to express in your context that the direction
+     * of a relationship is reverted.
+     * </p>
+     *
+     * @param reverseRel            to be used as reverse relationship
+     * @param additionalReverseRels to be used as reverse relationship
+     * @return builder
+     */
+    public AffordanceBuilder reverseRel(String reverseRel, String... additionalReverseRels) {
+        this.reverseRels.add(reverseRel);
+        for (String additionalReverseRel : additionalReverseRels) {
+            this.reverseRels.add(additionalReverseRel);
+        }
+        return this;
+    }
+
+    /**
+     * Allows to define one or more link relations for the affordance.
+     *
+     * @param rel            to be used as link relation
+     * @param additionalRels to be used as reverse property
+     * @return builder
+     */
+    public AffordanceBuilder rel(String rel, String... additionalRels) {
+        this.rels.add(rel);
+        for (String additionalRel : additionalRels) {
+            this.rels.add(additionalRel);
+        }
+        return this;
     }
 
 

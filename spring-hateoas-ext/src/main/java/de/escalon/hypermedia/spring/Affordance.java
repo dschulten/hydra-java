@@ -12,6 +12,7 @@ package de.escalon.hypermedia.spring;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.escalon.hypermedia.action.ActionDescriptor;
+import de.escalon.hypermedia.action.Cardinality;
 import org.springframework.hateoas.Link;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
@@ -34,13 +35,17 @@ import java.util.Map;
  */
 public class Affordance extends Link {
 
+    private boolean selfRel = false;
     private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
 
     private UriTemplateComponents uriTemplateComponents;
 
+
+    private Cardinality cardinality = Cardinality.SINGLE;
+
     /**
-     * Creates affordance, action descriptors and link param values may be added later.
+     * Creates affordance. Action descriptors and link param values may be added later.
      *
      * @param uriTemplate uri or uritemplate of the affordance
      * @param rels        describing the link relation type
@@ -50,7 +55,16 @@ public class Affordance extends Link {
     }
 
     /**
-     * Creates affordance, action descriptors and link header params may be added later.
+     * Creates affordance. Rels, action descriptors and link header params may be added later.
+     *
+     * @param uriTemplate uri or uritemplate of the affordance
+     */
+    public Affordance(String uriTemplate) {
+        this(uriTemplate, new String[]{});
+    }
+
+    /**
+     * Creates affordance. Action descriptors and link header params may be added later.
      *
      * @param uriTemplate       uri or uritemplate of the affordance
      * @param actionDescriptors describing the possible http methods on the affordance
@@ -60,8 +74,19 @@ public class Affordance extends Link {
         super(uriTemplate.stripOptionalVariables(actionDescriptors)); // keep only required and expanded variables
         this.uriTemplateComponents = uriTemplate.unexpandedComponents();
         Assert.noNullElements(rels, "null rels are not allowed");
+
         for (String rel : rels) {
             addRel(rel);
+            if("self".equals(rel)){
+                selfRel = true;
+            }
+        }
+        // if any action refers to a collection resource, make the affordance a collection affordance
+        for (ActionDescriptor actionDescriptor : actionDescriptors) {
+            if (Cardinality.COLLECTION == actionDescriptor.getCardinality()) {
+                this.cardinality = Cardinality.COLLECTION;
+                break;
+            }
         }
         this.actionDescriptors.addAll(actionDescriptors);
     }
@@ -71,15 +96,6 @@ public class Affordance extends Link {
                        List<ActionDescriptor> actionDescriptors) {
         this(new PartialUriTemplate(uriTemplate), actionDescriptors); // no rels to pass
         this.linkParams = linkParams; // takes care of rels
-    }
-
-    /**
-     * Creates affordance. Rels, action descriptors and link header params may be added later.
-     *
-     * @param uriTemplate uri or uritemplate of the affordance
-     */
-    public Affordance(String uriTemplate) {
-        this(uriTemplate, new String[]{});
     }
 
 
@@ -146,6 +162,8 @@ public class Affordance extends Link {
 
     /**
      * Gets the 'title' link parameter
+     *
+     * @return title of link
      */
     public String getTitle() {
         return linkParams.getFirst("title");
@@ -193,13 +211,11 @@ public class Affordance extends Link {
      * specification because it often confuses authors and readers; in most
      * cases, using a separate relation type is preferable.
      *
-     * @param rev to set
+     * @param rev to add
      */
-    public void setRev(String rev) {
-        if (rev != null)
-            linkParams.set("rev", rev);
-        else
-            linkParams.remove("rev");
+    public void addRev(String rev) {
+        Assert.hasLength(rev);
+        linkParams.add("rev", rev);
     }
 
     /**
@@ -256,7 +272,7 @@ public class Affordance extends Link {
     /**
      * Affordance represented as http link header value.
      *
-     * @return
+     * @return link header value
      */
     public String asHeader() {
         StringBuilder result = new StringBuilder();
@@ -264,8 +280,9 @@ public class Affordance extends Link {
             if (result.length() != 0) {
                 result.append("; ");
             }
-            if ("rel".equals(linkParamEntry.getKey())) {
-                result.append(linkParamEntry.getKey())
+            String linkParamEntryKey = linkParamEntry.getKey();
+            if ("rel".equals(linkParamEntryKey) || "rev".equals(linkParamEntryKey)) {
+                result.append(linkParamEntryKey)
                         .append("=");
                 result.append("\"")
                         .append(StringUtils.collectionToDelimitedString(linkParamEntry.getValue(), " "))
@@ -276,7 +293,7 @@ public class Affordance extends Link {
                     if (linkParams.length() != 0) {
                         linkParams.append("; ");
                     }
-                    linkParams.append(linkParamEntry.getKey())
+                    linkParams.append(linkParamEntryKey)
                             .append("=");
                     linkParams.append("\"")
                             .append(value)
@@ -332,16 +349,32 @@ public class Affordance extends Link {
         return rels == null ? Collections.<String>emptyList() : Collections.unmodifiableList(rels);
     }
 
+    /**
+     * Gets the rel.
+     * @return first defined rel or null
+     */
     @Override
     public String getRel() {
         return linkParams.getFirst("rel");
     }
 
+    /**
+     * Gets the rev.
+     * @return first defined rev or null
+     */
+    public String getRev() {
+        return linkParams.getFirst("rev");
+    }
+
+    public List<String> getRevs() {
+        final List<String> revs = linkParams.get("rev");
+        return revs == null ? Collections.<String>emptyList() : Collections.unmodifiableList(revs);
+    }
 
     /**
      * Sets action descriptors.
      *
-     * @param actionDescriptors
+     * @param actionDescriptors to set
      */
     public void setActionDescriptors(List<ActionDescriptor> actionDescriptors) {
         this.actionDescriptors = actionDescriptors;
@@ -355,5 +388,14 @@ public class Affordance extends Link {
     @JsonIgnore
     public List<ActionDescriptor> getActionDescriptors() {
         return Collections.unmodifiableList(actionDescriptors);
+    }
+
+    @JsonIgnore
+    public Cardinality getCardinality() {
+        return cardinality;
+    }
+
+    public boolean isSelfRel() {
+        return selfRel;
     }
 }

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import de.escalon.hypermedia.DataType;
 import de.escalon.hypermedia.PropertyUtils;
+import de.escalon.hypermedia.action.Cardinality;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.hydra.serialize.JsonLdKeywords;
@@ -66,6 +67,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             Collection<Affordance> affordances = new ArrayList<Affordance>();
             Collection<Link> templatedLinks = new ArrayList<Link>();
             Collection<Affordance> templatedAffordances = new ArrayList<Affordance>();
+            Collection<Affordance> collectionAffordances = new ArrayList<Affordance>();
+            Link selfRel = null;
             for (Link link : links) {
                 if (link instanceof Affordance) {
                     final Affordance affordance = (Affordance) link;
@@ -74,7 +77,11 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                         if (affordance.isTemplated()) {
                             templatedAffordances.add(affordance);
                         } else {
-                            affordances.add(affordance);
+                            if (!affordance.isSelfRel() && Cardinality.COLLECTION == affordance.getCardinality()) {
+                                collectionAffordances.add(affordance);
+                            } else {
+                                affordances.add(affordance);
+                            }
                         }
                     } else {
                         if (affordance.isTemplated()) {
@@ -87,6 +94,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     templatedLinks.add(link);
                 } else {
                     simpleLinks.add(link);
+                }
+                if ("self".equals(link.getRel())) {
+                    selfRel = link;
                 }
             }
 
@@ -123,9 +133,79 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             String currentVocab = (contextStack != null && !contextStack.isEmpty()) ?
                     contextStack.peek().vocab : null;
 
+            // related collections
+            if (!collectionAffordances.isEmpty()) {
+                jgen.writeArrayFieldStart("hydra:collection");
+
+                for (Affordance collectionAffordance : collectionAffordances) {
+                    jgen.writeStartObject();
+                    jgen.writeStringField(JsonLdKeywords.AT_TYPE, "hydra:Collection");
+                    jgen.writeStringField(JsonLdKeywords.AT_ID, collectionAffordance.getHref());
+                    jgen.writeObjectFieldStart("hydra:manages");
+                    jgen.writeStringField("hydra:property", collectionAffordance.getRel());
+                    // a) in the case of </Alice> :knows /bob the subject must be /Alice
+                    // b) in the case of <> orderedItem /latte-1 the subject is an anonymous resource of type Order
+                    // c) in the case of </order/1> :seller </store> the object must be the store
+                    // 1. where is the information *about* the subject or object: the type or @id
+                    // 2. how to decide if the collection manages items for a subject or object?
+                    // ad 1.)
+                    // ad a) self rel of the Resource that has the collection affordance: looking through link list
+                    //       at serialization time is possible
+                    // ad b) a candidate is the class given as value of @ExposesResourceFor on the controller
+                    //       that defines the method which leads us to believe we have a collection:
+                    //       either a GET /orders handler having a collection return type or the POST /orders.
+                    //       Works only if the GET or POST has no request mapping path of its own
+                    //       an alternative is to use {} without type if @ExposesResourceFor is not present
+                    // ad c) like a
+                    // ad 2.)
+                    // we know the affordance is a collection
+                    // * we could pass information into build(rel), like .rel().reverseRel("schema:seller").build()
+                    // * we could use build("myReversedTerm") and look at the @context to see if it is reversed,
+                    //   if so, we know that the manages block must use object not subject. However weird if the
+                    //   reverse term is never really used in the json-ld
+                    // * we could have a registry which says if a property is meant to be reversed in a certain context
+                    //   and use that to find out if we need subject or object, like :seller ->
+                    if (selfRel != null) {
+                        // prefer rev over rel, assuming that rev exists to be used by RDF serialization
+                        if (collectionAffordance.getRev() != null) {
+                            jgen.writeStringField("hydra:object", selfRel.getHref());
+                        } else if (collectionAffordance.getRel() != null) {
+                            jgen.writeStringField("hydra:subject", selfRel.getHref());
+                        }
+                    } else {
+                        // prefer rev over rel, assuming that rev exists to be used by RDF serialization
+                        if (collectionAffordance.getRev() != null) {
+                            jgen.writeObjectFieldStart("hydra:object");
+                            jgen.writeEndObject();
+                        } else if (collectionAffordance.getRel() != null) {
+                            jgen.writeObjectFieldStart("hydra:subject");
+                            jgen.writeEndObject();
+                        }
+                    }
+                    jgen.writeEndObject(); // end manages
+
+
+
+                    List<ActionDescriptor> actionDescriptors = collectionAffordance.getActionDescriptors();
+                    if (!actionDescriptors.isEmpty()) {
+                        jgen.writeArrayFieldStart("hydra:operation");
+                    }
+                    writeActionDescriptors(jgen, currentVocab, actionDescriptors);
+                    if (!actionDescriptors.isEmpty()) {
+                        jgen.writeEndArray(); // end hydra:operation
+                    }
+
+
+
+                    jgen.writeEndObject(); // end collection
+                }
+                jgen.writeEndArray();
+            }
+
             for (Affordance affordance : affordances) {
                 final String rel = affordance.getRel();
                 List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
+
                 if (!actionDescriptors.isEmpty()) {
                     if (!Link.REL_SELF.equals(rel)) {
                         jgen.writeObjectFieldStart(rel); // begin rel
@@ -135,43 +215,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 }
 
 
-                for (ActionDescriptor actionDescriptor : actionDescriptors) {
-                    jgen.writeStartObject(); // begin a hydra:Operation
-
-                    final String semanticActionType = actionDescriptor.getSemanticActionType();
-                    if (semanticActionType != null) {
-                        jgen.writeStringField("@type", semanticActionType);
-                    }
-                    jgen.writeStringField("hydra:method", actionDescriptor.getHttpMethod()
-                            .name());
-
-                    final ActionInputParameter requestBodyInputParameter = actionDescriptor.getRequestBody();
-                    if (requestBodyInputParameter != null) {
-
-                        jgen.writeObjectFieldStart("hydra:expects"); // begin hydra:expects
-
-                        final Class<?> clazz = requestBodyInputParameter.getNestedParameterType();
-                        final Expose classExpose = clazz.getAnnotation(Expose.class);
-                        final String typeName;
-                        if (classExpose != null) {
-                            typeName = classExpose.value();
-                        } else {
-                            typeName = requestBodyInputParameter.getNestedParameterType()
-                                    .getSimpleName();
-                        }
-                        jgen.writeStringField("@type", typeName);
-
-                        jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
-                        // TODO check need for actionDescriptor and requestBodyInputParameter here:
-                        recurseSupportedProperties(jgen, currentVocab, clazz, actionDescriptor,
-                                requestBodyInputParameter, requestBodyInputParameter.getCallValue());
-                        jgen.writeEndArray(); // end hydra:supportedProperty
-
-                        jgen.writeEndObject(); // end hydra:expects
-                    }
-
-                    jgen.writeEndObject(); // end hydra:Operation
-                }
+                writeActionDescriptors(jgen, currentVocab, actionDescriptors);
 
                 if (!actionDescriptors.isEmpty()) {
                     jgen.writeEndArray(); // end hydra:operation
@@ -195,6 +239,46 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             }
         } catch (IntrospectionException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void writeActionDescriptors(JsonGenerator jgen, String currentVocab, List<ActionDescriptor> actionDescriptors) throws IOException, IntrospectionException {
+        for (ActionDescriptor actionDescriptor : actionDescriptors) {
+            jgen.writeStartObject(); // begin a hydra:Operation
+
+            final String semanticActionType = actionDescriptor.getSemanticActionType();
+            if (semanticActionType != null) {
+                jgen.writeStringField("@type", semanticActionType);
+            }
+            jgen.writeStringField("hydra:method", actionDescriptor.getHttpMethod()
+                    .name());
+
+            final ActionInputParameter requestBodyInputParameter = actionDescriptor.getRequestBody();
+            if (requestBodyInputParameter != null) {
+
+                jgen.writeObjectFieldStart("hydra:expects"); // begin hydra:expects
+
+                final Class<?> clazz = requestBodyInputParameter.getNestedParameterType();
+                final Expose classExpose = clazz.getAnnotation(Expose.class);
+                final String typeName;
+                if (classExpose != null) {
+                    typeName = classExpose.value();
+                } else {
+                    typeName = requestBodyInputParameter.getNestedParameterType()
+                            .getSimpleName();
+                }
+                jgen.writeStringField("@type", typeName);
+
+                jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
+                // TODO check need for actionDescriptor and requestBodyInputParameter here:
+                recurseSupportedProperties(jgen, currentVocab, clazz, actionDescriptor,
+                        requestBodyInputParameter, requestBodyInputParameter.getCallValue());
+                jgen.writeEndArray(); // end hydra:supportedProperty
+
+                jgen.writeEndObject(); // end hydra:expects
+            }
+
+            jgen.writeEndObject(); // end hydra:Operation
         }
     }
 

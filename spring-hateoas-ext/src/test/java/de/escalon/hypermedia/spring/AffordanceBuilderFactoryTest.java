@@ -29,6 +29,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 public class AffordanceBuilderFactoryTest {
 
     AffordanceBuilderFactory factory = new AffordanceBuilderFactory();
@@ -64,7 +67,7 @@ public class AffordanceBuilderFactoryTest {
         final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
         final Affordance affordance = factory.linkTo(getEventMethod, new Object[0])
                 .build("foo");
-        Assert.assertEquals("http://example.com/events/{eventId}", affordance.getHref());
+        assertEquals("http://example.com/events/{eventId}", affordance.getHref());
     }
 
     @Test
@@ -73,14 +76,56 @@ public class AffordanceBuilderFactoryTest {
         final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
                 .getEvent((String) null))
                 .build("foo");
-        Assert.assertEquals("http://example.com/events/{eventId}", affordance.getHref());
+        assertEquals("http://example.com/events/{eventId}", affordance.getHref());
     }
 
     @Test
     public void testLinkToControllerClass() throws Exception {
         final Affordance affordance = factory.linkTo(EventControllerSample.class, new Object[0])
                 .build("foo");
-        Assert.assertEquals("http://example.com/events", affordance.getHref());
+        assertEquals("http://example.com/events", affordance.getHref());
+    }
+
+    @Test
+    public void testLinkToMethodNoArgsBuild() throws Exception {
+        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
+        final Affordance affordance = factory.linkTo(getEventMethod, new Object[0])
+                .rel("foo")
+                .build();
+        assertEquals("http://example.com/events/{eventId}", affordance.getHref());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToMethodInvocationNoArgsBuild() throws Exception {
+        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .getEvent((String) null))
+                .rel("foo")
+                .build();
+        assertEquals("http://example.com/events/{eventId}", affordance.getHref());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToControllerClassNoArgsBuild() throws Exception {
+        final Affordance affordance = factory.linkTo(EventControllerSample.class, new Object[0])
+                .rel("foo")
+                .build();
+        assertEquals("http://example.com/events", affordance.getHref());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToMethodInvocationReverseRel() throws Exception {
+        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .getEvent((String) null)).rel("ex:children")
+                .reverseRel("schema:parent")
+                .build();
+        assertEquals("http://example.com/events/{eventId}", affordance.getHref());
+        assertEquals("schema:parent", affordance.getRev());
+        assertEquals("ex:children", affordance.getRel());
     }
 
 

@@ -193,6 +193,15 @@ public class AffordanceBuilderTest {
         Assert.assertEquals("Link: <http://example.com/things>; rel=\"next thing\"", affordance.toString());
     }
 
+    @Test
+    public void testBuildNoArgs() throws Exception {
+        final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
+                .createThing(new Thing())).rel("next", "thing").reverseRel("reverted", "turned-around")
+                .build();
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next thing\"; rev=\"reverted turned-around\"",
+                affordance.toString());
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testRejectsEmptyRel() throws Exception {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
@@ -207,7 +216,7 @@ public class AffordanceBuilderTest {
                 .build(new String[0]);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void testRejectsMissingRel() throws Exception {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))

@@ -1,5 +1,8 @@
 package de.escalon.hypermedia.sample.store;
 
+import de.escalon.hypermedia.sample.beans.store.Order;
+import org.springframework.hateoas.Resources;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -32,4 +35,7 @@ public class OrderBackend {
         return orderModels.get(id);
     }
 
+    public List<OrderModel> getOrders() {
+        return orderModels;
+    }
 }

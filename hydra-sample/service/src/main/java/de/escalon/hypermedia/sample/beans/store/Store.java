@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.Currency;
 import java.util.List;
 
+import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
+import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
+
 /**
  * Created by Dietrich on 17.02.2015.
  */
@@ -21,7 +24,7 @@ public class Store extends ResourceSupport {
 
 
     public List<Offer> getMakesOffer() {
-        List<Offer> offers= Arrays.asList(
+        List<Offer> offers = Arrays.asList(
                 createOffer("Latte Macchiato", 2.80, createOffer("Shot", 0.20)),
                 createOffer("Caffè Macchiato", 1.40, createOffer("Shot", 0.20)),
                 createOffer("Caffè Espresso", 1.10, createOffer("Shot", 0.20)),
@@ -30,19 +33,18 @@ public class Store extends ResourceSupport {
         );
         for (Offer offer : offers) {
             Product itemOffered = offer.getItemOffered();
-            itemOffered.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(OrderController.class)
-                    .makeOrder(itemOffered))
+            itemOffered.add(linkTo(methodOn(OrderController.class).makeOrder(itemOffered))
                     .withRel("orderedItem"));
         }
         return offers;
     }
 
     private Offer createOffer(String productName, double val, Offer... addOns) {
-        Product latteMacchiato = new Product(productName);
-        latteMacchiato.setProductID(String.valueOf(productCounter++));
+        Product product = new Product(productName);
+        product.setProductID(String.valueOf(productCounter++));
 
         Offer offer = new Offer();
-        offer.setItemOffered(latteMacchiato);
+        offer.setItemOffered(product);
         BigDecimal price = BigDecimal.valueOf(val)
                 .setScale(2);
         offer.setPrice(price);

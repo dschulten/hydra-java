@@ -134,7 +134,7 @@ public class HydraMessageConverterTest {
                         .isOk())
                 .andExpect(jsonPath("$.[0].@type").value("Event"))
                 .andExpect(jsonPath("$.[0].performer").value("Walk off the Earth"))
-                .andExpect(jsonPath("$.[0].review.@id").value("http://localhost/reviews/events/1"))
+                .andExpect(jsonPath("$.[0].['hydra:collection'][0].@id").value("http://localhost/reviews/events/1"))
                 .andReturn();
         LOG.debug(result.getResponse()
                 .getContentAsString());
@@ -152,12 +152,12 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.['hydra:member'][0].@type").value("Event"))
                 .andExpect(jsonPath("$.['hydra:member'][0].@id").value("http://localhost/events/1"))
                 .andExpect(jsonPath("$.['hydra:member'][0].performer").value("Walk off the Earth"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.@id").value
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].@id").value
                         ("http://localhost/reviews/events/1"))
                 .andExpect(jsonPath("$.['hydra:member'][1].@type").value("Event"))
                 .andExpect(jsonPath("$.['hydra:member'][1].@id").value("http://localhost/events/2"))
                 .andExpect(jsonPath("$.['hydra:member'][1].performer").value("Cornelia Bielefeldt"))
-                .andExpect(jsonPath("$.['hydra:member'][1].workPerformed.review.@id").value
+                .andExpect(jsonPath("$.['hydra:member'][1].workPerformed.['hydra:collection'][0].@id").value
                         ("http://localhost/reviews/events/2"))
                 .andReturn();
         System.out.println(result.getResponse()
@@ -173,34 +173,34 @@ public class HydraMessageConverterTest {
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
                 .andExpect(content().contentType("application/ld+json"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.@id").value("http://localhost/reviews" +
-                        "/events/1"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].@id")
+                        .value("http://localhost/reviews/events/1"))
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
                         ".['hydra:method']").value("POST"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[0].['hydra:property']").value("reviewBody"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation']" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[0].['valuePattern']")
                         .value(".{10,}"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0]" +
                         ".['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['hydra:property']").value("reviewRating"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['hydra:property']").value("ratingValue"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation'].[0]" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['minValue']").value(1))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation']" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['maxValue']").value(5))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation']" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['stepValue']").value(1))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.review.['hydra:operation']" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['defaultValue']").value(3))
@@ -214,11 +214,13 @@ public class HydraMessageConverterTest {
     @Test
     public void deserializesRequestBody() throws Exception {
         String reviewJson = "{\"reviewBody\": \"meh.\", \"reviewRating\": {\"ratingValue\": 3}}";
-        MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.post("/reviews/events/1").content(reviewJson)
+        MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.post("/reviews/events/1")
+                .content(reviewJson)
                 .contentType(HypermediaTypes.APPLICATION_JSONLD)
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
-                        .isCreated()).andReturn();
+                        .isCreated())
+                .andReturn();
         LOG.debug(result.getResponse()
                 .getContentAsString());
     }

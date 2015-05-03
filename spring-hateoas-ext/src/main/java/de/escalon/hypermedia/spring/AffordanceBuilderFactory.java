@@ -10,22 +10,23 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.action.Action;
-import de.escalon.hypermedia.action.ActionDescriptor;
-import de.escalon.hypermedia.action.ActionInputParameter;
+import de.escalon.hypermedia.action.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.MethodLinkBuilderFactory;
+import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.core.AnnotationMappingDiscoverer;
 import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.hateoas.core.MappingDiscoverer;
 import org.springframework.hateoas.core.MethodParameters;
+import org.springframework.http.HttpEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -43,9 +44,9 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     }
 
     @Override
-    public AffordanceBuilder linkTo(Class<?> type, Method method, Object... parameters) {
+    public AffordanceBuilder linkTo(Class<?> controller, Method method, Object... parameters) {
 
-        String pathMapping = MAPPING_DISCOVERER.getMapping(type, method);
+        String pathMapping = MAPPING_DISCOVERER.getMapping(controller, method);
 
         final List<String> params = getRequestParamNames(method);
         String query = StringUtils.join(params, ',');
@@ -67,7 +68,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             values.put(names.next(), parameter);
         }
 
-        ActionDescriptor actionDescriptor = getActionDescriptor(method, values, parameters);
+        ActionDescriptor actionDescriptor = createActionDescriptor(method, values, parameters);
 
         return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
     }
@@ -132,7 +133,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             }
         }
 
-        ActionDescriptor actionDescriptor = getActionDescriptor(
+        ActionDescriptor actionDescriptor = createActionDescriptor(
                 invocation.getMethod(), values, invocation.getArguments());
 
 
@@ -150,25 +151,32 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return params;
     }
 
-    private ActionDescriptor getActionDescriptor(Method invokedMethod,
-                                                 Map<String, Object> values, Object[] arguments) {
+    private ActionDescriptor createActionDescriptor(Method invokedMethod,
+                                                    Map<String, Object> values, Object[] arguments) {
         RequestMethod httpMethod = getHttpMethod(invokedMethod);
+        Type genericReturnType = invokedMethod.getGenericReturnType();
 
-        ActionDescriptor actionDescriptor = new ActionDescriptor(invokedMethod.getName(), httpMethod);
+
+        ActionDescriptor actionDescriptor =
+                new ActionDescriptor(invokedMethod.getName(), httpMethod);
+
+        actionDescriptor.setCardinality(getCardinality(invokedMethod, httpMethod, genericReturnType));
+
         final Action actionAnnotation = AnnotationUtils.getAnnotation(invokedMethod, Action.class);
         if (actionAnnotation != null) {
             actionDescriptor.setSemanticActionType(actionAnnotation.value());
         }
+
         Map<String, ActionInputParameter> requestBodyMap = getActionInputParameters(RequestBody.class, invokedMethod,
                 arguments);
-
+        Assert.state(requestBodyMap.size() < 2, "found more than one request body on " + invokedMethod.getName());
         for (ActionInputParameter value : requestBodyMap.values()) {
             actionDescriptor.setRequestBody(value);
         }
 
         // the action descriptor needs to know the param type, value and name
-        Map<String, ActionInputParameter> requestParamMap = getActionInputParameters(RequestParam.class, invokedMethod,
-                arguments);
+        Map<String, ActionInputParameter> requestParamMap =
+                getActionInputParameters(RequestParam.class, invokedMethod, arguments);
         for (Map.Entry<String, ActionInputParameter> entry : requestParamMap.entrySet()) {
             ActionInputParameter value = entry.getValue();
             if (value != null) {
@@ -180,8 +188,8 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             }
         }
 
-        Map<String, ActionInputParameter> pathVariableMap = getActionInputParameters(PathVariable.class, invokedMethod,
-                arguments);
+        Map<String, ActionInputParameter> pathVariableMap =
+                getActionInputParameters(PathVariable.class, invokedMethod, arguments);
         for (Map.Entry<String, ActionInputParameter> entry : pathVariableMap.entrySet()) {
             ActionInputParameter actionInputParameter = entry.getValue();
             if (actionInputParameter != null) {
@@ -192,7 +200,81 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 }
             }
         }
+
+        Map<String, ActionInputParameter> requestHeadersMap =
+                getActionInputParameters(RequestHeader.class, invokedMethod, arguments);
+
+        for (Map.Entry<String, ActionInputParameter> entry : pathVariableMap.entrySet()) {
+            ActionInputParameter actionInputParameter = entry.getValue();
+            if (actionInputParameter != null) {
+                final String key = entry.getKey();
+                actionDescriptor.addRequestHeader(key, actionInputParameter);
+                if (!actionInputParameter.isRequestBody()) {
+                    values.put(key, actionInputParameter.getCallValueFormatted());
+                }
+            }
+        }
+
         return actionDescriptor;
+    }
+
+    private Cardinality getCardinality(Method invokedMethod, RequestMethod httpMethod, Type genericReturnType) {
+        Cardinality cardinality;
+
+        Resource resourceAnn = AnnotationUtils.findAnnotation(invokedMethod, Resource.class);
+        if (resourceAnn != null) {
+            cardinality = resourceAnn.value();
+        } else {
+            if (RequestMethod.POST == httpMethod || containsCollection(genericReturnType)) {
+                cardinality = Cardinality.COLLECTION;
+            } else {
+                cardinality = Cardinality.SINGLE;
+            }
+        }
+        return cardinality;
+    }
+
+    private boolean containsCollection(Type genericReturnType) {
+        final boolean ret;
+        if (genericReturnType instanceof ParameterizedType) {
+            ParameterizedType t = (ParameterizedType) genericReturnType;
+            Type rawType = t.getRawType();
+            Assert.state(rawType instanceof Class<?>, "raw type is not a Class: " + rawType.toString());
+            Class<?> cls = (Class<?>) rawType;
+            if (HttpEntity.class.isAssignableFrom(cls)) {
+                Type[] typeArguments = t.getActualTypeArguments();
+                ret = containsCollection(typeArguments[0]);
+            } else if (Resources.class.isAssignableFrom(cls) ||
+                    Collection.class.isAssignableFrom(cls)) {
+                ret = true;
+            } else {
+                ret = false;
+            }
+        } else if (genericReturnType instanceof GenericArrayType) {
+            ret = true;
+        } else if (genericReturnType instanceof WildcardType) {
+            WildcardType t = (WildcardType) genericReturnType;
+            ret = containsCollection(getBound(t.getLowerBounds())) || containsCollection(getBound(t.getUpperBounds()));
+        } else if (genericReturnType instanceof TypeVariable) {
+            ret = false;
+        } else if (genericReturnType instanceof Class) {
+            Class<?> cls = (Class<?>) genericReturnType;
+            ret = Resources.class.isAssignableFrom(cls) ||
+                    Collection.class.isAssignableFrom(cls);
+        } else {
+            ret = false;
+        }
+        return ret;
+    }
+
+    private Type getBound(Type[] lowerBounds) {
+        Type ret;
+        if (lowerBounds != null && lowerBounds.length > 0) {
+            ret = lowerBounds[0];
+        } else {
+            ret = null;
+        }
+        return ret;
     }
 
     private static RequestMethod getHttpMethod(Method method) {
