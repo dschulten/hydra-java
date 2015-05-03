@@ -182,7 +182,7 @@ The json-ld output written by hydra-java makes the GoodRelations url known under
 
 === AffordanceBuilder for rich hyperlinks (from V. 0.2.0)
 
-An affordance is a rich hyperlink. That means, it not only contains a URI or a URITemplate, but also information about the usage of the URI, such as suported http methods and expected parameters. The word is a neologism introduced by http://amundsen.com/blog/archives/1109[Mike Amundsen].
+A hypermedia affordance is a rich hyperlink. That means, it not only contains a URI or a URITemplate, but also information about the usage of the URI, such as supported http methods and expected parameters. The term 'hypermedia affordance' is a neologism made popular by http://amundsen.com/blog/archives/1109[Mike Amundsen], following an earlier reference in http://roy.gbiv.com/talks/200804_REST_ApacheCon.pdf[A little REST and Relaxation] by Roy Fielding.
 A hydra-java `Affordance` can be used to render media-types which support this kind of information: first and foremost hydra, but it is quite easy to add message converters for other media types once the basic information is available.
 
 Version 0.2.0 provides an `AffordanceBuilder` class which is a drop-in replacement for the spring-hateoas `ControllerLinkBuilder`. The `AffordanceBuilder` does not depend on hydra or json-ld. It lives in the standalone jar spring-hateoas-ext and can also be used to render other media types than json-ld. One example is the `XhtmlResourceMessageConverter` which allows you to render your API responses as HTML forms.
