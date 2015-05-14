@@ -343,6 +343,10 @@ public class Affordance extends Link {
                 .getHref(), linkParams, actionDescriptors);
     }
 
+    /**
+     * Allows to retrieve all rels defined for this affordance.
+     * @return rels
+     */
     @JsonIgnore
     public List<String> getRels() {
         final List<String> rels = linkParams.get("rel");
@@ -359,6 +363,16 @@ public class Affordance extends Link {
     }
 
     /**
+     * Retrieves all revs for this affordance.
+     * @return
+     */
+    @JsonIgnore
+    public List<String> getRevs() {
+        final List<String> revs = linkParams.get("rev");
+        return revs == null ? Collections.<String>emptyList() : Collections.unmodifiableList(revs);
+    }
+
+    /**
      * Gets the rev.
      * @return first defined rev or null
      */
@@ -366,10 +380,6 @@ public class Affordance extends Link {
         return linkParams.getFirst("rev");
     }
 
-    public List<String> getRevs() {
-        final List<String> revs = linkParams.get("rev");
-        return revs == null ? Collections.<String>emptyList() : Collections.unmodifiableList(revs);
-    }
 
     /**
      * Sets action descriptors.
@@ -390,11 +400,20 @@ public class Affordance extends Link {
         return Collections.unmodifiableList(actionDescriptors);
     }
 
+    /**
+     * Determines if the affordance points to a single or a collection resource.
+     * @return single or collection cardinality, never null
+     */
     @JsonIgnore
     public Cardinality getCardinality() {
         return cardinality;
     }
 
+    /**
+     * Determines if the affordance is a self rel.
+     * @return
+     */
+    @JsonIgnore
     public boolean isSelfRel() {
         return selfRel;
     }

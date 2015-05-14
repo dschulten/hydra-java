@@ -19,7 +19,6 @@ import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
-@Ignore
 public class AbstractUberNodeTest {
 
 	private static final String URL_PREVIOUS = "http://www.example.com/previous";

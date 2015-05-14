@@ -19,7 +19,6 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-@Ignore
 public class UberMessageModelTest {
 
 	private UberMessageModel uberMessageModel;
@@ -35,13 +34,15 @@ public class UberMessageModelTest {
 	public void hasVersionAndDataAndError() throws Exception {
 		uberMessageModel = new UberMessageModel(map);
 		assertEquals("1.0", uberMessageModel.getVersion());
-		assertEquals(1, uberMessageModel.getData().size());
-		assertEquals(0, uberMessageModel.getError().size());
+		assertEquals(0, uberMessageModel.getData()
+                .size());
+		assertEquals(0, uberMessageModel.getError()
+                .size());
 	}
-	
+
 	@Test
 	public void readsMapIntoData() throws Exception {
-		map.put("name", "Doe");
+        map.put("name", "Doe");
 		uberMessageModel = new UberMessageModel(map);
 		assertEquals(1, uberMessageModel.getData().size());
 	}

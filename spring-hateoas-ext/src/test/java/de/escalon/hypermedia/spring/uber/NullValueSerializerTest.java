@@ -20,7 +20,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class NullValueSerializerTest {
 

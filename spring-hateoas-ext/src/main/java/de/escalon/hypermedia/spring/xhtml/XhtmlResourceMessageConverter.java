@@ -96,7 +96,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
 
     @Override
-    protected Object readInternal(Class<? extends Object> clazz, HttpInputMessage inputMessage) throws IOException,
+    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage) throws IOException,
             HttpMessageNotReadableException {
 
         InputStream is;
@@ -133,7 +133,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
         Writer writer = new OutputStreamWriter(bos, charset);
-
+        @SuppressWarnings("unchecked")
         Map<String, String[]> form = request.getParameterMap();
         for (Iterator<String> nameIterator = form.keySet()
                 .iterator(); nameIterator.hasNext(); ) {
@@ -159,7 +159,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         return new ByteArrayInputStream(bos.toByteArray());
     }
 
-    private Object readRequestBody(Class<? extends Object> clazz, InputStream inputStream, Charset charset) throws
+    private Object readRequestBody(Class<?> clazz, InputStream inputStream, Charset charset) throws
             IOException {
 
         String body = StreamUtils.copyToString(inputStream, charset);
@@ -184,7 +184,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
     }
 
-    private Object recursivelyCreateObject(Class<? extends Object> clazz, MultiValueMap<String, String> formValues) {
+    private Object recursivelyCreateObject(Class<?> clazz, MultiValueMap<String, String> formValues) {
 
         if (Map.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Map not supported");
@@ -472,11 +472,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
     @Override
     public boolean canRead(java.lang.reflect.Type type, Class<?> contextClass, MediaType mediaType) {
-        if (MediaType.APPLICATION_FORM_URLENCODED == mediaType) {
-            return true;
-        } else {
-            return false;
-        }
+        return MediaType.APPLICATION_FORM_URLENCODED == mediaType;
     }
 
     /**

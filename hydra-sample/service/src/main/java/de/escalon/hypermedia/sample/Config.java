@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
 import de.escalon.hypermedia.spring.hydra.JsonLdDocumentationProvider;
+import de.escalon.hypermedia.spring.uber.UberJackson2HttpMessageConverter;
 import de.escalon.hypermedia.spring.xhtml.XhtmlResourceMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -53,8 +54,14 @@ public class Config extends WebMvcConfigurerAdapter {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(hydraMessageConverter());
         converters.add(halConverter());
+        converters.add(uberConverter());
         converters.add(xhtmlMessageConverter());
         converters.add(jsonConverter());
+    }
+
+    @Bean
+    public HttpMessageConverter<?> uberConverter() {
+        return new UberJackson2HttpMessageConverter();
     }
 
     private HttpMessageConverter<?> xhtmlMessageConverter() {
@@ -79,6 +86,8 @@ public class Config extends WebMvcConfigurerAdapter {
     public HydraMessageConverter hydraMessageConverter() {
         return new HydraMessageConverter();
     }
+
+
 
     @Bean
     public ObjectMapper jacksonObjectMapper() {
