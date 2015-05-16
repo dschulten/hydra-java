@@ -16,7 +16,7 @@ import org.springframework.util.Assert;
 /**
  * Created by dschulten on 04.12.2014.
  */
-public class UriTemplateComponents {
+public class PartialUriTemplateComponents {
 
     private String baseUri;
     private String queryHead;
@@ -30,7 +30,7 @@ public class UriTemplateComponents {
      * @param queryTail comma-separated list of unexpanded query keys, may be empty
      * @param fragmentIdentifier, beginning with #, may contain a fragment variable, may also be empty
      */
-    public UriTemplateComponents(String baseUri, String queryHead, String queryTail, String fragmentIdentifier) {
+    public PartialUriTemplateComponents(String baseUri, String queryHead, String queryTail, String fragmentIdentifier) {
         Assert.notNull(baseUri);
         Assert.notNull(queryHead);
         Assert.notNull(queryTail);

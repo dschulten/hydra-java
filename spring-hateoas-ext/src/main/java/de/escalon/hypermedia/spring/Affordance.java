@@ -39,7 +39,7 @@ public class Affordance extends Link {
     private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
 
-    private UriTemplateComponents uriTemplateComponents;
+    private PartialUriTemplateComponents partialUriTemplateComponents;
 
 
     private Cardinality cardinality = Cardinality.SINGLE;
@@ -72,7 +72,7 @@ public class Affordance extends Link {
      */
     public Affordance(PartialUriTemplate uriTemplate, List<ActionDescriptor> actionDescriptors, String... rels) {
         super(uriTemplate.stripOptionalVariables(actionDescriptors)); // keep only required and expanded variables
-        this.uriTemplateComponents = uriTemplate.unexpandedComponents();
+        this.partialUriTemplateComponents = uriTemplate.unexpandedComponents();
         Assert.noNullElements(rels, "null rels are not allowed");
 
         for (String rel : rels) {
@@ -261,7 +261,7 @@ public class Affordance extends Link {
     @JsonIgnore
     public String getHeaderName() {
         String headerName;
-        if (uriTemplateComponents.hasVariables()) {
+        if (partialUriTemplateComponents.hasVariables()) {
             headerName = "Link-Template";
         } else {
             headerName = "Link";

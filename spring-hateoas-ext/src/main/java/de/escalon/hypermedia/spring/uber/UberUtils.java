@@ -14,12 +14,11 @@ import de.escalon.hypermedia.DataType;
 import de.escalon.hypermedia.action.ActionDescriptor;
 import de.escalon.hypermedia.spring.Affordance;
 import de.escalon.hypermedia.spring.PartialUriTemplate;
-import de.escalon.hypermedia.spring.UriTemplateComponents;
+import de.escalon.hypermedia.spring.PartialUriTemplateComponents;
 import org.springframework.hateoas.*;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -173,8 +172,8 @@ public class UberUtils {
         Assert.notNull(actionDescriptor, "actionDescriptor must not be null");
         UberNode uberLink = new UberNode();
         uberLink.setRel(rels);
-        UriTemplateComponents uriTemplateComponents = new PartialUriTemplate(href).expand(Collections.<String, Object>emptyMap());
-        uberLink.setUrl(uriTemplateComponents.getBaseUri());
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(href).expand(Collections.<String, Object>emptyMap());
+        uberLink.setUrl(partialUriTemplateComponents.getBaseUri());
         uberLink.setModel(getModelProperty(href, actionDescriptor));
         if (actionDescriptor != null) {
             RequestMethod requestMethod = actionDescriptor.getHttpMethod();
@@ -227,8 +226,8 @@ public class UberUtils {
     }
 
     private static String getUrlProperty(Link link) {
-        UriTemplateComponents uriTemplateComponents = new PartialUriTemplate(link.getHref()).expand(Collections.<String, Object>emptyMap());
-        return uriTemplateComponents.getBaseUri();
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(link.getHref()).expand(Collections.<String, Object>emptyMap());
+        return partialUriTemplateComponents.getBaseUri();
 //		return UriComponentsBuilder.fromUriString(baseUri).build().normalize().toString();
     }
 

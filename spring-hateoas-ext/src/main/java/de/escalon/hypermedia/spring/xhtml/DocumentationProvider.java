@@ -45,7 +45,7 @@ public interface DocumentationProvider {
     String getDocumentationUrl(Class clazz, Object content);
 
     /**
-     * Gets documentationUrl for given attribute name. Only makes sense if the attribute is in the current vocab.
+     * Gets documentationUrl for given attribute name.
      * @param name to document
      * @param content current value
      * @return url or null

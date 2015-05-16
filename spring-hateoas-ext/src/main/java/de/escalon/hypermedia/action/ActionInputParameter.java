@@ -211,18 +211,6 @@ public class ActionInputParameter implements AnnotatedParameter {
         }
     }
 
-    private Select getSelectAnnotationFromFirstParam(Annotation[] parameterAnnotation) {
-        Select select = null;
-        Annotation[] annotationsOnParameter = parameterAnnotation;
-        for (Annotation annotation : annotationsOnParameter) {
-            if (annotation.getClass() == Select.class) {
-                select = (Select) annotation;
-                break;
-            }
-        }
-        return select;
-    }
-
     public boolean isArrayOrCollection() {
         if (arrayOrCollection == null) {
             Class<?> parameterType = getParameterType();
@@ -314,10 +302,6 @@ public class ActionInputParameter implements AnnotatedParameter {
 
     public java.lang.reflect.Type getGenericParameterType() {
         return methodParameter.getGenericParameterType();
-    }
-
-    public Class<?> getNestedParameterType() {
-        return methodParameter.getNestedParameterType();
     }
 
     public Map<String, Object> getInputConstraints() {

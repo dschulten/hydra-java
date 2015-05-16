@@ -45,7 +45,7 @@ public class AffordanceBuilder implements LinkBuilder {
     private static final MappingDiscoverer DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
     private static final AffordanceBuilderFactory FACTORY = new AffordanceBuilderFactory();
 
-    private UriTemplateComponents uriTemplateComponents;
+    private PartialUriTemplateComponents partialUriTemplateComponents;
     private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
 
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
@@ -103,15 +103,15 @@ public class AffordanceBuilder implements LinkBuilder {
     /**
      * Creates a new {@link AffordanceBuilder} using the given {@link ActionDescriptor}.
      *
-     * @param uriTemplateComponents must not be {@literal null}
+     * @param partialUriTemplateComponents must not be {@literal null}
      * @param actionDescriptors     must not be {@literal null}
      */
-    public AffordanceBuilder(UriTemplateComponents uriTemplateComponents, List<ActionDescriptor> actionDescriptors) {
+    public AffordanceBuilder(PartialUriTemplateComponents partialUriTemplateComponents, List<ActionDescriptor> actionDescriptors) {
 
-        Assert.notNull(uriTemplateComponents);
+        Assert.notNull(partialUriTemplateComponents);
         Assert.notNull(actionDescriptors);
 
-        this.uriTemplateComponents = uriTemplateComponents;
+        this.partialUriTemplateComponents = partialUriTemplateComponents;
 
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
             this.actionDescriptors.add(actionDescriptor);
@@ -284,8 +284,8 @@ public class AffordanceBuilder implements LinkBuilder {
             return this;
         }
 
-        final UriTemplateComponents urlPartComponents = new PartialUriTemplate(urlPart).expand(Collections.<String, Object>emptyMap());
-        final UriTemplateComponents affordanceComponents = uriTemplateComponents;
+        final PartialUriTemplateComponents urlPartComponents = new PartialUriTemplate(urlPart).expand(Collections.<String, Object>emptyMap());
+        final PartialUriTemplateComponents affordanceComponents = partialUriTemplateComponents;
 
         final String path = !affordanceComponents.getBaseUri()
                 .endsWith("/") && !urlPartComponents.getBaseUri()
@@ -305,8 +305,8 @@ public class AffordanceBuilder implements LinkBuilder {
                 urlPartComponents.getFragmentIdentifier() :
                 affordanceComponents.getFragmentIdentifier();
 
-        final UriTemplateComponents mergedUriComponents =
-                new UriTemplateComponents(path, queryHead, queryTail, fragmentIdentifier);
+        final PartialUriTemplateComponents mergedUriComponents =
+                new PartialUriTemplateComponents(path, queryHead, queryTail, fragmentIdentifier);
 
         return new AffordanceBuilder(mergedUriComponents, actionDescriptors);
 
@@ -323,7 +323,7 @@ public class AffordanceBuilder implements LinkBuilder {
 
     @Override
     public URI toUri() {
-        final String actionLink = uriTemplateComponents.toString();
+        final String actionLink = partialUriTemplateComponents.toString();
         if (actionLink == null || actionLink.contains("{")) {
             throw new IllegalStateException("cannot convert template to URI");
         }
@@ -345,7 +345,7 @@ public class AffordanceBuilder implements LinkBuilder {
 
     @Override
     public String toString() {
-        return uriTemplateComponents.toString();
+        return partialUriTemplateComponents.toString();
     }
 
     /**

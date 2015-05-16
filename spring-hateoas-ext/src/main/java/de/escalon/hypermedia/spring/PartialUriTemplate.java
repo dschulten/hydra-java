@@ -13,7 +13,6 @@ package de.escalon.hypermedia.spring;
 import de.escalon.hypermedia.action.ActionDescriptor;
 import de.escalon.hypermedia.action.ActionInputParameter;
 import org.springframework.hateoas.TemplateVariable;
-import org.springframework.hateoas.TemplateVariable.VariableType;
 import org.springframework.util.Assert;
 
 import java.io.UnsupportedEncodingException;
@@ -110,16 +109,16 @@ public class PartialUriTemplate {
      *
      * @return components
      */
-    UriTemplateComponents unexpandedComponents() {
+    PartialUriTemplateComponents unexpandedComponents() {
         return expand(Collections.<String, Object>emptyMap());
     }
 
-    public UriTemplateComponents expand(Map<String, Object> parameters) {
+    public PartialUriTemplateComponents expand(Map<String, Object> parameters) {
         return getUriTemplateComponents(parameters, Collections.<String>emptyList());
 
     }
 
-    private UriTemplateComponents getUriTemplateComponents(Map<String, Object> parameters, List<String> requiredArgs) {
+    private PartialUriTemplateComponents getUriTemplateComponents(Map<String, Object> parameters, List<String> requiredArgs) {
         Assert.notNull(parameters, "Parameters must not be null!");
 
         final StringBuilder baseUrl = new StringBuilder(urlComponents.get(0));
@@ -194,7 +193,7 @@ public class PartialUriTemplate {
         }
 
 
-        return new UriTemplateComponents(baseUrl.toString(), queryHead.toString(), queryTail.toString(),
+        return new PartialUriTemplateComponents(baseUrl.toString(), queryHead.toString(), queryTail.toString(),
                 fragmentIdentifier.toString());
     }
 

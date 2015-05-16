@@ -13,19 +13,17 @@ package de.escalon.hypermedia.spring;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
-public class UriTemplateComponentsTest {
+public class PartialUriTemplateComponentsTest {
 
     @Test
     public void testToStringWithQueryContinuation() throws Exception {
-        UriTemplateComponents uriTemplateComponents = new UriTemplateComponents("http://example.com", "?foo=bar", "baz, gnarf", "#fragmentIdentifier");
-        Assert.assertEquals("http://example.com?foo=bar{&baz, gnarf}#fragmentIdentifier", uriTemplateComponents.toString());
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplateComponents("http://example.com", "?foo=bar", "baz, gnarf", "#fragmentIdentifier");
+        Assert.assertEquals("http://example.com?foo=bar{&baz, gnarf}#fragmentIdentifier", partialUriTemplateComponents.toString());
     }
 
     @Test
     public void testToStringWithQueryVariables() throws Exception {
-        UriTemplateComponents uriTemplateComponents = new UriTemplateComponents("http://example.com", "", "baz, gnarf", "#fragmentIdentifier");
-        Assert.assertEquals("http://example.com{?baz, gnarf}#fragmentIdentifier", uriTemplateComponents.toString());
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplateComponents("http://example.com", "", "baz, gnarf", "#fragmentIdentifier");
+        Assert.assertEquals("http://example.com{?baz, gnarf}#fragmentIdentifier", partialUriTemplateComponents.toString());
     }
 }

@@ -28,7 +28,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         val.put("section", "description");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
                 expanded.toString());
     }
@@ -41,7 +41,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         val.put("section", "description");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof",
                 expanded.toString());
     }
@@ -54,7 +54,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         val.put("section", "description");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour",
                 expanded.toString());
     }
@@ -64,7 +64,7 @@ public class PartialUriTemplateTest {
         final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events/{city}");
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("city", "Wiesbaden");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden",
                 expanded.toString());
     }
@@ -74,7 +74,7 @@ public class PartialUriTemplateTest {
         final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events/{city:+}");
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("city", "Wiesbaden");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden",
                 expanded.toString());
     }
@@ -84,7 +84,7 @@ public class PartialUriTemplateTest {
         final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events/v{version}/Wiesbaden");
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("version", "1.2.0");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/v1.2.0/Wiesbaden",
                 expanded.toString());
     }
@@ -97,7 +97,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         val.put("section", "description");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour",
                 expanded.toString());
     }
@@ -110,7 +110,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         val.put("section", "description");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof",
                 expanded.toString());
     }
@@ -124,7 +124,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         val.put("section", "description");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
                 expanded.toString());
     }
@@ -139,7 +139,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         val.put("section", "description");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
                 expanded.toString());
     }
@@ -153,7 +153,7 @@ public class PartialUriTemplateTest {
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
         val.put("section", "description");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#price",
                 expanded.toString());
     }
@@ -166,7 +166,7 @@ public class PartialUriTemplateTest {
         val.put("city", "Wiesbaden");
         val.put("eventName", "Revo Tour");
         val.put("location", "Schlachthof");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof{#section}",
                 expanded.toString());
     }
@@ -176,7 +176,7 @@ public class PartialUriTemplateTest {
         final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events{/city}/concerts{?eventName,location}");
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("location", "Schlachthof");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events{/city}/concerts?location=Schlachthof{&eventName}", expanded.toString());
     }
 
@@ -186,7 +186,7 @@ public class PartialUriTemplateTest {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("city", "Wiesbaden");
         val.put("location", "Schlachthof");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events/Wiesbaden/concerts?location=Schlachthof{&eventName}", expanded.toString());
     }
 
@@ -195,7 +195,7 @@ public class PartialUriTemplateTest {
         final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events{/city}/concerts?eventName=Revo+Tour{&location}");
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("location", "Schlachthof");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&location=Schlachthof", expanded.toString());
     }
 
@@ -204,7 +204,7 @@ public class PartialUriTemplateTest {
         final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events{/city}/concerts?eventName=Revo+Tour&foo=bar{&location}");
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("location", "Schlachthof");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&foo=bar&location=Schlachthof", expanded.toString());
     }
 
@@ -214,7 +214,7 @@ public class PartialUriTemplateTest {
         Map<String, Object> val = new HashMap<String, Object>();
         val.put("baz", "Gnarf");
         val.put("location", "Schlachthof");
-        final UriTemplateComponents expanded = template.expand(val);
+        final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example.com/events{/city}/concerts?eventName=Revo+Tour&foo=bar&location=Schlachthof&baz=Gnarf", expanded.toString());
     }
 }

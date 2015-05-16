@@ -258,13 +258,13 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
                 jgen.writeObjectFieldStart("hydra:expects"); // begin hydra:expects
 
-                final Class<?> clazz = requestBodyInputParameter.getNestedParameterType();
+                final Class<?> clazz = requestBodyInputParameter.getParameterType();
                 final Expose classExpose = clazz.getAnnotation(Expose.class);
                 final String typeName;
                 if (classExpose != null) {
                     typeName = classExpose.value();
                 } else {
-                    typeName = requestBodyInputParameter.getNestedParameterType()
+                    typeName = requestBodyInputParameter.getParameterType()
                             .getSimpleName();
                 }
                 jgen.writeStringField("@type", typeName);
@@ -456,7 +456,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                         LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
 
                 writeScalarValue(jgen, actionInputParameter.getCallValue(), actionInputParameter
-                        .getNestedParameterType());
+                        .getParameterType());
             }
         }
 

@@ -441,8 +441,8 @@ public class XhtmlWriter extends Writer {
         // build the form
         if (actionDescriptor.hasRequestBody()) {
             ActionInputParameter requestBody = actionDescriptor.getRequestBody();
-            Class<?> nestedParameterType = requestBody.getNestedParameterType();
-            recurseBeanProperties(nestedParameterType, actionDescriptor, requestBody, requestBody.getCallValue());
+            Class<?> parameterType = requestBody.getParameterType();
+            recurseBeanProperties(parameterType, actionDescriptor, requestBody, requestBody.getCallValue());
         } else {
             Collection<String> requestParams = actionDescriptor.getRequestParamNames();
             for (String requestParamName : requestParams) {
@@ -605,7 +605,7 @@ public class XhtmlWriter extends Writer {
                                         } else {
                                             value = null;
                                         }
-                                        recurseBeanProperties(actionInputParameter.getNestedParameterType(),
+                                        recurseBeanProperties(actionInputParameter.getParameterType(),
                                                 actionDescriptor, actionInputParameter, value);
                                     }
                                 } else {
@@ -673,7 +673,7 @@ public class XhtmlWriter extends Writer {
                         } else {
                             value = null;
                         }
-                        recurseBeanProperties(actionInputParameter.getNestedParameterType(), actionDescriptor,
+                        recurseBeanProperties(actionInputParameter.getParameterType(), actionDescriptor,
                                 actionInputParameter, value);
                     }
                 } else {

@@ -12,6 +12,7 @@ package de.escalon.hypermedia;
 
 import org.omg.CORBA.Current;
 
+import javax.xml.bind.DatatypeConverter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Calendar;
@@ -156,8 +157,9 @@ public class DataType {
             return new BigInteger(string);
         } else if (isBigDecimal(type)) {
             return new BigDecimal(string);
+        } else if (isCalendar(type)) {
+            return DatatypeConverter.parseDateTime(string);
         } else if (isDate(type)) {
-            // TODO handle ISO date or epoch
             return new Date(Long.parseLong(string));
         } else if (isCurrency(type)) {
             return Currency.getInstance(string);
