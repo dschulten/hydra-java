@@ -11,11 +11,7 @@
 package de.escalon.hypermedia.spring.uber;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.escalon.hypermedia.action.ActionDescriptor;
-import de.escalon.hypermedia.spring.Affordance;
-import de.escalon.hypermedia.spring.PartialUriTemplate;
-import org.hamcrest.Matchers;
-import org.junit.Ignore;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
 import org.junit.Test;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
@@ -39,7 +35,7 @@ public class UberUtilsTest {
 
     @Test
     public void linkGetToUberNode() throws Exception {
-        UberNode linkNode = UberUtils.toUberLink("/foo", new ActionDescriptor("get", RequestMethod.GET), Link.REL_SELF);
+        UberNode linkNode = UberUtils.toUberLink("/foo", new ActionDescriptor("get", RequestMethod.GET.name()), Link.REL_SELF);
         assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
         assertNull(linkNode.getModel());
@@ -49,7 +45,7 @@ public class UberUtilsTest {
     @Test
     public void linkPostToUberNode() throws Exception {
         // TODO create a Link with variables separate from URITemplate for POST
-        UberNode linkNode = UberUtils.toUberLink("/foo{?foo,bar}", new ActionDescriptor("post", RequestMethod.POST), Link.REL_SELF);
+        UberNode linkNode = UberUtils.toUberLink("/foo{?foo,bar}", new ActionDescriptor("post", RequestMethod.POST.name()), Link.REL_SELF);
         assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
         assertEquals("foo={foo}&bar={bar}", linkNode.getModel());

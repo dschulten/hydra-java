@@ -11,6 +11,8 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.action.*;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.PartialUriTemplate;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -158,7 +160,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
 
         ActionDescriptor actionDescriptor =
-                new ActionDescriptor(invokedMethod.getName(), httpMethod);
+                new ActionDescriptor(invokedMethod.getName(), httpMethod.name());
 
         actionDescriptor.setCardinality(getCardinality(invokedMethod, httpMethod, genericReturnType));
 
@@ -221,9 +223,9 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     private Cardinality getCardinality(Method invokedMethod, RequestMethod httpMethod, Type genericReturnType) {
         Cardinality cardinality;
 
-        Resource resourceAnn = AnnotationUtils.findAnnotation(invokedMethod, Resource.class);
-        if (resourceAnn != null) {
-            cardinality = resourceAnn.value();
+        ResourceHandler resourceHandlerAnn = AnnotationUtils.findAnnotation(invokedMethod, ResourceHandler.class);
+        if (resourceHandlerAnn != null) {
+            cardinality = resourceHandlerAnn.value();
         } else {
             if (RequestMethod.POST == httpMethod || containsCollection(genericReturnType)) {
                 cardinality = Cardinality.COLLECTION;

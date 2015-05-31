@@ -10,18 +10,12 @@ import org.springframework.hateoas.ResourceSupport;
 public class Product extends ResourceSupport {
     public final String name;
 
-    private String productID;
+    public final String productID;
 
     @JsonCreator
-    public Product(@JsonProperty("name") String name) {
+    public Product(@JsonProperty("name") String name, @JsonProperty("productID") String productID) {
         this.name = name;
+        this.productID = productID;
     }
 
-    public void setProductID(String productId) {
-        this.productID = productId;
-    }
-
-    public String getProductID() {
-        return productID;
-    }
 }

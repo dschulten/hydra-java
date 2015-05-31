@@ -12,9 +12,9 @@ package de.escalon.hypermedia.spring.uber;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import de.escalon.hypermedia.action.ActionDescriptor;
-import de.escalon.hypermedia.spring.PartialUriTemplate;
-import de.escalon.hypermedia.spring.PartialUriTemplateComponents;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.PartialUriTemplate;
+import de.escalon.hypermedia.affordance.PartialUriTemplateComponents;
 import org.springframework.hateoas.Link;
 
 import java.util.ArrayList;

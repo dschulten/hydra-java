@@ -10,6 +10,8 @@
 
 package de.escalon.hypermedia.action;
 
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+
 public class StringOptions implements Options {
 
 	/**

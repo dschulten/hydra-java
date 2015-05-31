@@ -8,10 +8,9 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring;
+package de.escalon.hypermedia.affordance;
 
-import de.escalon.hypermedia.action.ActionDescriptor;
-import de.escalon.hypermedia.action.ActionInputParameter;
+import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.hateoas.TemplateVariable;
 import org.springframework.util.Assert;
 
@@ -22,6 +21,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * URI template with the ability to be partially expanded, no matter if its variables are required or not. Unsatisfied
+ * variables are kept as variables. Other implementations either remove all unsatisfied variables or fail when required
+ * variables are unsatisfied.
+ * This behavior is required due to the way an Affordance is created by {@link AffordanceBuilder}.
+
  * Created by dschulten on 01.12.2014.
  */
 public class PartialUriTemplate {
@@ -104,21 +108,35 @@ public class PartialUriTemplate {
         return variableNames;
     }
 
-    /**
-     * Returns raw template components, without variables expanded
-     *
-     * @return components
-     */
-    PartialUriTemplateComponents unexpandedComponents() {
-        return expand(Collections.<String, Object>emptyMap());
+
+    public PartialUriTemplateComponents expand(Object... parameters) {
+        List<String> variableNames = getVariableNames();
+        Map<String, Object> parameterMap = new LinkedHashMap<String, Object>();
+
+        int i = 0;
+        for (String variableName : variableNames) {
+            if (i < parameters.length) {
+                parameterMap.put(variableName, parameters[i++]);
+            } else {
+                break;
+            }
+        }
+        return getUriTemplateComponents(parameterMap, Collections.<String>emptyList());
     }
 
     public PartialUriTemplateComponents expand(Map<String, Object> parameters) {
         return getUriTemplateComponents(parameters, Collections.<String>emptyList());
-
     }
 
-    private PartialUriTemplateComponents getUriTemplateComponents(Map<String, Object> parameters, List<String> requiredArgs) {
+    /**
+     * Applies parameters to template variables.
+     *
+     * @param parameters   to apply to variables
+     * @param requiredArgs if not empty, retains given requiredArgs
+     * @return uri components
+     */
+    private PartialUriTemplateComponents getUriTemplateComponents(Map<String, Object> parameters,
+                                                                  List<String> requiredArgs) {
         Assert.notNull(parameters, "Parameters must not be null!");
 
         final StringBuilder baseUrl = new StringBuilder(urlComponents.get(0));
@@ -144,7 +162,7 @@ public class PartialUriTemplate {
                         switch (variable.getType()) {
                             case REQUEST_PARAM:
                             case REQUEST_PARAM_CONTINUED:
-                                if(requiredArgs.isEmpty() || requiredArgs.contains(variable.getName())) {
+                                if (requiredArgs.isEmpty() || requiredArgs.contains(variable.getName())) {
                                     // query vars without value always go last (query tail)
                                     if (queryTail.length() > 0) {
                                         queryTail.append(',');
@@ -205,14 +223,14 @@ public class PartialUriTemplate {
         }
     }
 
-    public String stripOptionalVariables(List<ActionDescriptor> actionDescriptors) {
-        return getUriTemplateComponents(Collections.<String, Object>emptyMap(), getRequiredArgNames(actionDescriptors)).toString();
+    public PartialUriTemplateComponents stripOptionalVariables(List<ActionDescriptor> actionDescriptors) {
+        return getUriTemplateComponents(Collections.<String, Object>emptyMap(), getRequiredArgNames(actionDescriptors));
     }
 
     private List<String> getRequiredArgNames(List<ActionDescriptor> actionDescriptors) {
         List<String> ret = new ArrayList<String>();
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
-            Map<String, ActionInputParameter> required = actionDescriptor.getRequiredUrlVariables();
+            Map<String, AnnotatedParameter> required = actionDescriptor.getRequiredParameters();
             ret.addAll(required.keySet());
         }
         return ret;

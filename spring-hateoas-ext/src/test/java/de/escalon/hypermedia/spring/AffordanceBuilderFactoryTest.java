@@ -10,7 +10,7 @@
 
 package de.escalon.hypermedia.spring;
 
-import org.junit.Assert;
+import de.escalon.hypermedia.affordance.Affordance;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.hateoas.Resource;

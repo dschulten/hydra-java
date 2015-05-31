@@ -1,7 +1,7 @@
 package de.escalon.hypermedia.sample.store;
 
 import de.escalon.hypermedia.action.Cardinality;
-import de.escalon.hypermedia.action.Resource;
+import de.escalon.hypermedia.action.ResourceHandler;
 import de.escalon.hypermedia.sample.beans.store.Order;
 import de.escalon.hypermedia.sample.beans.store.Product;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
@@ -32,12 +32,12 @@ public class OrderController {
     private OrderAssembler orderAssembler;
 
 
-    @Resource(Cardinality.COLLECTION)
+    @ResourceHandler(Cardinality.COLLECTION)
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Void> makeOrder(@RequestBody Product product) {
         OrderModel orderModel = orderBackend.createOrder();
         orderModel = orderBackend.addOrderedItem(orderModel.getId(),
-                new ProductModel(product.name, product.getProductID()));
+                new ProductModel(product.name, product.productID));
         AffordanceBuilder location = linkTo(methodOn(this.getClass()).getOrder(orderModel.getId()));
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(location.toUri());

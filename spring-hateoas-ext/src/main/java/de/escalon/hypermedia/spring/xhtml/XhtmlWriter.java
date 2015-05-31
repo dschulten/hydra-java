@@ -2,13 +2,14 @@ package de.escalon.hypermedia.spring.xhtml;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import de.escalon.hypermedia.DataType;
+import de.escalon.hypermedia.affordance.AnnotatedParameter;
+import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.PropertyUtils;
-import de.escalon.hypermedia.action.ActionDescriptor;
-import de.escalon.hypermedia.action.ActionInputParameter;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.spring.ActionInputParameter;
 import de.escalon.hypermedia.action.Type;
-import de.escalon.hypermedia.spring.Affordance;
-import de.escalon.hypermedia.spring.PartialUriTemplate;
+import de.escalon.hypermedia.affordance.Affordance;
+import de.escalon.hypermedia.affordance.PartialUriTemplate;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -190,8 +191,10 @@ public class XhtmlWriter extends Writer {
         /**
          * Creates OptionalAttributes with one optional attribute having name if value is not null.
          *
-         * @param name  of first attribute
-         * @param value may be null
+         * @param name
+         *         of first attribute
+         * @param value
+         *         may be null
          * @return builder with one attribute, attr builder if value is null
          */
         public static OptionalAttributes attr(String name, String value) {
@@ -240,7 +243,7 @@ public class XhtmlWriter extends Writer {
                     if (affordance.isTemplated()) {
                         // TODO ensure that template expansion takes place for base uri
                         if (!(new PartialUriTemplate(affordance.getHref()).
-                                expand(Collections.<String, Object>emptyMap())
+                                expand()
                                 .isBaseUriTemplated())) {
 
                             // TODO using appendForm here would require to calculate the baseUri in appendForm
@@ -250,37 +253,42 @@ public class XhtmlWriter extends Writer {
                             // can't render the form if base uri isn't plain)
                             // html does not allow templated action attr for POST or GET
 
-                            Affordance expanded = affordance.expand();
                             // GET form for template
-                            for (ActionDescriptor actionDescriptor : actionDescriptors) {
-                                RequestMethod httpMethod = actionDescriptor.getHttpMethod();
-                                if (RequestMethod.GET == httpMethod) {
-                                    // TODO duplicate in writeLinkWithoutActionDescriptor
-                                    String formName = actionDescriptor.getActionName();
+                            if (actionDescriptors.isEmpty()) {
+                                List<TemplateVariable> variables = link.getVariables();
+                                for (TemplateVariable variable : variables) {
+                                    String variableName = variable.getName();
+                                    writeLabelWithDoc(variableName, variableName, null);
+                                    input(variableName, Type.TEXT);
+                                }
+                            } else {
+                                for (ActionDescriptor actionDescriptor : actionDescriptors) {
+                                    RequestMethod httpMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
+                                    if (RequestMethod.GET == httpMethod) {
+                                        // TODO duplicate in writeLinkWithoutActionDescriptor
+                                        String formName = actionDescriptor.getActionName();
 
-                                    beginForm(OptionalAttributes.attr("action", expanded.getHref())
-                                            .and("method", "GET")
-                                            .and("name", formName));
+                                        beginForm(OptionalAttributes.attr("action", affordance.getHref())
+                                                .and("method", "GET")
+                                                .and("name", formName));
 
-                                    write("<h3>");
-                                    String formH1 = "Form " + formName;
-                                    write(formH1);
-                                    write("</h3>");
+                                        write("<h3>");
+                                        String formH1 = "Form " + formName;
+                                        write(formH1);
+                                        write("</h3>");
 
-                                    List<TemplateVariable> variables = link.getVariables();
-                                    for (TemplateVariable variable : variables) {
-                                        String variableName = variable.getName();
-                                        String label = variable.hasDescription() ? variable.getDescription() :
-                                                variableName;
-                                        ActionInputParameter actionInputParameter =
-                                                actionDescriptor.getActionInputParameter(variableName);
-                                        String documentationUrl = documentationProvider.getDocumentationUrl(
-                                                actionInputParameter, actionInputParameter.getCallValue());
-                                        writeLabelWithDoc(variableName, variableName, documentationUrl);
-                                        input(variableName, Type.TEXT);
+                                        Collection<String> requestParamNames = actionDescriptor.getRequestParamNames();
+                                        for (String variableName : requestParamNames) {
+                                            AnnotatedParameter actionInputParameter =
+                                                    actionDescriptor.getAnnotatedParameter(variableName);
+                                            String documentationUrl = documentationProvider.getDocumentationUrl(
+                                                    actionInputParameter, actionInputParameter.getCallValue());
+                                            writeLabelWithDoc(variableName, variableName, documentationUrl);
+                                            input(variableName, Type.TEXT);
+                                        }
+                                        inputButton(Type.SUBMIT, "Query");
+                                        endForm();
                                     }
-                                    inputButton(Type.SUBMIT, "Query");
-                                    endForm();
                                 }
                             }
                         }
@@ -324,8 +332,10 @@ public class XhtmlWriter extends Writer {
     /**
      * Classic submit or reset button.
      *
-     * @param type  submit or reset
-     * @param value caption on the button
+     * @param type
+     *         submit or reset
+     * @param value
+     *         caption on the button
      * @throws IOException
      */
     private void inputButton(Type type, String value) throws IOException {
@@ -420,14 +430,17 @@ public class XhtmlWriter extends Writer {
      * Appends form and squashes non-GET or POST to POST. Always adds _method field for handling by an appropriate
      * filter such as Spring's HiddenHttpMethodFilter.
      *
-     * @param affordance       to make into a form
-     * @param actionDescriptor describing the form action
+     * @param affordance
+     *         to make into a form
+     * @param actionDescriptor
+     *         describing the form action
      * @throws IOException
-     * @see <a href="http://docs.spring.io/spring/docs/3.0.x/javadoc-api/org/springframework/web/filter/HiddenHttpMethodFilter.html">Spring MVC HiddenHttpMethodFilter</a>
+     * @see <a href="http://docs.spring.io/spring/docs/3.0.x/javadoc-api/org/springframework/web/filter/HiddenHttpMethodFilter.html">Spring
+     * MVC HiddenHttpMethodFilter</a>
      */
     private void appendForm(Affordance affordance, ActionDescriptor actionDescriptor) throws IOException {
         String formName = actionDescriptor.getActionName();
-        RequestMethod httpMethod = actionDescriptor.getHttpMethod();
+        RequestMethod httpMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
 
         beginForm(OptionalAttributes.attr("action", affordance.getHref())
                 .and("method", getHtmlConformingHttpMethod(httpMethod))
@@ -437,7 +450,7 @@ public class XhtmlWriter extends Writer {
         write(formH1);
         write("</h4>");
 
-        writeHiddenHttpMethodField(actionDescriptor.getHttpMethod());
+        writeHiddenHttpMethodField(httpMethod);
         // build the form
         if (actionDescriptor.hasRequestBody()) {
             ActionInputParameter requestBody = actionDescriptor.getRequestBody();
@@ -446,7 +459,7 @@ public class XhtmlWriter extends Writer {
         } else {
             Collection<String> requestParams = actionDescriptor.getRequestParamNames();
             for (String requestParamName : requestParams) {
-                ActionInputParameter actionInputParameter = actionDescriptor.getActionInputParameter(requestParamName);
+                AnnotatedParameter actionInputParameter = actionDescriptor.getAnnotatedParameter(requestParamName);
 
                 // TODO support list and matrix parameters?
                 Object[] possibleValues = actionInputParameter.getPossibleValues(actionDescriptor);
@@ -532,10 +545,14 @@ public class XhtmlWriter extends Writer {
     /**
      * Renders input fields for bean properties of bean to add or update or patch.
      *
-     * @param beanType             to render
-     * @param actionDescriptor     which describes the method
-     * @param actionInputParameter which requires the bean
-     * @param currentCallValue     sample call value
+     * @param beanType
+     *         to render
+     * @param actionDescriptor
+     *         which describes the method
+     * @param actionInputParameter
+     *         which requires the bean
+     * @param currentCallValue
+     *         sample call value
      * @throws IOException
      */
     private void recurseBeanProperties(Class<?> beanType, ActionDescriptor actionDescriptor, ActionInputParameter
@@ -548,7 +565,7 @@ public class XhtmlWriter extends Writer {
         // TODO: do not add two inputs for setter and ctor
 
         // TODO almost duplicate of HtmlResourceMessageConverter.recursivelyCreateObject
-        if (RequestMethod.POST == actionDescriptor.getHttpMethod()) {
+        if (RequestMethod.POST == RequestMethod.valueOf(actionDescriptor.getHttpMethod())) {
             try {
                 Constructor[] constructors = beanType.getConstructors();
                 // find default ctor
@@ -581,8 +598,9 @@ public class XhtmlWriter extends Writer {
                                     ActionInputParameter constructorParamInputParameter = new ActionInputParameter
                                             (new MethodParameter(constructor, paramIndex), propertyValue);
 
-                                    final Object[] possibleValues = actionInputParameter.getPossibleValues(new
-                                            MethodParameter(constructor, paramIndex), actionDescriptor);
+                                    final Object[] possibleValues =
+                                            actionInputParameter.getPossibleValues(
+                                                    constructor, paramIndex, actionDescriptor);
                                     if (possibleValues.length > 0) {
                                         if (actionInputParameter.isArrayOrCollection()) {
                                             // TODO multiple formatted callvalues
@@ -629,7 +647,7 @@ public class XhtmlWriter extends Writer {
             }
         } else { // non-POST
 
-            // TODO non-writable properties and public fields; make sure the inputs are part of a form
+            // TODO non-writable properties and public fields: make sure the inputs are part of a form
             // write input field for every setter
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
                 final Method writeMethod = propertyDescriptor.getWriteMethod();
@@ -649,7 +667,7 @@ public class XhtmlWriter extends Writer {
                     MethodParameter methodParameter = new MethodParameter(propertyDescriptor.getWriteMethod(), 0);
                     ActionInputParameter propertySetterInputParameter = new ActionInputParameter(methodParameter,
                             propertyValue);
-                    final Object[] possibleValues = actionInputParameter.getPossibleValues(methodParameter,
+                    final Object[] possibleValues = actionInputParameter.getPossibleValues(propertyDescriptor.getWriteMethod(), 0,
                             actionDescriptor);
                     if (possibleValues.length > 0) {
                         if (actionInputParameter.isArrayOrCollection()) {
@@ -753,7 +771,7 @@ public class XhtmlWriter extends Writer {
         }
     }
 
-    private void appendInput(String requestParamName, ActionInputParameter actionInputParameter, Object value) throws
+    private void appendInput(String requestParamName, AnnotatedParameter actionInputParameter, Object value) throws
             IOException {
         if (actionInputParameter.isRequestBody()) { // recurseBeanProperties does that
             throw new IllegalArgumentException("cannot append input field for requestBody");
@@ -762,9 +780,10 @@ public class XhtmlWriter extends Writer {
 
 
         Type htmlInputFieldType = actionInputParameter.getHtmlInputFieldType();
+        Assert.notNull(htmlInputFieldType);
         String val = value == null ? "" : value.toString();
         beginDiv();
-        if (Type.HIDDEN == htmlInputFieldType) {
+        if (Type.HIDDEN.equals(htmlInputFieldType)) {
             input(requestParamName, htmlInputFieldType, OptionalAttributes.attr("value", val));
         } else {
             String documentationUrl = documentationProvider.getDocumentationUrl(actionInputParameter, value);
@@ -801,7 +820,7 @@ public class XhtmlWriter extends Writer {
     }
 
 
-    private void appendSelectOne(String requestParamName, Object[] possibleValues, ActionInputParameter actionInputParameter)
+    private void appendSelectOne(String requestParamName, Object[] possibleValues, AnnotatedParameter actionInputParameter)
             throws IOException {
         beginDiv();
         Object callValue = actionInputParameter.getCallValue();
@@ -821,7 +840,7 @@ public class XhtmlWriter extends Writer {
     }
 
 
-    private void appendSelectMulti(String requestParamName, Object[] possibleValues, ActionInputParameter actionInputParameter) throws IOException {
+    private void appendSelectMulti(String requestParamName, Object[] possibleValues, AnnotatedParameter actionInputParameter) throws IOException {
         beginDiv();
         Object[] actualValues = actionInputParameter.getCallValues();
         final Object aCallValue;

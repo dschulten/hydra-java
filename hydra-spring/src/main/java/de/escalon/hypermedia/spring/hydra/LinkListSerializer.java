@@ -16,7 +16,9 @@ package de.escalon.hypermedia.spring.hydra;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import de.escalon.hypermedia.DataType;
+import de.escalon.hypermedia.action.Input;
+import de.escalon.hypermedia.affordance.AnnotatedParameter;
+import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Cardinality;
 import de.escalon.hypermedia.hydra.mapping.Expose;
@@ -24,9 +26,9 @@ import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.hydra.serialize.JsonLdKeywords;
 import de.escalon.hypermedia.hydra.serialize.LdContext;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
-import de.escalon.hypermedia.spring.Affordance;
-import de.escalon.hypermedia.action.ActionDescriptor;
-import de.escalon.hypermedia.action.ActionInputParameter;
+import de.escalon.hypermedia.affordance.Affordance;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.spring.ActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -48,8 +50,6 @@ import java.util.*;
  * Serializer to convert Link to json-ld representation. Created by dschulten on 19.09.2014.
  */
 public class LinkListSerializer extends StdSerializer<List<Link>> {
-
-    public static final boolean schemaOrgActions = false;
 
     private static final String IANA_REL_PREFIX = "urn:iana:link-relations:";
 
@@ -128,6 +128,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeEndObject();
             }
 
+            @SuppressWarnings("unchecked")
             Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(JacksonHydraSerializer
                     .KEY_LD_CONTEXT);
             String currentVocab = (contextStack != null && !contextStack.isEmpty()) ?
@@ -185,7 +186,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     jgen.writeEndObject(); // end manages
 
 
-
                     List<ActionDescriptor> actionDescriptors = collectionAffordance.getActionDescriptors();
                     if (!actionDescriptors.isEmpty()) {
                         jgen.writeArrayFieldStart("hydra:operation");
@@ -194,7 +194,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     if (!actionDescriptors.isEmpty()) {
                         jgen.writeEndArray(); // end hydra:operation
                     }
-
 
 
                     jgen.writeEndObject(); // end collection
@@ -250,8 +249,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             if (semanticActionType != null) {
                 jgen.writeStringField("@type", semanticActionType);
             }
-            jgen.writeStringField("hydra:method", actionDescriptor.getHttpMethod()
-                    .name());
+            jgen.writeStringField("hydra:method", actionDescriptor.getHttpMethod());
 
             final ActionInputParameter requestBodyInputParameter = actionDescriptor.getRequestBody();
             if (requestBodyInputParameter != null) {
@@ -313,7 +311,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
                         methodParameter, propertyValue);
                 final Object[] possiblePropertyValues =
-                        actionInputParameter.getPossibleValues(methodParameter, actionDescriptor);
+                        actionInputParameter.getPossibleValues(propertyDescriptor.getWriteMethod(), 0, actionDescriptor);
 
                 writeSupportedProperty(jgen, currentVocab, propertySetterInputParameter,
                         propertyName, property, possiblePropertyValues);
@@ -355,7 +353,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
      * @param vocabulary                to which the given property belongs
      * @param vocabularyPrefixWithColon to use if the current vocab does not match the given vocabulary to which the
      *                                  name belongs, should end with colon
-     * @return
+     * @return property name or class name in the currenct context
      */
     private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName, String
             vocabulary, String vocabularyPrefixWithColon) {
@@ -373,7 +371,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     private void writeSupportedProperty(JsonGenerator jgen, String currentVocab,
                                         ActionInputParameter actionInputParameter,
                                         String propertyName, Property property,
-                                        Object[] possiblePropertyValues) throws IOException {
+                                        @SuppressWarnings("unused") Object[] possiblePropertyValues)
+            throws IOException {
 
         jgen.writeStartObject();
 
@@ -395,7 +394,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     }
 
     private void writePossiblePropertyValues(JsonGenerator jgen, String currentVocab, ActionInputParameter
-            actionInputParameter, Object[] possiblePropertyValues) throws IOException {
+            actionInputParameter, @SuppressWarnings("unused") Object[] possiblePropertyValues) throws IOException {
         // Enable the following to list possible values.
         // Problem: how to express individuals only for certain hydra:options
         // not all hydra:options should be taken as uris, sometimes they might be just literals
@@ -461,8 +460,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         }
 
         if (!inputConstraints.isEmpty()) {
-            final List<String> keysToAppendValue = Arrays.asList(ActionInputParameter.MAX, ActionInputParameter.MIN,
-                    ActionInputParameter.STEP);
+            final List<String> keysToAppendValue = Arrays.asList(Input.MAX, Input.MIN,
+                    Input.STEP);
             for (String keyToAppendValue : keysToAppendValue) {
                 final Object constraint = inputConstraints.get(keyToAppendValue);
                 if (constraint != null) {
@@ -474,15 +473,15 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             }
 
 
-            final List<String> keysToPrependValue = Arrays.asList(ActionInputParameter.MAX_LENGTH,
-                    ActionInputParameter.MIN_LENGTH, ActionInputParameter.PATTERN);
+            final List<String> keysToPrependValue = Arrays.asList(Input.MAX_LENGTH,
+                    Input.MIN_LENGTH, Input.PATTERN);
             for (String keyToPrependValue : keysToPrependValue) {
                 final Object constraint = inputConstraints.get(keyToPrependValue);
                 if (constraint != null) {
                     jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "value" + StringUtils.capitalize
                                     (keyToPrependValue),
                             LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
-                    if (ActionInputParameter.PATTERN.equals(keyToPrependValue)) {
+                    if (Input.PATTERN.equals(keyToPrependValue)) {
                         jgen.writeString(constraint.toString());
                     } else {
                         jgen.writeNumber(constraint
@@ -560,10 +559,10 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             jgen.writeStringField("hydra:variable", requestParamName);
             if (actionDescriptor != null) {
                 jgen.writeBooleanField("hydra:required",
-                        actionDescriptor.getActionInputParameter(requestParamName)
+                        actionDescriptor.getAnnotatedParameter(requestParamName)
                                 .isRequired());
                 jgen.writeStringField("hydra:property",
-                        getExposedPropertyOrParamName(actionDescriptor.getActionInputParameter(requestParamName)));
+                        getExposedPropertyOrParamName(actionDescriptor.getAnnotatedParameter(requestParamName)));
             }
             jgen.writeEndObject();
         }
@@ -575,7 +574,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
      * @param inputParameter for exposure
      * @return property name
      */
-    private String getExposedPropertyOrParamName(ActionInputParameter inputParameter) {
+    private String getExposedPropertyOrParamName(AnnotatedParameter inputParameter) {
         final Expose expose = inputParameter.getAnnotation(Expose.class);
         String property;
         if (expose != null) {

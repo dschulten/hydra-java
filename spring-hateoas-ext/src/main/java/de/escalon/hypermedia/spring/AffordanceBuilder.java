@@ -10,7 +10,10 @@
 
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.action.ActionDescriptor;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.Affordance;
+import de.escalon.hypermedia.affordance.PartialUriTemplate;
+import de.escalon.hypermedia.affordance.PartialUriTemplateComponents;
 import org.springframework.hateoas.Identifiable;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkBuilder;
@@ -411,6 +414,11 @@ public class AffordanceBuilder implements LinkBuilder {
         return servletRequest;
     }
 
+    /**
+     * Adds actionDescriptors of the given AffordanceBuilder to this affordanceBuilder.
+     * @param affordanceBuilder whose action descriptors should be added to this one
+     * @return builder
+     */
     public AffordanceBuilder and(AffordanceBuilder affordanceBuilder) {
         for (ActionDescriptor actionDescriptor : affordanceBuilder.actionDescriptors) {
             this.actionDescriptors.add(actionDescriptor);

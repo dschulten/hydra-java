@@ -18,7 +18,7 @@ public class PaymentController {
     public ResponseEntity<Void> makePayment(int id) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(linkTo(AffordanceBuilder.methodOn(this.getClass()).getPayment()).toUri());
-        return new ResponseEntity(httpHeaders, HttpStatus.CREATED);
+        return new ResponseEntity<Void>(httpHeaders, HttpStatus.CREATED);
     }
 
     public Payment getPayment() {

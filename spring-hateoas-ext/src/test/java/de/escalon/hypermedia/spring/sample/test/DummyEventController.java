@@ -10,7 +10,7 @@
 
 package de.escalon.hypermedia.spring.sample.test;
 
-import de.escalon.hypermedia.spring.Affordance;
+import de.escalon.hypermedia.affordance.Affordance;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;

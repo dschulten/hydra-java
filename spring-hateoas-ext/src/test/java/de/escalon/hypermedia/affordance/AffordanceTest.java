@@ -8,8 +8,9 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring;
+package de.escalon.hypermedia.affordance;
 
+import de.escalon.hypermedia.affordance.Affordance;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,9 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.junit.Assert.*;
 
 public class AffordanceTest {
 

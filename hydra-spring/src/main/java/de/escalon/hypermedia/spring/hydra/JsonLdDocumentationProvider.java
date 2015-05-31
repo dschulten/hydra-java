@@ -1,6 +1,6 @@
 package de.escalon.hypermedia.spring.hydra;
 
-import de.escalon.hypermedia.AnnotatedParameter;
+import de.escalon.hypermedia.affordance.AnnotatedParameter;
 import de.escalon.hypermedia.AnnotationUtils;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;

@@ -40,8 +40,7 @@ public class Store extends ResourceSupport {
     }
 
     private Offer createOffer(String productName, double val, Offer... addOns) {
-        Product product = new Product(productName);
-        product.setProductID(String.valueOf(productCounter++));
+        Product product = new Product(productName, String.valueOf(productCounter++));
 
         Offer offer = new Offer();
         offer.setItemOffered(product);

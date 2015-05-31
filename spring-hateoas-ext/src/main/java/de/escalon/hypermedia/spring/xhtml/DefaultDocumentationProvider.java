@@ -1,6 +1,6 @@
 package de.escalon.hypermedia.spring.xhtml;
 
-import de.escalon.hypermedia.AnnotatedParameter;
+import de.escalon.hypermedia.affordance.AnnotatedParameter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

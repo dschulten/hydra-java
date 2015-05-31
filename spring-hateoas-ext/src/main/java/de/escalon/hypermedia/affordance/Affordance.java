@@ -8,10 +8,9 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring;
+package de.escalon.hypermedia.affordance;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import de.escalon.hypermedia.action.ActionDescriptor;
 import de.escalon.hypermedia.action.Cardinality;
 import org.springframework.hateoas.Link;
 import org.springframework.util.Assert;
@@ -39,9 +38,7 @@ public class Affordance extends Link {
     private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
     private MultiValueMap<String, String> linkParams = new LinkedMultiValueMap<String, String>();
 
-    private PartialUriTemplateComponents partialUriTemplateComponents;
-
-
+    private PartialUriTemplate partialUriTemplate;
     private Cardinality cardinality = Cardinality.SINGLE;
 
     /**
@@ -64,20 +61,39 @@ public class Affordance extends Link {
     }
 
     /**
-     * Creates affordance. Action descriptors and link header params may be added later.
+     * Creates affordance. Link header params may be added later.
      *
      * @param uriTemplate       uri or uritemplate of the affordance
      * @param actionDescriptors describing the possible http methods on the affordance
      * @param rels              describing the link relation type
      */
     public Affordance(PartialUriTemplate uriTemplate, List<ActionDescriptor> actionDescriptors, String... rels) {
-        super(uriTemplate.stripOptionalVariables(actionDescriptors)); // keep only required and expanded variables
-        this.partialUriTemplateComponents = uriTemplate.unexpandedComponents();
+        // AffordanceBuilder usually expands the uriTemplate before it creates the Affordance
+        // UriTemplate rfc makes no difference between required and optional variables.
+        // Sometimes an api has a resource with purely optional query params.
+        // Link removes them during expansion.
+        // 1. Url has no unexpanded variables --> plain Link
+        // 2. Url has required unexpanded variables --> templated Link
+        // Additional behavior by Affordance:
+        // 3. Url has no required unexpanded variables, but optional ones --> possible to render both plain Link and templated Link
+        // 4. Url has both required and optional unexpanded variables
+        // underlying Link should only be templated if required variables are not expanded
+        //
+        // Other aspects:
+        // - html form needs action uri without template, somehow that must be recognized and we need the
+        // base uri (path) separate from the entire uri. Template variables become query params for GET and form-urlencoded body
+        // for POST (PUT, PATCH). We access the variables via the input parameters of the actionDescriptors.
+        // - Affordance has one href but several action descriptors. Currently there is no check which ensures that all handlers
+        // share the same URI.
+
+        super(uriTemplate.stripOptionalVariables(actionDescriptors)
+                .toString());
+        this.partialUriTemplate = uriTemplate;
         Assert.noNullElements(rels, "null rels are not allowed");
 
         for (String rel : rels) {
             addRel(rel);
-            if("self".equals(rel)){
+            if ("self".equals(rel)) {
                 selfRel = true;
             }
         }
@@ -108,6 +124,8 @@ public class Affordance extends Link {
         Assert.hasLength(rel);
         linkParams.add("rel", rel);
     }
+
+
 
     /**
      * The "type" parameter, when present, is a hint indicating what the
@@ -261,7 +279,7 @@ public class Affordance extends Link {
     @JsonIgnore
     public String getHeaderName() {
         String headerName;
-        if (partialUriTemplateComponents.hasVariables()) {
+        if (super.isTemplated()) {
             headerName = "Link-Template";
         } else {
             headerName = "Link";
@@ -343,8 +361,19 @@ public class Affordance extends Link {
                 .getHref(), linkParams, actionDescriptors);
     }
 
+    public Affordance expandPartially(Object... arguments) {
+        return new Affordance(partialUriTemplate.expand(arguments)
+                .toString(), linkParams, actionDescriptors);
+    }
+
+    public Affordance expandPartially(Map<String, ? extends Object> arguments) {
+        return new Affordance(partialUriTemplate.expand((Map<String, Object>) arguments)
+                .toString(), linkParams, actionDescriptors);
+    }
+
     /**
      * Allows to retrieve all rels defined for this affordance.
+     *
      * @return rels
      */
     @JsonIgnore
@@ -355,6 +384,7 @@ public class Affordance extends Link {
 
     /**
      * Gets the rel.
+     *
      * @return first defined rel or null
      */
     @Override
@@ -364,6 +394,7 @@ public class Affordance extends Link {
 
     /**
      * Retrieves all revs for this affordance.
+     *
      * @return
      */
     @JsonIgnore
@@ -374,6 +405,7 @@ public class Affordance extends Link {
 
     /**
      * Gets the rev.
+     *
      * @return first defined rev or null
      */
     public String getRev() {
@@ -402,6 +434,7 @@ public class Affordance extends Link {
 
     /**
      * Determines if the affordance points to a single or a collection resource.
+     *
      * @return single or collection cardinality, never null
      */
     @JsonIgnore
@@ -411,6 +444,7 @@ public class Affordance extends Link {
 
     /**
      * Determines if the affordance is a self rel.
+     *
      * @return
      */
     @JsonIgnore

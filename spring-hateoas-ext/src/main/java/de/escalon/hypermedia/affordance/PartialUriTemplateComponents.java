@@ -8,12 +8,14 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.spring;
+package de.escalon.hypermedia.affordance;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 /**
+ * Represents components of a Uri Template with variables.
+ *
  * Created by dschulten on 04.12.2014.
  */
 public class PartialUriTemplateComponents {
@@ -25,9 +27,10 @@ public class PartialUriTemplateComponents {
 
     /**
      * Represents components of a Uri Template with variables.
-     * @param baseUri may be relative or absolute, and may contain {xxx} or {/xxx} style variables
-     * @param queryHead start of query containing expanded key-value pairs (no variables), beginning with ?, may be empty
-     * @param queryTail comma-separated list of unexpanded query keys, may be empty
+     *
+     * @param baseUri             may be relative or absolute, and may contain {xxx} or {/xxx} style variables
+     * @param queryHead           start of query containing expanded key-value pairs (no variables), beginning with ?, may be empty
+     * @param queryTail           comma-separated list of unexpanded query keys, may be empty
      * @param fragmentIdentifier, beginning with #, may contain a fragment variable, may also be empty
      */
     public PartialUriTemplateComponents(String baseUri, String queryHead, String queryTail, String fragmentIdentifier) {
@@ -83,6 +86,7 @@ public class PartialUriTemplateComponents {
 
     /**
      * Concatenates all components to uri String.
+     *
      * @return uri String
      */
     public String toString() {

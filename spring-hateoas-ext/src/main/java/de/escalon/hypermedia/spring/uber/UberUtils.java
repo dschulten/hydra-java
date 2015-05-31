@@ -10,11 +10,11 @@
 
 package de.escalon.hypermedia.spring.uber;
 
-import de.escalon.hypermedia.DataType;
-import de.escalon.hypermedia.action.ActionDescriptor;
-import de.escalon.hypermedia.spring.Affordance;
-import de.escalon.hypermedia.spring.PartialUriTemplate;
-import de.escalon.hypermedia.spring.PartialUriTemplateComponents;
+import de.escalon.hypermedia.affordance.DataType;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.Affordance;
+import de.escalon.hypermedia.affordance.PartialUriTemplate;
+import de.escalon.hypermedia.affordance.PartialUriTemplateComponents;
 import org.springframework.hateoas.*;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -176,7 +176,7 @@ public class UberUtils {
         uberLink.setUrl(partialUriTemplateComponents.getBaseUri());
         uberLink.setModel(getModelProperty(href, actionDescriptor));
         if (actionDescriptor != null) {
-            RequestMethod requestMethod = actionDescriptor.getHttpMethod();
+            RequestMethod requestMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
             uberLink.setAction(UberAction.forRequestMethod(requestMethod));
         }
         return uberLink;
@@ -185,7 +185,7 @@ public class UberUtils {
     private static String getModelProperty(String href, ActionDescriptor actionDescriptor) {
 
         PartialUriTemplate uriTemplate = new PartialUriTemplate(href);
-        RequestMethod httpMethod = actionDescriptor.getHttpMethod();
+        RequestMethod httpMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
         final String model;
         switch (httpMethod) {
             case GET:
@@ -210,7 +210,7 @@ public class UberUtils {
         if (link instanceof Affordance) {
             actionDescriptors = ((Affordance) link).getActionDescriptors();
         } else {
-            actionDescriptors = Arrays.asList(new ActionDescriptor("get", RequestMethod.GET));
+            actionDescriptors = Arrays.asList(new ActionDescriptor("get", RequestMethod.GET.name()));
         }
         return actionDescriptors;
     }

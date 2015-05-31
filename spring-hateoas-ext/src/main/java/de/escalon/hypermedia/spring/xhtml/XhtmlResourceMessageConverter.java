@@ -15,7 +15,7 @@ package de.escalon.hypermedia.spring.xhtml;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import de.escalon.hypermedia.DataType;
+import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.PropertyUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.Resource;

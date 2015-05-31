@@ -8,10 +8,12 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.action;
+package de.escalon.hypermedia.affordance;
 
+import de.escalon.hypermedia.action.Action;
+import de.escalon.hypermedia.action.Cardinality;
+import de.escalon.hypermedia.spring.ActionInputParameter;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.*;
 
@@ -30,15 +32,15 @@ import java.util.*;
  *
  * @author Dietrich Schulten
  */
-public class ActionDescriptor {
+public class ActionDescriptor implements AnnotatedParameters {
 
-    private RequestMethod httpMethod;
+    private String httpMethod;
     private String actionName;
 
     private String semanticActionType;
-    private Map<String, ActionInputParameter> requestParams = new LinkedHashMap<String, ActionInputParameter>();
-    private Map<String, ActionInputParameter> pathVariables = new LinkedHashMap<String, ActionInputParameter>();
-    private Map<String, ActionInputParameter> requestHeaders = new LinkedHashMap<String, ActionInputParameter>();
+    private Map<String, AnnotatedParameter> requestParams = new LinkedHashMap<String, AnnotatedParameter>();
+    private Map<String, AnnotatedParameter> pathVariables = new LinkedHashMap<String, AnnotatedParameter>();
+    private Map<String, AnnotatedParameter> requestHeaders = new LinkedHashMap<String, AnnotatedParameter>();
 
     private ActionInputParameter requestBody;
     private Cardinality cardinality = Cardinality.SINGLE;
@@ -50,7 +52,7 @@ public class ActionDescriptor {
      *                   Can be used by an action representation, e.g. to identify the action using a form name.
      * @param httpMethod used during submit
      */
-    public ActionDescriptor(String actionName, RequestMethod httpMethod) {
+    public ActionDescriptor(String actionName, String httpMethod) {
         Assert.notNull(actionName);
         Assert.notNull(httpMethod);
         this.httpMethod = httpMethod;
@@ -70,7 +72,7 @@ public class ActionDescriptor {
      * Gets the http method of this action.
      * @return method, never null
      */
-    public RequestMethod getHttpMethod() {
+    public String getHttpMethod() {
         return httpMethod;
     }
 
@@ -132,8 +134,9 @@ public class ActionDescriptor {
      * @param name to retrieve
      * @return parameter descriptor or null
      */
-    public ActionInputParameter getActionInputParameter(String name) {
-        ActionInputParameter ret = requestParams.get(name);
+    @Override
+    public AnnotatedParameter getAnnotatedParameter(String name) {
+        AnnotatedParameter ret = requestParams.get(name);
         if (ret == null) {
             ret = pathVariables.get(name);
         }
@@ -146,7 +149,7 @@ public class ActionDescriptor {
      * @param name of the request header
      * @return request header descriptor or null
      */
-    public ActionInputParameter getRequestHeader(String name) {
+    public AnnotatedParameter getRequestHeader(String name) {
         return requestHeaders.get(name);
     }
 
@@ -201,17 +204,17 @@ public class ActionDescriptor {
      *
      * @return required url variables
      */
-    public Map<String, ActionInputParameter> getRequiredUrlVariables() {
-        Map<String, ActionInputParameter> ret = new HashMap<String, ActionInputParameter>();
-        for (Map.Entry<String, ActionInputParameter> entry : requestParams.entrySet()) {
-            ActionInputParameter actionInputParameter = entry.getValue();
-            if (actionInputParameter.isRequired()) {
-                ret.put(entry.getKey(), actionInputParameter);
+    public Map<String, AnnotatedParameter> getRequiredParameters() {
+        Map<String, AnnotatedParameter> ret = new HashMap<String, AnnotatedParameter>();
+        for (Map.Entry<String, AnnotatedParameter> entry : requestParams.entrySet()) {
+            AnnotatedParameter annotatedParameter = entry.getValue();
+            if (annotatedParameter.isRequired()) {
+                ret.put(entry.getKey(), annotatedParameter);
             }
         }
-        for (Map.Entry<String, ActionInputParameter> entry : pathVariables.entrySet()) {
-            ActionInputParameter actionInputParameter = entry.getValue();
-            ret.put(entry.getKey(), actionInputParameter);
+        for (Map.Entry<String, AnnotatedParameter> entry : pathVariables.entrySet()) {
+            AnnotatedParameter annotatedParameter = entry.getValue();
+            ret.put(entry.getKey(), annotatedParameter);
         }
         // requestBody not supported, would have to use exploded modifier
         return ret;

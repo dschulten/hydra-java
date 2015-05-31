@@ -11,7 +11,7 @@
 package de.escalon.hypermedia.action;
 
 /**
- * Specifies explicit HTML5 input types.
+ * Allows to specify explicit HTML5 input types.
  *
  * @author Dietrich Schulten
  */
@@ -48,6 +48,18 @@ public enum Type {
      */
     public String toString() {
         return value;
+    }
+
+    public static Type fromInputType(String inputType) {
+        Type[] values = Type.values();
+        Type ret = null;
+        for (Type type : values) {
+            if(inputType.equals(type.value)) {
+                ret = type;
+                break;
+            }
+        }
+        return ret;
     }
 
 }

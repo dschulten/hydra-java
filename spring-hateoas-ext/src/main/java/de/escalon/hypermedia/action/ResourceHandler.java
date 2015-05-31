@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Resource {
+public @interface ResourceHandler {
 
     /**
      * Allows to disambiguate if the annotated method handler manages a single or a collection resource.
@@ -22,7 +22,7 @@ public @interface Resource {
      * of a resource, or when the default recognition comes to the wrong result.
      * E.g. one can annotate a POST handler so that renderers can render the related resource as a single resource.
      * <pre>
-     * &#64;Resource(Cardinality.SINGLE)
+     * &#64;ResourceHandler(Cardinality.SINGLE)
      * &#64;RequestMapping(method=RequestMethod.POST)
      * public ResponseEntity&lt;String&gt; myPostHandler() {}
      * </pre>
