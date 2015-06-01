@@ -1,3 +1,7 @@
+Performing a release to Maven and Openshift involves the following steps
+
+Publish to Maven Central
+
 Add Sonatype password to server ossrh in local settings.xml
 
 <settings>
@@ -17,10 +21,13 @@ The above command should automatically release from staging repo https://oss.son
 Details:
 http://central.sonatype.org/pages/releasing-the-deployment.html#locate-and-examine-your-staging-repository
 
-In case that signing failed and the build asks for the gpg passphrase over and over again, perform the release again:
+In case that signing failed and the build asks for the gpg passphrase over and over again, perform the release once more:
 mvn release:perform -Darguments="-Dgpg.passphrase=XXX"
 
-Publish to openshift
-Check that new release has become available in Central: http://search.maven.org/#search%7Cga%7C1%7Chydra-service
+Publish to Openshift
+
+Check that new hydra-java release has become available in Central: http://search.maven.org/#search%7Cga%7C1%7Chydra-service
 Adjust latest version in openshift project: ssh://549fcacc5973ca16e1000025@jbosswildfly-escalon.rhcloud.com/~/git/jbosswildfly.git/
-Run deployment build (if necessary, runs automatically every hour): https://jenkins-escalon.rhcloud.com/job/jbosswildfly-build/
+Run deployment build (if necessary; runs automatically every hour): https://jenkins-escalon.rhcloud.com/job/jbosswildfly-build/
+
+The openshift project has its own web.xml, configuration changes must be applied there, too.
