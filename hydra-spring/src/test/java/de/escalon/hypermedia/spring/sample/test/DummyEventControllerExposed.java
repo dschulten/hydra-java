@@ -42,7 +42,7 @@ public class DummyEventControllerExposed extends DummyEventController {
     @RequestMapping(method = RequestMethod.GET, params = {"eventName"})
     public
     @ResponseBody
-    Resource<Event> getEvent(@RequestParam @Expose("http://schema.org/name") String eventName) {
+    Resource<Event> findEventByName(@RequestParam @Expose("http://schema.org/name") String eventName) {
         Resource<Event> ret = null;
         for (Event event : getEvents()) {
             if (event.getWorkPerformed()

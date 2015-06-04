@@ -17,8 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Sample Event Controller.
- * Created by dschulten on 28.12.2014.
+ * Sample Event Controller. Created by dschulten on 28.12.2014.
  */
 @Controller
 @RequestMapping("/events")
@@ -47,7 +46,7 @@ public class EventController {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<Resources<Event>> findEvents(@RequestParam(required=false) String name) {
+    public ResponseEntity<Resources<Event>> findEvents(@RequestParam(required = false) String name) {
         List<Event> events = assembler.toResources(eventBackend.getEvents());
         List<Event> matches = new ArrayList<Event>();
         for (Event event : events) {
@@ -80,8 +79,10 @@ public class EventController {
     }
 
     private void addAffordances(Event event) {
-        event.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
-                .updateEvent(event.id, event))
+        event.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
+                .getEvent(event.id))
+                .and(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
+                        .updateEvent(event.id, event)))
                 .and(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
                         .deleteEvent(event.id)))
                 .withSelfRel());
@@ -110,7 +111,8 @@ public class EventController {
         int eventId = eventBackend.addEvent(eventModel);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
-                .getEvent(eventId)).toUri());
+                .getEvent(eventId))
+                .toUri());
         return new ResponseEntity<Void>(httpHeaders, HttpStatus.CREATED);
     }
 
