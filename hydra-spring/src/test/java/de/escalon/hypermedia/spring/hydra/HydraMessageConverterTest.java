@@ -227,6 +227,14 @@ public class HydraMessageConverterTest {
 
     @Test
     public void convertsTemplatedLinkToSampleInvocationAsIriTemplate() throws Exception {
+        // TODO make sure a collection resource is rendered as collection with hydra:search property
+        // TODO if its link has unsatisfied optional or required variables
+        // TODO if the url has unsatisfied required variables, the collection has no @id, only a hydra:search
+        // TODO distinguish if affordance:
+        // is still templated after satisfying all variables from call values
+        // if remaining are all optional and may be stripped when used as Uri
+        // if a variable has a default value but might use other values which should be described in the IriTemplate
+        // other cases?
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/reviews/events/1")
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(content().contentType("application/ld+json"))
@@ -238,6 +246,7 @@ public class HydraMessageConverterTest {
         LOG.debug(result.getResponse()
                 .getContentAsString());
     }
+
 
     @Test
     public void convertsTemplatedLinkToMethodAsIriTemplate() throws Exception {

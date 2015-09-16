@@ -241,7 +241,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         }
     }
 
-    private void writeActionDescriptors(JsonGenerator jgen, String currentVocab, List<ActionDescriptor> actionDescriptors) throws IOException, IntrospectionException {
+    private void writeActionDescriptors(JsonGenerator jgen, String currentVocab, List<ActionDescriptor>
+            actionDescriptors) throws IOException, IntrospectionException {
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
             jgen.writeStartObject(); // begin a hydra:Operation
 
@@ -311,7 +312,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
                         methodParameter, propertyValue);
                 final Object[] possiblePropertyValues =
-                        actionInputParameter.getPossibleValues(propertyDescriptor.getWriteMethod(), 0, actionDescriptor);
+                        actionInputParameter.getPossibleValues(propertyDescriptor.getWriteMethod(), 0,
+                                actionDescriptor);
 
                 writeSupportedProperty(jgen, currentVocab, propertySetterInputParameter,
                         propertyName, property, possiblePropertyValues);
@@ -328,7 +330,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 } else {
                     subClass = propertyType.getSimpleName();
                 }
-                jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab, "subClassOf", "http://www.w3.org/2000/01/rdf-schema#", "rdfs:"), subClass);
+                jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab, "subClassOf", "http://www.w3" +
+                        ".org/2000/01/rdf-schema#", "rdfs:"), subClass);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty");
 
@@ -348,11 +351,15 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
      * Gets property or class name in the current context, either without prefix if the current vocab is the given
      * vocabulary, or prefixed otherwise.
      *
-     * @param currentVocab              to determine the current vocab
-     * @param propertyOrClassName       name to contextualize
-     * @param vocabulary                to which the given property belongs
-     * @param vocabularyPrefixWithColon to use if the current vocab does not match the given vocabulary to which the
-     *                                  name belongs, should end with colon
+     * @param currentVocab
+     *         to determine the current vocab
+     * @param propertyOrClassName
+     *         name to contextualize
+     * @param vocabulary
+     *         to which the given property belongs
+     * @param vocabularyPrefixWithColon
+     *         to use if the current vocab does not match the given vocabulary to which the name belongs, should end
+     *         with colon
      * @return property name or class name in the currenct context
      */
     private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName, String
@@ -420,12 +427,16 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         //     specific request beans for different
         //     purposes rather than always passing an instance of e.g. Event?)
         //       -> update is a different use case than create - or maybe have an @Requires("eventStatus")
-        //          annotation alongside requestBody to tell which attributes are required or writable, and use Requires over
+        //          annotation alongside requestBody to tell which attributes are required or writable, and use
+        // Requires over
         //          bean structure, where ctor with least length of args is required and setters are supported
-        //          but optional? The bean structure does say what is writable for updates, but not what is required for creation. Right now setters are supportedProperties. For creation we would have to add constructor arguments as supportedProperties.
+        //          but optional? The bean structure does say what is writable for updates, but not what is required
+        // for creation. Right now setters are supportedProperties. For creation we would have to add constructor
+        // arguments as supportedProperties.
         //  (/) defaultValue (pre-filled value, e.g. list of selected items for option)
         //  valueName (for iri templates only)
-        //  (/) readonlyValue (true for final public field or absence of setter, send fixed value like hidden field?) -> use hydra:readable, hydra:writable
+        //  (/) readonlyValue (true for final public field or absence of setter, send fixed value like hidden field?)
+        // -> use hydra:readable, hydra:writable
         //  (/) multipleValues
         //  (/) valueMinLength
         //  (/) valueMaxLength
@@ -553,25 +564,30 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
     private void writeHydraVariableMapping(JsonGenerator jgen, @Nullable ActionDescriptor actionDescriptor,
                                            Collection<String> variableNames) throws IOException {
-        for (String requestParamName : variableNames) {
-            jgen.writeStartObject();
-            jgen.writeStringField("@type", "hydra:IriTemplateMapping");
-            jgen.writeStringField("hydra:variable", requestParamName);
-            if (actionDescriptor != null) {
-                jgen.writeBooleanField("hydra:required",
-                        actionDescriptor.getAnnotatedParameter(requestParamName)
-                                .isRequired());
-                jgen.writeStringField("hydra:property",
-                        getExposedPropertyOrParamName(actionDescriptor.getAnnotatedParameter(requestParamName)));
+        if (actionDescriptor != null) {
+            for (String variableName : variableNames) {
+                AnnotatedParameter annotatedParameter = actionDescriptor.getAnnotatedParameter(variableName);
+                // only unsatisfied parameters become hydra variables
+                if (annotatedParameter.getCallValue() == null) {
+                    jgen.writeStartObject();
+                    jgen.writeStringField("@type", "hydra:IriTemplateMapping");
+                    jgen.writeStringField("hydra:variable", variableName);
+                    jgen.writeBooleanField("hydra:required",
+                            annotatedParameter
+                                    .isRequired());
+                    jgen.writeStringField("hydra:property",
+                            getExposedPropertyOrParamName(annotatedParameter));
+                    jgen.writeEndObject();
+                }
             }
-            jgen.writeEndObject();
         }
     }
 
     /**
      * Gets exposed property or parameter name.
      *
-     * @param inputParameter for exposure
+     * @param inputParameter
+     *         for exposure
      * @return property name
      */
     private String getExposedPropertyOrParamName(AnnotatedParameter inputParameter) {
@@ -588,7 +604,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     /**
      * Gets exposed property or parameter name for properties with an appropriate setter (=write) method.
      *
-     * @param inputParameter for exposure
+     * @param inputParameter
+     *         for exposure
      * @return property name
      */
     private String getWritableExposedPropertyOrPropertyName(PropertyDescriptor inputParameter) {

@@ -1,0 +1,31 @@
+{
+  "performer": "Walk off the Earth",
+  "@type": "Event",
+  "review": {
+    "hydra:template": "http:\/\/localhost\/reviews\/events\/1{?rating}",
+    "@type": "hydra:IriTemplate",
+    "hydra:mapping": [
+      {
+        "@type": "hydra:IriTemplateMapping",
+        "hydra:variable": "rating",
+        "hydra:property": "rating",
+        "hydra:required": true
+      }
+    ]
+  },
+  "workPerformed": {
+    "@type": "CreativeWork",
+    "name": "Gang of Rhythm Tour"
+  },
+  "eventStatus": "EVENT_SCHEDULED",
+  "location": "Wiesbaden",
+  "id": 1,
+  "@id": "http:\/\/localhost\/events\/1",
+  "@context": {
+    "@vocab": "http:\/\/schema.org\/",
+    "eventStatus": {
+      "@type": "@vocab"
+    },
+    "EVENT_SCHEDULED": "EventScheduled"
+  }
+}

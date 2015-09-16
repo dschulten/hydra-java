@@ -326,7 +326,10 @@ public class AffordanceBuilder implements LinkBuilder {
 
     @Override
     public URI toUri() {
-        final String actionLink = partialUriTemplateComponents.toString();
+        PartialUriTemplate partialUriTemplate = new PartialUriTemplate(partialUriTemplateComponents.toString());
+
+        final String actionLink = partialUriTemplate.stripOptionalVariables(actionDescriptors).toString();
+
         if (actionLink == null || actionLink.contains("{")) {
             throw new IllegalStateException("cannot convert template to URI");
         }

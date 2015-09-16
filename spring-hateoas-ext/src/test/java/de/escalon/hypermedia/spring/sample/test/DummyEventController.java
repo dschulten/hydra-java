@@ -89,8 +89,10 @@ public class DummyEventController {
             eventResource.add(linkTo(this.getClass()).slash(event.id)
                     .withSelfRel());
             eventResource.add(linkTo(methodOn(ReviewController.class)
-                    .getReviews(event.id))
+                    .getReviews(event.id, null))
                     .withRel("review"));
+            // TODO how to express that the same method getReviews
+            // is also an IriTemplate if the variable is optional
             eventResourcesList.add(eventResource);
         }
         return eventResourcesList;
@@ -104,7 +106,7 @@ public class DummyEventController {
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
-
+    
     @RequestMapping(value = "/regex/{eventId:.+}", method = RequestMethod.GET)
     public
     @ResponseBody
