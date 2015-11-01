@@ -1,5 +1,6 @@
 package de.escalon.hypermedia.sample.beans.store;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.hateoas.ResourceSupport;
 
 import java.math.BigDecimal;
@@ -41,7 +42,8 @@ public class Offer extends ResourceSupport {
         this.itemOffered = itemOffered;
     }
 
-    public List<Offer> getAddOn() {
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+    public List<Offer> getAddOns() {
         return addOns;
     }
 

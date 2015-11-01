@@ -86,7 +86,7 @@ public class PartialUriTemplate {
             // collect variablesInPart and track for each part which variables it contains
             // group(1) is the variable head without the leading {
             TemplateVariable.VariableType type = TemplateVariable.VariableType.from(matcher.group(1));
-            // group(2) is the
+            // group(2) are the variable names
             String[] names = matcher.group(2)
                     .split(",");
             List<Integer> variablesInPart = new ArrayList<Integer>();
@@ -113,7 +113,7 @@ public class PartialUriTemplate {
 
     /**
      * Returns the template as uri components, without variable expansion.
-     * @return components
+     * @return components of the Uri
      */
     public PartialUriTemplateComponents asComponents() {
         return getUriTemplateComponents(Collections.<String, Object>emptyMap(), Collections.<String>emptyList());

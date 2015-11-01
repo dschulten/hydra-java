@@ -1,8 +1,10 @@
 package de.escalon.hypermedia.sample.event;
 
-import de.escalon.hypermedia.sample.beans.Rating;
-import de.escalon.hypermedia.sample.beans.Review;
-import de.escalon.hypermedia.sample.model.*;
+import de.escalon.hypermedia.sample.beans.event.Rating;
+import de.escalon.hypermedia.sample.beans.event.Review;
+import de.escalon.hypermedia.sample.model.event.CreativeWork;
+import de.escalon.hypermedia.sample.model.event.EventModel;
+import de.escalon.hypermedia.sample.model.event.EventStatusType;
 import org.springframework.stereotype.Component;
 
 import java.util.*;

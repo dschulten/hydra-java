@@ -23,8 +23,8 @@ public class UnwrappingJacksonHydraSerializer extends JacksonHydraSerializer {
      * Creates unwrapping serializer from given serializer.
      * @param source to decorate.
      */
-    UnwrappingJacksonHydraSerializer(BeanSerializerBase source) {
-        super(source);
+    UnwrappingJacksonHydraSerializer(BeanSerializerBase source, ProxyUnwrapper proxyUnwrapper) {
+        super(source, proxyUnwrapper);
     }
 
     @Override

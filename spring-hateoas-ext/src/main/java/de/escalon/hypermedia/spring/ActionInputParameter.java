@@ -55,9 +55,12 @@ public class ActionInputParameter implements AnnotatedParameter {
     /**
      * Creates action input parameter.
      *
-     * @param methodParameter   to describe
-     * @param value             used during sample invocation
-     * @param conversionService to apply to value
+     * @param methodParameter
+     *         to describe
+     * @param value
+     *         used during sample invocation
+     * @param conversionService
+     *         to apply to value
      */
     public ActionInputParameter(MethodParameter methodParameter, Object value, ConversionService conversionService) {
         this.methodParameter = methodParameter;
@@ -84,8 +87,10 @@ public class ActionInputParameter implements AnnotatedParameter {
     /**
      * Creates new ActionInputParameter with default formatting conversion service.
      *
-     * @param methodParameter holding metadata about the parameter
-     * @param value           during sample method invocation
+     * @param methodParameter
+     *         holding metadata about the parameter
+     * @param value
+     *         during sample method invocation
      */
     public ActionInputParameter(MethodParameter methodParameter, Object value) {
         this(methodParameter, value, new DefaultFormattingConversionService());
@@ -167,9 +172,8 @@ public class ActionInputParameter implements AnnotatedParameter {
     }
 
     /**
-     * Has constraints defined via <code>@Input</code> annotation.
-     * Note that there might also be other kinds of constraints,
-     * e.g. <code>@Select</code> may define values for {@link #getPossibleValues}.
+     * Has constraints defined via <code>@Input</code> annotation. Note that there might also be other kinds of
+     * constraints, e.g. <code>@Select</code> may define values for {@link #getPossibleValues}.
      *
      * @return true if parameter is constrained
      */
@@ -180,6 +184,95 @@ public class ActionInputParameter implements AnnotatedParameter {
     public <T extends Annotation> T getAnnotation(Class<T> annotation) {
         return methodParameter.getParameterAnnotation(annotation);
     }
+
+
+    /**
+     * Determines if request body input parameter has a hidden input property.
+     *
+     * @param property
+     *         name or property path
+     * @return true if hidden
+     */
+    @Override
+    public boolean isHidden(String property) {
+        Annotation[] paramAnnotations = methodParameter.getParameterAnnotations();
+        Input inputAnnotation = methodParameter.getParameterAnnotation(Input.class);
+        return inputAnnotation != null && arrayContains(inputAnnotation.hidden(), property);
+    }
+
+    /**
+     * Determines if request body input parameter has a read-only input property.
+     *
+     * @param property
+     *         name or property path
+     * @return true if read-only
+     */
+    @Override
+    public boolean isReadOnly(String property) {
+        return inputAnnotation != null && arrayContains(inputAnnotation.readOnly(), property);
+    }
+
+    /**
+     * Determines if request body input parameter should be included, considering all of {@link Input#include}, {@link
+     * Input#hidden} and {@link Input#readOnly}.
+     *
+     * @param property
+     *         name or property path
+     * @return true if included or no include statements found
+     */
+    @Override
+    public boolean isIncluded(String property) {
+        return inputAnnotation == null
+                || (hasExplicitOrImplicitPropertyIncludeValue() && containsPropertyIncludeValue(property));
+    }
+
+    /**
+     * Find out if property is included by searching through all annotations.
+     * @param property
+     * @return
+     */
+    private boolean containsPropertyIncludeValue(String property) {
+        return arrayContains(inputAnnotation.readOnly(), property)
+                || arrayContains(inputAnnotation.hidden(), property)
+                || arrayContains(inputAnnotation.include(), property);
+    }
+
+    /**
+     * Has any explicit include value or might have implicit includes because there is a hidden or readOnly flag.
+     *
+     * @return true if explicitly or implicitly included.
+     */
+    private boolean hasExplicitOrImplicitPropertyIncludeValue() {
+        // TODO maybe not a useful optimization
+        return inputAnnotation != null && inputAnnotation.readOnly().length > 0
+                || inputAnnotation.hidden().length > 0
+                || inputAnnotation.include().length > 0;
+    }
+
+    /**
+     * Determines if request body input parameter should be excluded, considering {@link Input#exclude}.
+     *
+     * @param property
+     *         name or property path
+     * @return true if excluded, false if no include statement found or not excluded
+     */
+    @Override
+    public boolean isExcluded(String property) {
+        return inputAnnotation != null && arrayContains(inputAnnotation.exclude(), property);
+    }
+
+    private boolean arrayContains(String[] array, String toFind) {
+        if (array.length == 0) {
+            return false;
+        }
+        for (String item : array) {
+            if (toFind.equals(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     @Override
     public Object[] getPossibleValues(AnnotatedParameters actionDescriptor) {
@@ -193,7 +286,8 @@ public class ActionInputParameter implements AnnotatedParameter {
     }
 
     @Override
-    public Object[] getPossibleValues(Constructor constructor, int parameterIndex, AnnotatedParameters actionDescriptor) {
+    public Object[] getPossibleValues(Constructor constructor, int parameterIndex, AnnotatedParameters
+            actionDescriptor) {
         MethodParameter methodParameter = new MethodParameter(constructor, parameterIndex);
         return getPossibleValues(methodParameter, actionDescriptor);
     }
@@ -252,7 +346,8 @@ public class ActionInputParameter implements AnnotatedParameter {
 
 
     /**
-     * Is this action input parameter required.
+     * Is this action input parameter required, based on the presence of a default value,
+     * the parameter annotations and the kind of input parameter.
      *
      * @return true if required
      */
@@ -298,7 +393,8 @@ public class ActionInputParameter implements AnnotatedParameter {
      * Make sure to check {@link #isArrayOrCollection()} before calling this method.
      *
      * @return call values
-     * @throws UnsupportedOperationException if this input parameter is not an array or collection
+     * @throws UnsupportedOperationException
+     *         if this input parameter is not an array or collection
      */
     public Object[] getCallValues() {
         Object[] callValues;

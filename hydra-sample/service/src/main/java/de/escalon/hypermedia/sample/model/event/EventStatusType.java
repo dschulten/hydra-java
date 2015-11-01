@@ -1,4 +1,4 @@
-package de.escalon.hypermedia.sample.model;
+package de.escalon.hypermedia.sample.model.event;
 
 /**
  * Created by dschulten on 03.10.2014.

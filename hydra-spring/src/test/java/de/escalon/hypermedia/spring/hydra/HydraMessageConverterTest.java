@@ -248,6 +248,12 @@ public class HydraMessageConverterTest {
     }
 
 
+//    @Test
+//    public void usesInputInclude() {
+//
+//        throw new UnsupportedOperationException();
+//    }
+
     @Test
     public void convertsTemplatedLinkToMethodAsIriTemplate() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")

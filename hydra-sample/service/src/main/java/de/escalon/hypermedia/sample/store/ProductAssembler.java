@@ -1,6 +1,7 @@
 package de.escalon.hypermedia.sample.store;
 
 import de.escalon.hypermedia.sample.beans.store.Product;
+import de.escalon.hypermedia.sample.model.store.ProductModel;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +22,10 @@ public class ProductAssembler extends ResourceAssemblerSupport<ProductModel, Pro
 
     @Override
     protected Product instantiateResource(ProductModel entity) {
-        Product orderedItem = new Product(entity.name, entity.productId);
-        return orderedItem;
+        Product product = new Product(entity.name, entity.productId);
+        for (ProductModel accessory : entity.accessories) {
+            product.addAccessory(new Product(accessory.name, accessory.productId));
+        }
+        return product;
     }
 }

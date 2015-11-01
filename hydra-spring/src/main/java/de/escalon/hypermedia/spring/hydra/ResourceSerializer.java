@@ -44,15 +44,6 @@ public class ResourceSerializer extends StdSerializer<Resource> {
         serializer.unwrappingSerializer(NameTransformer.NOP)
                 .serialize(value, jgen, provider);
 
-//        // make a Link Serializer
-//        for (Link link : value.getLinks()) {
-//            final String rel = link.getRel();
-//            String linkFieldName = IanaRels.isIanaRel(rel) ? IANA_REL_PREFIX + rel : rel;
-//            jgen.writeFieldName(linkFieldName);
-//            jgen.writeStartObject();
-//            jgen.writeStringField("@id", link.getHref());
-//            jgen.writeEndObject();
-//        }
         jgen.writeEndObject();
 
     }

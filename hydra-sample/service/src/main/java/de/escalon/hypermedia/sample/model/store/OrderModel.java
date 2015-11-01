@@ -1,4 +1,4 @@
-package de.escalon.hypermedia.sample.store;
+package de.escalon.hypermedia.sample.model.store;
 
 import java.util.ArrayList;
 import java.util.List;

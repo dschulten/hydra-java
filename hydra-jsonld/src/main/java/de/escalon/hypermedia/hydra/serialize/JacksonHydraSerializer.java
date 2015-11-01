@@ -29,11 +29,28 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
 
     public static final String KEY_LD_CONTEXT = "de.escalon.hypermedia.ld-context";
 
-    private LdContextFactory ldContextFactory = new LdContextFactory();
+    protected LdContextFactory ldContextFactory;
+    private ProxyUnwrapper proxyUnwrapper;
 
     public JacksonHydraSerializer(BeanSerializerBase source) {
-        super(source);
+        this(source, (ProxyUnwrapper) null);
     }
+
+    /**
+     * Creates new serializer with optional proxy unwrapper.
+     *
+     * @param source
+     *         wrapped serializer
+     * @param proxyUnwrapper
+     *         to unwrap proxified beans, may be null
+     */
+    public JacksonHydraSerializer(BeanSerializerBase source, ProxyUnwrapper proxyUnwrapper) {
+        super(source);
+        this.proxyUnwrapper = proxyUnwrapper;
+        this.ldContextFactory = new LdContextFactory();
+        ldContextFactory.setProxyUnwrapper(proxyUnwrapper);
+    }
+
 
     public JacksonHydraSerializer(BeanSerializerBase source,
                                   ObjectIdWriter objectIdWriter) {
@@ -103,7 +120,10 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         }
     }
 
-    private void serializeType(Object bean, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    protected void serializeType(Object bean, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+        if (proxyUnwrapper != null) {
+            bean = proxyUnwrapper.unwrapProxy(bean);
+        }
         // adds @type attribute, reflecting the simple name of the class or the exposed annotation on the class.
         final Expose classExpose = getAnnotation(bean.getClass(), Expose.class);
         // TODO allow to search up the hierarchy for ResourceSupport mixins and cache found result?
@@ -116,6 +136,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         } else if (classExpose != null) {
             val = classExpose.value(); // expose is better than Java type
         } else {
+
             val = bean.getClass()
                     .getSimpleName();
         }
@@ -123,59 +144,62 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         jgen.writeStringField(JsonLdKeywords.AT_TYPE, val);
     }
 
-    private void serializeContext(Object bean, JsonGenerator jgen,
-                                  SerializerProvider serializerProvider, Deque<LdContext> contextStack) throws IOException {
+    protected void serializeContext(Object bean, JsonGenerator jgen,
+                                    SerializerProvider serializerProvider, Deque<LdContext> contextStack)
+            throws IOException {
 
-            MixinSource mixinSource = new JacksonMixinSource(serializerProvider.getConfig());
-            final Class<?> mixInClass = mixinSource.findMixInClassFor(bean.getClass());
+        // TODO: this code is duplicated in PagedResourcesSerializer!!!
+        // couldn't inherit from this because this is a serializer wrapper
+        // make it a static utility or a common collaborator dependency?
 
-            final LdContext parentContext = contextStack.peek();
-            LdContext currentContext = new LdContext(parentContext, ldContextFactory.getVocab(mixinSource, bean, mixInClass), ldContextFactory.getTerms(mixinSource, bean, mixInClass));
-            contextStack.push(currentContext);
-            // check if we need to write a context for the current bean at all
-            // If it is in the same vocab: no context
-            // If the terms are already defined in the context: no context
-            boolean mustWriteContext;
-            if (parentContext == null || !parentContext.contains(currentContext)) {
-                mustWriteContext = true;
-            } else {
-                mustWriteContext = false;
+        if (proxyUnwrapper != null) {
+            bean = proxyUnwrapper.unwrapProxy(bean);
+        }
+        MixinSource mixinSource = new JacksonMixinSource(serializerProvider.getConfig());
+        final Class<?> mixInClass = mixinSource.findMixInClassFor(bean.getClass());
+
+        final LdContext parentContext = contextStack.peek();
+        LdContext currentContext = new LdContext(parentContext, ldContextFactory.getVocab(mixinSource, bean,
+                mixInClass), ldContextFactory.getTerms(mixinSource, bean, mixInClass));
+        contextStack.push(currentContext);
+        // check if we need to write a context for the current bean at all
+        // If it is in the same vocab: no context
+        // If the terms are already defined in the context: no context
+        boolean mustWriteContext;
+        if (parentContext == null || !parentContext.contains(currentContext)) {
+            mustWriteContext = true;
+        } else {
+            mustWriteContext = false;
+        }
+
+        if (mustWriteContext) {
+            // begin context
+            // default context: schema.org vocab or vocab package annotation
+            jgen.writeObjectFieldStart("@context");
+            // do not repeat vocab if already defined in current context
+            if (parentContext == null || parentContext.vocab == null ||
+                    (currentContext.vocab != null && !currentContext.vocab.equals(parentContext.vocab))) {
+                jgen.writeStringField(JsonLdKeywords.AT_VOCAB, currentContext.vocab);
             }
 
-            if (mustWriteContext) {
-                // begin context
-                // default context: schema.org vocab or vocab package annotation
-                jgen.writeObjectFieldStart("@context");
-                // do not repeat vocab if already defined in current context
-                if (parentContext == null || parentContext.vocab == null ||
-                        (currentContext.vocab != null && !currentContext.vocab.equals(parentContext.vocab))) {
-                    jgen.writeStringField(JsonLdKeywords.AT_VOCAB, currentContext.vocab);
+            for (Map.Entry<String, Object> termEntry : currentContext.terms.entrySet()) {
+                if (termEntry.getValue() instanceof String) {
+                    jgen.writeStringField(termEntry.getKey(), termEntry.getValue()
+                            .toString());
+                } else {
+                    jgen.writeObjectField(termEntry.getKey(), termEntry.getValue());
                 }
-
-                for (Map.Entry<String, Object> termEntry : currentContext.terms.entrySet()) {
-                    if (termEntry.getValue() instanceof String) {
-                        jgen.writeStringField(termEntry.getKey(), termEntry.getValue()
-                                .toString());
-                    } else {
-                        jgen.writeObjectField(termEntry.getKey(), termEntry.getValue());
-                    }
-                }
-                jgen.writeEndObject();
-                // end context
             }
-            // TODO build the context from @Vocab and @Term and @Expose and write it as local or external context with
-            // TODO jsonld extension (using apt?)
-            // TODO also allow manually created jsonld contexts
-            // TODO how to define a context containing several context objects? @context is then an array of
-            // TODO external context strings pointing to json-ld, and json objects containing terms
-            // TODO another option: create custom vocabulary without reference to public vocabs
-            // TODO support additionalType from goodrelations
-
+            jgen.writeEndObject();
+            // end context
+        }
     }
 
     @Override
     public JsonSerializer<Object> unwrappingSerializer(NameTransformer unwrapper) {
-        return new UnwrappingJacksonHydraSerializer(this);
+        UnwrappingJacksonHydraSerializer unwrappingJacksonHydraSerializer = new UnwrappingJacksonHydraSerializer
+                (this, proxyUnwrapper);
+        return unwrappingJacksonHydraSerializer;
     }
 
     @Override

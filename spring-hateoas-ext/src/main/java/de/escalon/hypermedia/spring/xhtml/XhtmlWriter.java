@@ -510,28 +510,7 @@ public class XhtmlWriter extends Writer {
         return ret;
     }
 
-    private Constructor findDefaultCtor(Constructor[] constructors) {
-        // TODO duplicate on HtmlResourceMessageConverter
-        Constructor constructor = null;
-        for (Constructor ctor : constructors) {
-            if (ctor.getParameterTypes().length == 0) {
-                constructor = ctor;
-            }
-        }
-        return constructor;
-    }
 
-    private Constructor findJsonCreator(Constructor[] constructors) {
-        // TODO duplicate on HtmlResourceMessageConverter
-        Constructor constructor = null;
-        for (Constructor ctor : constructors) {
-            if (AnnotationUtils.getAnnotation(ctor, JsonCreator.class) != null) {
-                constructor = ctor;
-                break;
-            }
-        }
-        return constructor;
-    }
 
     /**
      * Renders input fields for bean properties of bean to add or update or patch.
@@ -560,10 +539,10 @@ public class XhtmlWriter extends Writer {
             try {
                 Constructor[] constructors = beanType.getConstructors();
                 // find default ctor
-                Constructor constructor = findDefaultCtor(constructors);
+                Constructor constructor = PropertyUtils.findDefaultCtor(constructors);
                 // find ctor with JsonCreator ann
                 if (constructor == null) {
-                    constructor = findJsonCreator(constructors);
+                    constructor = PropertyUtils.findJsonCreator(constructors, JsonCreator.class);
                 }
                 Assert.notNull(constructor, "no default constructor or JsonCreator found for type " + beanType
                         .getName());
@@ -584,7 +563,7 @@ public class XhtmlWriter extends Writer {
                                 // TODO duplicate below for PropertyDescriptors
                                 if (DataType.isSingleValueType(parameterType)) {
 
-                                    Object propertyValue = getPropertyOrFieldValue(currentCallValue, paramName);
+                                    Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, paramName);
 
                                     ActionInputParameter constructorParamInputParameter = new ActionInputParameter
                                             (new MethodParameter(constructor, paramIndex), propertyValue);
@@ -620,7 +599,8 @@ public class XhtmlWriter extends Writer {
                                 } else {
                                     beginDiv();
                                     write(paramName + ":");
-                                    Object propertyValue = getPropertyOrFieldValue(currentCallValue, paramName);
+                                    Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue,
+                                            paramName);
                                     recurseBeanProperties(parameterType, actionDescriptor, actionInputParameter,
                                             propertyValue);
                                     endDiv();
@@ -654,7 +634,7 @@ public class XhtmlWriter extends Writer {
                     final Property property = new Property(beanType, propertyDescriptor.getReadMethod(),
                             propertyDescriptor.getWriteMethod(), propertyDescriptor.getName());
 
-                    Object propertyValue = getPropertyOrFieldValue(currentCallValue, propertyName);
+                    Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, propertyName);
                     MethodParameter methodParameter = new MethodParameter(propertyDescriptor.getWriteMethod(), 0);
                     ActionInputParameter propertySetterInputParameter = new ActionInputParameter(methodParameter,
                             propertyValue);
@@ -699,60 +679,7 @@ public class XhtmlWriter extends Writer {
         }
     }
 
-    // TODO move to PropertyUtil and remove current method for propertyDescriptors, cache search results
-    private Object getPropertyOrFieldValue(Object currentCallValue, String propertyOrFieldName) {
-        if (currentCallValue == null) {
-            return null;
-        }
-        Object propertyValue = getBeanPropertyValue(currentCallValue, propertyOrFieldName);
-        if (propertyValue == null) {
-            propertyValue = getFieldValue(currentCallValue, propertyOrFieldName);
-        }
-        return propertyValue;
-    }
 
-    private Object getFieldValue(Object currentCallValue, String fieldName) {
-        try {
-            Class<?> beanType = currentCallValue.getClass();
-            Object propertyValue = null;
-            Field[] fields = beanType.getFields();
-            for (Field field : fields) {
-                if (fieldName.equals(field.getName())) {
-                    propertyValue = field.get(currentCallValue);
-                    break;
-                }
-            }
-            return propertyValue;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to read field " + fieldName + " from " + currentCallValue.toString(), e);
-        }
-    }
-
-
-    // TODO move to PropertyUtil and remove current method for propertyDescriptors
-    private Object getBeanPropertyValue(Object currentCallValue, String paramName) {
-        if (currentCallValue == null) {
-            return null;
-        }
-        try {
-            Object propertyValue = null;
-            BeanInfo info = Introspector.getBeanInfo(currentCallValue.getClass());
-            PropertyDescriptor[] pds = info.getPropertyDescriptors();
-            for (PropertyDescriptor pd : pds) {
-                if (paramName.equals(pd.getName())) {
-                    Method readMethod = pd.getReadMethod();
-                    if (readMethod != null) {
-                        propertyValue = readMethod.invoke(currentCallValue);
-                    }
-                    break;
-                }
-            }
-            return propertyValue;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to read property " + paramName + " from " + currentCallValue.toString
-                    (), e);
-        }
-    }
 
 
     private BeanInfo getBeanInfo(Class<?> beanType) {

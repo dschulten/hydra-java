@@ -1,6 +1,5 @@
 package de.escalon.hypermedia.hydra.serialize;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.AnnotationUtils;
 import de.escalon.hypermedia.hydra.mapping.*;
 import org.apache.commons.lang3.text.WordUtils;
@@ -20,23 +19,29 @@ import java.util.Map;
 import static de.escalon.hypermedia.AnnotationUtils.getAnnotation;
 
 /**
- * Provides LdContext information.
- * Created by Dietrich on 05.04.2015.
+ * Provides LdContext information. Created by Dietrich on 05.04.2015.
  */
 public class LdContextFactory {
 
     public static final String HTTP_SCHEMA_ORG = "http://schema.org/";
+    private ProxyUnwrapper proxyUnwrapper;
 
     /**
      * Gets vocab for given bean.
      *
-     * @param bean       to inspect for vocab
-     * @param mixInClass for bean which might define a vocab or has a context provider
+     * @param bean
+     *         to inspect for vocab
+     * @param mixInClass
+     *         for bean which might define a vocab or has a context provider
      * @return explicitly defined vocab or http://schema.org
      */
     public String getVocab(MixinSource mixinSource, Object bean, Class<?> mixInClass) {
+        if (proxyUnwrapper != null) {
+            bean = proxyUnwrapper.unwrapProxy(bean);
+        }
+
         // determine vocab in context
-        String classVocab = vocabFromClass(bean.getClass(), HTTP_SCHEMA_ORG);
+        String classVocab = vocabFromClassOrPackage(bean.getClass());
 
         final Vocab mixinVocab = getAnnotation(mixInClass, Vocab.class);
 
@@ -63,6 +68,9 @@ public class LdContextFactory {
 
         try {
 
+            if (proxyUnwrapper != null) {
+                bean = proxyUnwrapper.unwrapProxy(bean);
+            }
             final Class<?> beanClass = bean.getClass();
             Map<String, Object> termsMap = termsFromClass(beanClass);
             Map<String, Object> mixinTermsMap = getAnnotatedTerms(mixInClass, beanClass
@@ -116,8 +124,10 @@ public class LdContextFactory {
     /**
      * Gets explicitly defined terms, e.g. on package, class or mixin.
      *
-     * @param annotatedElement to find terms
-     * @param name             of annotated element, i.e. class name or package name
+     * @param annotatedElement
+     *         to find terms
+     * @param name
+     *         of annotated element, i.e. class name or package name
      * @return terms
      */
     private Map<String, Object> getAnnotatedTerms(AnnotatedElement annotatedElement, String name) {
@@ -153,6 +163,10 @@ public class LdContextFactory {
     }
 
     private Object getNestedContextProviderFromMixin(MixinSource mixinSource, Object bean, Class<?> mixinClass) {
+        // TODO does not consider Collection<Resource> or Collection<PersistentEntityResource> to find mixin of
+        // object wrapped in resource
+        // TODO does not consider package of object wrapped in resource
+        // TODO: we do not know Resources here
         if (mixinClass == null) {
             return null;
         }
@@ -202,8 +216,9 @@ public class LdContextFactory {
     private Method getContextProvider(Class<?> beanClass) {
         Class<? extends Annotation> annotation = ContextProvider.class;
         Method contextProvider = AnnotationUtils.getAnnotatedMethod(beanClass, annotation);
-        if (contextProvider.getParameterTypes().length > 0) {
-            throw new IllegalStateException("the context provider method " + contextProvider.getName() + " must not have arguments");
+        if (contextProvider != null && contextProvider.getParameterTypes().length > 0) {
+            throw new IllegalStateException("the context provider method " + contextProvider.getName() + " must not " +
+                    "have arguments");
         }
         return contextProvider;
     }
@@ -232,7 +247,7 @@ public class LdContextFactory {
     }
 
 
-    public String vocabFromClass(Class<?> clazz, String defaultVocab) {
+    public String vocabFromClassOrPackage(Class<?> clazz) {
         // vocab and terms of defining class: class and package
         final Vocab packageVocab = getAnnotation(clazz
                 .getPackage(), Vocab.class);
@@ -244,7 +259,7 @@ public class LdContextFactory {
         } else if (packageVocab != null) {
             vocab = packageVocab.value(); // wins over context provider
         } else {
-            vocab = defaultVocab;
+            vocab = null;
         }
         return vocab;
     }
@@ -257,5 +272,9 @@ public class LdContextFactory {
         // class terms override package terms
         termsMap.putAll(classTermsMap);
         return termsMap;
+    }
+
+    public void setProxyUnwrapper(ProxyUnwrapper proxyUnwrapper) {
+        this.proxyUnwrapper = proxyUnwrapper;
     }
 }

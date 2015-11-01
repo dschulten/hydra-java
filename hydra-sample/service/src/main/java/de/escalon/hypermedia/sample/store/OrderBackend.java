@@ -1,8 +1,8 @@
 package de.escalon.hypermedia.sample.store;
 
-import de.escalon.hypermedia.sample.beans.store.Order;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.ResponseEntity;
+import de.escalon.hypermedia.sample.beans.store.Product;
+import de.escalon.hypermedia.sample.model.store.OrderModel;
+import de.escalon.hypermedia.sample.model.store.ProductModel;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,14 +20,21 @@ public class OrderBackend {
         OrderModel orderModel = new OrderModel();
         orderModel.setId(counter++);
         orderModels.add(orderModel);
-        counter++;
         return orderModel;
     }
 
-    public OrderModel addOrderedItem(int id, ProductModel productModel) {
-        OrderModel orderModel = orderModels.get(id);
+    public OrderModel addOrderedItem(int orderId, ProductModel productModel) {
+        OrderModel orderModel = orderModels.get(orderId);
         List<ProductModel> products = orderModel.getProducts();
         products.add(productModel);
+        return orderModel;
+    }
+
+    public OrderModel orderAccessoryForOrderedItem(int orderId, int orderedItemId, ProductModel accessory) {
+        OrderModel orderModel = orderModels.get(orderId);
+        List<ProductModel> products = orderModel.getProducts();
+        ProductModel productModel = products.get(orderedItemId);
+        productModel.addAccessory(accessory);
         return orderModel;
     }
 

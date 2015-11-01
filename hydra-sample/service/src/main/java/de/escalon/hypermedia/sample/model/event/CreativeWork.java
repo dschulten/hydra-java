@@ -1,4 +1,4 @@
-package de.escalon.hypermedia.sample.model;
+package de.escalon.hypermedia.sample.model.event;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

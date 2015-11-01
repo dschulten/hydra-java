@@ -1,10 +1,10 @@
-package de.escalon.hypermedia.sample.beans;
+package de.escalon.hypermedia.sample.beans.event;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.action.Select;
-import de.escalon.hypermedia.sample.model.CreativeWork;
-import de.escalon.hypermedia.sample.model.EventStatusType;
+import de.escalon.hypermedia.sample.model.event.CreativeWork;
+import de.escalon.hypermedia.sample.model.event.EventStatusType;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
 

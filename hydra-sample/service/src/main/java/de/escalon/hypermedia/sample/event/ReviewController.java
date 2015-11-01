@@ -14,7 +14,7 @@
 package de.escalon.hypermedia.sample.event;
 
 import de.escalon.hypermedia.action.Action;
-import de.escalon.hypermedia.sample.beans.Review;
+import de.escalon.hypermedia.sample.beans.event.Review;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resources;

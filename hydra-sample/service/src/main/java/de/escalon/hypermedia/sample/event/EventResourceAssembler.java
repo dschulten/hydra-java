@@ -1,7 +1,7 @@
 package de.escalon.hypermedia.sample.event;
 
-import de.escalon.hypermedia.sample.beans.Event;
-import de.escalon.hypermedia.sample.model.EventModel;
+import de.escalon.hypermedia.sample.beans.event.Event;
+import de.escalon.hypermedia.sample.model.event.EventModel;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
 

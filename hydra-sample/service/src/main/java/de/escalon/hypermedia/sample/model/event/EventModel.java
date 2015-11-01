@@ -1,7 +1,4 @@
-package de.escalon.hypermedia.sample.model;
-
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
+package de.escalon.hypermedia.sample.model.event;
 
 /**
  * Sample Event model bean.

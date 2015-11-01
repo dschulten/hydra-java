@@ -13,29 +13,28 @@
 
 package de.escalon.hypermedia.spring.hydra;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import de.escalon.hypermedia.action.Input;
-import de.escalon.hypermedia.affordance.AnnotatedParameter;
-import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Cardinality;
+import de.escalon.hypermedia.action.Input;
+import de.escalon.hypermedia.affordance.*;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.hydra.serialize.JsonLdKeywords;
 import de.escalon.hypermedia.hydra.serialize.LdContext;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
-import de.escalon.hypermedia.affordance.Affordance;
-import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.spring.ActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.convert.Property;
 import org.springframework.hateoas.IanaRels;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.TemplateVariable;
 import org.springframework.util.Assert;
 
 import java.beans.BeanInfo;
@@ -43,6 +42,8 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -66,7 +67,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             Collection<Link> simpleLinks = new ArrayList<Link>();
             Collection<Affordance> affordances = new ArrayList<Affordance>();
             Collection<Link> templatedLinks = new ArrayList<Link>();
-            Collection<Affordance> templatedAffordances = new ArrayList<Affordance>();
+            // Collection<Affordance> templatedAffordances = new ArrayList<Affordance>();
             Collection<Affordance> collectionAffordances = new ArrayList<Affordance>();
             Link selfRel = null;
             for (Link link : links) {
@@ -74,9 +75,10 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     final Affordance affordance = (Affordance) link;
                     final List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
                     if (!actionDescriptors.isEmpty()) {
-                        if (affordance.isTemplated()) {
-                            templatedAffordances.add(affordance);
+                        if (affordance.isTemplated() && affordance.hasUnsatisfiedRequiredVariables()) {
+                            templatedLinks.add(affordance);
                         } else {
+                            // TODO code duplication, see below
                             if (!affordance.isSelfRel() && Cardinality.COLLECTION == affordance.getCardinality()) {
                                 collectionAffordances.add(affordance);
                             } else {
@@ -100,33 +102,35 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 }
             }
 
-            for (Affordance templatedAffordance : templatedAffordances) {
-                jgen.writeObjectFieldStart(templatedAffordance.getRel());
-
-                jgen.writeStringField("@type", "hydra:IriTemplate");
-                jgen.writeStringField("hydra:template", templatedAffordance.getHref());
-                final List<ActionDescriptor> actionDescriptors = templatedAffordance.getActionDescriptors();
-                ActionDescriptor actionDescriptor = actionDescriptors.get(0);
-                jgen.writeArrayFieldStart("hydra:mapping");
-                writeHydraVariableMapping(jgen, actionDescriptor, actionDescriptor.getPathVariableNames());
-                writeHydraVariableMapping(jgen, actionDescriptor, actionDescriptor.getRequestParamNames());
-                jgen.writeEndArray();
-
-                jgen.writeEndObject();
-            }
             for (Link templatedLink : templatedLinks) {
-                // we only have the template, no access to method params
+                // templated affordance might turn out to have all variables satisfied or
+                // only optional unsatisfied variables
+                ActionDescriptor actionDescriptorForHttpGet = getActionDescriptorForHttpGet(templatedLink);
+
+
                 jgen.writeObjectFieldStart(templatedLink.getRel());
 
                 jgen.writeStringField("@type", "hydra:IriTemplate");
                 jgen.writeStringField("hydra:template", templatedLink.getHref());
-
                 jgen.writeArrayFieldStart("hydra:mapping");
-                writeHydraVariableMapping(jgen, null, templatedLink.getVariableNames());
+                writeHydraVariableMapping(jgen, actionDescriptorForHttpGet, templatedLink.getVariableNames());
                 jgen.writeEndArray();
 
                 jgen.writeEndObject();
             }
+//            for (Link templatedLink : templatedLinks) {
+//                // we only have the template, no access to method params
+//                jgen.writeObjectFieldStart(templatedLink.getRel());
+//
+//                jgen.writeStringField("@type", "hydra:IriTemplate");
+//                jgen.writeStringField("hydra:template", templatedLink.getHref());
+//
+//                jgen.writeArrayFieldStart("hydra:mapping");
+//                writeHydraVariableMapping(jgen, null, templatedLink.getVariableNames());
+//                jgen.writeEndArray();
+//
+//                jgen.writeEndObject();
+//            }
 
             @SuppressWarnings("unchecked")
             Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(JacksonHydraSerializer
@@ -143,44 +147,23 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     jgen.writeStringField(JsonLdKeywords.AT_TYPE, "hydra:Collection");
                     jgen.writeStringField(JsonLdKeywords.AT_ID, collectionAffordance.getHref());
                     jgen.writeObjectFieldStart("hydra:manages");
-                    jgen.writeStringField("hydra:property", collectionAffordance.getRel());
-                    // a) in the case of </Alice> :knows /bob the subject must be /Alice
-                    // b) in the case of <> orderedItem /latte-1 the subject is an anonymous resource of type Order
-                    // c) in the case of </order/1> :seller </store> the object must be the store
-                    // 1. where is the information *about* the subject or object: the type or @id
-                    // 2. how to decide if the collection manages items for a subject or object?
-                    // ad 1.)
-                    // ad a) self rel of the Resource that has the collection affordance: looking through link list
-                    //       at serialization time is possible
-                    // ad b) a candidate is the class given as value of @ExposesResourceFor on the controller
-                    //       that defines the method which leads us to believe we have a collection:
-                    //       either a GET /orders handler having a collection return type or the POST /orders.
-                    //       Works only if the GET or POST has no request mapping path of its own
-                    //       an alternative is to use {} without type if @ExposesResourceFor is not present
-                    // ad c) like a
-                    // ad 2.)
-                    // we know the affordance is a collection
-                    // * we could pass information into build(rel), like .rel().reverseRel("schema:seller").build()
-                    // * we could use build("myReversedTerm") and look at the @context to see if it is reversed,
-                    //   if so, we know that the manages block must use object not subject. However weird if the
-                    //   reverse term is never really used in the json-ld
-                    // * we could have a registry which says if a property is meant to be reversed in a certain context
-                    //   and use that to find out if we need subject or object, like :seller ->
-                    if (selfRel != null) {
-                        // prefer rev over rel, assuming that rev exists to be used by RDF serialization
-                        if (collectionAffordance.getRev() != null) {
+                    // do we have a collection holder which is not owner of the affordance?
+                    TypedResource collectionHolder = collectionAffordance.getCollectionHolder();
+                    if (collectionAffordance.getRev() != null) {
+                        jgen.writeStringField("hydra:property", collectionAffordance.getRev());
+                        if (collectionHolder != null) {
+                            // can't use writeObjectField, it won't inherit the context stack
+                            writeCollectionHolder("hydra:object", collectionHolder, jgen);
+                        } else if (selfRel != null) {
                             jgen.writeStringField("hydra:object", selfRel.getHref());
-                        } else if (collectionAffordance.getRel() != null) {
-                            jgen.writeStringField("hydra:subject", selfRel.getHref());
                         }
-                    } else {
-                        // prefer rev over rel, assuming that rev exists to be used by RDF serialization
-                        if (collectionAffordance.getRev() != null) {
-                            jgen.writeObjectFieldStart("hydra:object");
-                            jgen.writeEndObject();
-                        } else if (collectionAffordance.getRel() != null) {
-                            jgen.writeObjectFieldStart("hydra:subject");
-                            jgen.writeEndObject();
+                    } else if (collectionAffordance.getRel() != null) {
+                        jgen.writeStringField("hydra:property", collectionAffordance.getRel());
+                        if (collectionHolder != null) {
+                            // can't use writeObjectField, it won't inherit the context stack
+                            writeCollectionHolder("hydra:subject", collectionHolder, jgen);
+                        } else if (selfRel != null) {
+                            jgen.writeStringField("hydra:subject", selfRel.getHref());
                         }
                     }
                     jgen.writeEndObject(); // end manages
@@ -241,6 +224,33 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         }
     }
 
+    private void writeCollectionHolder(String fieldName, TypedResource collectionHolder, JsonGenerator jgen) throws IOException {
+        jgen.writeObjectFieldStart(fieldName);
+        String identifyingUri = collectionHolder.getIdentifyingUri();
+        if (identifyingUri != null) {
+            jgen.writeStringField(JsonLdKeywords.AT_ID, identifyingUri);
+        }
+        jgen.writeStringField(JsonLdKeywords.AT_TYPE, collectionHolder.getTypeUri());
+        jgen.writeEndObject();
+    }
+
+    @Nullable
+    private ActionDescriptor getActionDescriptorForHttpGet(Link templatedAffordance) {
+        if (!(templatedAffordance instanceof Affordance)) {
+            return null;
+        }
+        final List<ActionDescriptor> actionDescriptors = ((Affordance) templatedAffordance).getActionDescriptors();
+        ActionDescriptor actionDescriptorGet = null;
+        for (ActionDescriptor actionDescriptor : actionDescriptors) {
+            String httpMethod = actionDescriptor.getHttpMethod();
+            if ("GET".equalsIgnoreCase(httpMethod)) {
+                actionDescriptorGet = actionDescriptor;
+            }
+        }
+        return actionDescriptorGet;
+    }
+
+
     private void writeActionDescriptors(JsonGenerator jgen, String currentVocab, List<ActionDescriptor>
             actionDescriptors) throws IOException, IntrospectionException {
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
@@ -269,9 +279,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeStringField("@type", typeName);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
-                // TODO check need for actionDescriptor and requestBodyInputParameter here:
+                // TODO check need for allRootParameters and requestBodyInputParameter here:
                 recurseSupportedProperties(jgen, currentVocab, clazz, actionDescriptor,
-                        requestBodyInputParameter, requestBodyInputParameter.getCallValue());
+                        requestBodyInputParameter, requestBodyInputParameter.getCallValue(), "");
                 jgen.writeEndArray(); // end hydra:supportedProperty
 
                 jgen.writeEndObject(); // end hydra:expects
@@ -281,64 +291,157 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         }
     }
 
+    /**
+     * Writes bean description recursively.
+     *
+     * @param jgen
+     *         to write to
+     * @param currentVocab
+     *         in context
+     * @param valueType
+     *         class of value
+     * @param allRootParameters
+     *         of the method that receives the request body
+     * @param rootParameter
+     *         the request body
+     * @param currentCallValue
+     *         the value at the current recursion level
+     * @param propertyPath
+     *         of the current recursion level
+     * @throws IntrospectionException
+     * @throws IOException
+     */
     private void recurseSupportedProperties(JsonGenerator jgen, String currentVocab, Class<?>
-            beanType, ActionDescriptor actionDescriptor,
-                                            ActionInputParameter actionInputParameter, Object currentCallValue)
+            valueType, AnnotatedParameters allRootParameters,
+                                            AnnotatedParameter rootParameter, Object currentCallValue,
+                                            String propertyPath)
             throws IntrospectionException,
             IOException {
+
+
+        Map<String, AnnotatedParameter> properties = new HashMap<String, AnnotatedParameter>();
+
+        // collect supported properties from ctor
+
+        Constructor[] constructors = valueType.getConstructors();
+        // find default ctor
+        Constructor constructor = PropertyUtils.findDefaultCtor(constructors);
+        // find ctor with JsonCreator ann
+        if (constructor == null) {
+            constructor = PropertyUtils.findJsonCreator(constructors, JsonCreator.class);
+        }
+        Assert.notNull(constructor, "no default constructor or JsonCreator found for type " + valueType
+                .getName());
+        int parameterCount = constructor.getParameterTypes().length;
+        if (parameterCount > 0) {
+            Annotation[][] annotationsOnParameters = constructor.getParameterAnnotations();
+
+            Class[] parameters = constructor.getParameterTypes();
+            int paramIndex = 0;
+            for (Annotation[] annotationsOnParameter : annotationsOnParameters) {
+                for (Annotation annotation : annotationsOnParameter) {
+                    if (JsonProperty.class == annotation.annotationType()) {
+                        JsonProperty jsonProperty = (JsonProperty) annotation;
+                        // TODO use required attribute of JsonProperty
+                        String paramName = jsonProperty.value();
+
+                        Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, paramName);
+
+                        AnnotatedParameter constructorParamInputParameter = new ActionInputParameter
+                                (new MethodParameter(constructor, paramIndex), propertyValue);
+
+                        // TODO collect ctor params, setter params and process
+                        // TODO then handle single, collection and bean for both
+                        properties.put(paramName, constructorParamInputParameter);
+                        paramIndex++; // increase for each @JsonProperty
+                    }
+                }
+            }
+            Assert.isTrue(parameters.length == paramIndex,
+                    "not all constructor arguments of @JsonCreator " + constructor.getName() +
+                            " are annotated with @JsonProperty");
+        }
+
+        // collect supported properties from setters
+
         // TODO support Option provider by other method args?
-        final BeanInfo beanInfo = Introspector.getBeanInfo(beanType);
+        final BeanInfo beanInfo = Introspector.getBeanInfo(valueType);
         final PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
         // TODO collection and map
-
+        // TODO distinguish which properties should be printed as supported - now just setters
         for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
             final Method writeMethod = propertyDescriptor.getWriteMethod();
             if (writeMethod == null) {
                 continue;
             }
-            final Class<?> propertyType = propertyDescriptor.getPropertyType();
+//            final Class<?> propertyType = propertyDescriptor.getPropertyType();
             // TODO: the property name must be a valid URI - need to check context for terms?
             String propertyName = getWritableExposedPropertyOrPropertyName(propertyDescriptor);
-            if (DataType.isSingleValueType(propertyType)) {
 
-                final Property property = new Property(beanType,
-                        propertyDescriptor.getReadMethod(),
-                        propertyDescriptor.getWriteMethod(),
-                        propertyDescriptor.getName());
+            Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, propertyDescriptor
+                    .getName());
 
-                Object propertyValue = PropertyUtils.getPropertyValue(currentCallValue, propertyDescriptor);
+            MethodParameter methodParameter = new MethodParameter(propertyDescriptor.getWriteMethod(), 0);
+            AnnotatedParameter propertySetterInputParameter = new ActionInputParameter(
+                    methodParameter, propertyValue);
 
-                MethodParameter methodParameter = new MethodParameter(propertyDescriptor.getWriteMethod(), 0);
-                ActionInputParameter propertySetterInputParameter = new ActionInputParameter(
-                        methodParameter, propertyValue);
-                final Object[] possiblePropertyValues =
-                        actionInputParameter.getPossibleValues(propertyDescriptor.getWriteMethod(), 0,
-                                actionDescriptor);
+            properties.put(propertyName, propertySetterInputParameter);
+        }
 
-                writeSupportedProperty(jgen, currentVocab, propertySetterInputParameter,
-                        propertyName, property, possiblePropertyValues);
+        // write all supported properties
+        // TODO we are using the annotatedParameter.parameterName but should use the key of properties here:
+        for (AnnotatedParameter annotatedParameter : properties.values()) {
+            String nextPropertyPathLevel = propertyPath.isEmpty() ? annotatedParameter.getParameterName() :
+                    propertyPath + '.' + annotatedParameter.getParameterName();
+            if (DataType.isSingleValueType(annotatedParameter.getParameterType())) {
+
+                final Object[] possiblePropertyValues = rootParameter.getPossibleValues(allRootParameters);
+
+                if (rootParameter.isIncluded(nextPropertyPathLevel) && !rootParameter.isExcluded
+                        (nextPropertyPathLevel)) {
+                    writeSupportedProperty(jgen, currentVocab, annotatedParameter,
+                            annotatedParameter.getParameterName(), possiblePropertyValues);
+                }
+                // TODO collections?
+                //                        } else if (DataType.isArrayOrCollection(parameterType)) {
+                //                            Object[] callValues = rootParameter.getCallValues();
+                //                            int items = callValues.length;
+                //                            for (int i = 0; i < items; i++) {
+                //                                Object value;
+                //                                if (i < callValues.length) {
+                //                                    value = callValues[i];
+                //                                } else {
+                //                                    value = null;
+                //                                }
+                //                                recurseSupportedProperties(jgen, currentVocab, rootParameter
+                // .getParameterType(),
+                //                                        allRootParameters, rootParameter, value);
+                //                            }
             } else {
                 jgen.writeStartObject();
-                jgen.writeStringField("hydra:property", propertyName);
+                jgen.writeStringField("hydra:property", annotatedParameter.getParameterName());
                 // TODO: is the property required -> for bean props we need the Access annotation to express that
                 jgen.writeObjectFieldStart(getPropertyOrClassNameInVocab(currentVocab, "rangeIncludes",
                         LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
-                Expose expose = AnnotationUtils.getAnnotation(propertyType, Expose.class);
+                Expose expose = AnnotationUtils.getAnnotation(annotatedParameter.getParameterType(), Expose.class);
                 String subClass;
                 if (expose != null) {
                     subClass = expose.value();
                 } else {
-                    subClass = propertyType.getSimpleName();
+                    subClass = annotatedParameter.getParameterType()
+                            .getSimpleName();
                 }
                 jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab, "subClassOf", "http://www.w3" +
                         ".org/2000/01/rdf-schema#", "rdfs:"), subClass);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty");
 
-                Object propertyValue = PropertyUtils.getPropertyValue(currentCallValue, propertyDescriptor);
+                Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, annotatedParameter
+                        .getParameterName());
 
-                recurseSupportedProperties(jgen, currentVocab, propertyType, actionDescriptor,
-                        actionInputParameter, propertyValue);
+                recurseSupportedProperties(jgen, currentVocab, annotatedParameter.getParameterType(),
+                        allRootParameters,
+                        rootParameter, propertyValue, nextPropertyPathLevel);
                 jgen.writeEndArray();
 
                 jgen.writeEndObject();
@@ -362,6 +465,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
      *         with colon
      * @return property name or class name in the currenct context
      */
+
     private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName, String
             vocabulary, String vocabularyPrefixWithColon) {
         Assert.notNull(vocabulary);
@@ -376,9 +480,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
 
     private void writeSupportedProperty(JsonGenerator jgen, String currentVocab,
-                                        ActionInputParameter actionInputParameter,
-                                        String propertyName, Property property,
-                                        @SuppressWarnings("unused") Object[] possiblePropertyValues)
+                                        AnnotatedParameter actionInputParameter,
+                                        String propertyName, @SuppressWarnings("unused") Object[]
+                                                possiblePropertyValues)
             throws IOException {
 
         jgen.writeStartObject();
@@ -400,7 +504,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         jgen.writeEndObject();
     }
 
-    private void writePossiblePropertyValues(JsonGenerator jgen, String currentVocab, ActionInputParameter
+    private void writePossiblePropertyValues(JsonGenerator jgen, String currentVocab, AnnotatedParameter
             actionInputParameter, @SuppressWarnings("unused") Object[] possiblePropertyValues) throws IOException {
         // Enable the following to list possible values.
         // Problem: how to express individuals only for certain hydra:options
@@ -412,7 +516,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 //
 //            for (Object possibleValue : possiblePropertyValues) {
 //                // TODO: apply "hydra:option" : { "@type": "@vocab"} to context for enums
-//                writeScalarValue(jgen, possibleValue, actionInputParameter.getParameterType());
+//                writeScalarValue(jgen, possibleValue, rootParameter.getParameterType());
 //            }
 //            jgen.writeEndArray();
 //        }
@@ -520,12 +624,12 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         }
     }
 
-//    private boolean isSelected(Object possibleValue, ActionInputParameter actionInputParameter) {
+//    private boolean isSelected(Object possibleValue, ActionInputParameter rootParameter) {
 //        boolean ret;
-//        if (actionInputParameter.isArrayOrCollection()) {
-//            ret = ArrayUtils.contains(actionInputParameter.getCallValues(), possibleValue);
+//        if (rootParameter.isArrayOrCollection()) {
+//            ret = ArrayUtils.contains(rootParameter.getCallValues(), possibleValue);
 //        } else {
-//            final Object callValue = actionInputParameter.getCallValue();
+//            final Object callValue = rootParameter.getCallValue();
 //            ret = (callValue == null ? false :
 //                    callValue.equals(possibleValue));
 //        }
@@ -533,12 +637,12 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 //    }
 
 //    private void writePropertyValueSpecifications(JsonGenerator jgen,
-//                                                  ActionDescriptor actionDescriptor) throws IOException {
+//                                                  ActionDescriptor allRootParameters) throws IOException {
 //        // TODO use input constraints
-//        for (String pathVariableName : actionDescriptor.getPathVariableNames()) {
+//        for (String pathVariableName : allRootParameters.getPathVariableNames()) {
 //            jgen.writeStringField(pathVariableName + "-input", "required");
 //        }
-//        for (String requestParamName : actionDescriptor.getRequestParamNames()) {
+//        for (String requestParamName : allRootParameters.getRequestParamNames()) {
 //            // TODO could be a list -> tell the client using select options, but what about a list
 //            // of free length, such as ids?
 //            jgen.writeStringField(requestParamName + "-input", "required");
@@ -562,11 +666,11 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 //    }
 
 
-    private void writeHydraVariableMapping(JsonGenerator jgen, @Nullable ActionDescriptor actionDescriptor,
+    private void writeHydraVariableMapping(JsonGenerator jgen, @Nullable AnnotatedParameters annotatedParameters,
                                            Collection<String> variableNames) throws IOException {
-        if (actionDescriptor != null) {
+        if (annotatedParameters != null) {
             for (String variableName : variableNames) {
-                AnnotatedParameter annotatedParameter = actionDescriptor.getAnnotatedParameter(variableName);
+                AnnotatedParameter annotatedParameter = annotatedParameters.getAnnotatedParameter(variableName);
                 // only unsatisfied parameters become hydra variables
                 if (annotatedParameter.getCallValue() == null) {
                     jgen.writeStartObject();

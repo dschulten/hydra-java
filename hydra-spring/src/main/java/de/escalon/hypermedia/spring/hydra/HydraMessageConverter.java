@@ -11,8 +11,10 @@
 package de.escalon.hypermedia.spring.hydra;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import de.escalon.hypermedia.hydra.serialize.ProxyUnwrapper;
 import de.escalon.hypermedia.spring.HypermediaTypes;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
@@ -25,11 +27,19 @@ public class HydraMessageConverter extends MappingJackson2HttpMessageConverter {
 
 
     public HydraMessageConverter() {
+        this(null);
+    }
+
+    /**
+     * Creates new HydraMessageConverter with proxyUnwrapper.
+     * @param proxyUnwrapper capable of unwrapping proxified Java beans during message conversion.
+     */
+    public HydraMessageConverter(ProxyUnwrapper proxyUnwrapper, Module... additionalModules) {
         ObjectMapper objectMapper = new ObjectMapper();
         // see https://github.com/json-ld/json-ld.org/issues/76
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        SimpleModule module = new JacksonHydraModule();
-        objectMapper.registerModule(module);
+        objectMapper.registerModules(additionalModules);
+        objectMapper.registerModule(new JacksonHydraModule(proxyUnwrapper));
         this.setObjectMapper(objectMapper);
         this.setSupportedMediaTypes(
                 Arrays.asList(HypermediaTypes.APPLICATION_JSONLD));

@@ -151,7 +151,8 @@ public class JsonLdDocumentationProvider implements DocumentationProvider {
     }
 
     private String vocabFromClass(Class<?> clazz) {
-        return ldContextFactory.vocabFromClass(clazz, LdContextFactory.HTTP_SCHEMA_ORG);
+        String vocabFromClassOrPackage = ldContextFactory.vocabFromClassOrPackage(clazz);
+        return vocabFromClassOrPackage == null ? LdContextFactory.HTTP_SCHEMA_ORG : vocabFromClassOrPackage;
     }
 
 }

@@ -1,5 +1,6 @@
 package de.escalon.hypermedia.affordance;
 
+import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.Type;
 
 import java.lang.annotation.Annotation;
@@ -31,14 +32,78 @@ public interface AnnotatedParameter {
 
     <T extends Annotation> T getAnnotation(Class<T> annotation);
 
+    /**
+     * Property is hidden according to {@link Input#hidden()}
+     * @param property name or property path
+     * @return true if hidden
+     */
+    boolean isHidden(String property);
+
+    /**
+     * Property is readOnly according to {@link Input#readOnly()}
+     * @param property name or property path
+     * @return true if hidden
+     */
+    boolean isReadOnly(String property);
+
+    /**
+     * Checks if property is included according to {@link Input#include}, {@link
+     * Input#hidden} and {@link Input#readOnly}.
+     * @param property name or property path
+     * @return true if included
+     */
+    boolean isIncluded(String property);
+
+    /**
+     * Checks if property is excluded according to {@link Input#exclude()}.
+     * @param property name or property path
+     * @return true if hidden
+     */
+    boolean isExcluded(String property);
+
+    /**
+     * Gets possible values for this parameter.
+     *
+     * @param annotatedParameters
+     *         in case that access to the other parameters is necessary to determine the possible values.
+     * @return possible values
+     */
     Object[] getPossibleValues(AnnotatedParameters annotatedParameters);
 
+    /**
+     * Gets possible values for a method parameter.
+     *
+     * @param annotatedParameters
+     *         in case that access to the other parameters is necessary to determine the possible values.
+     * @param method
+     *         having parameter
+     * @param parameterIndex
+     *         of parameter
+     * @return possible values
+     */
     Object[] getPossibleValues(Method method, int parameterIndex, AnnotatedParameters annotatedParameters);
 
+    /**
+     * Gets possible values for a constructor parameter.
+     *
+     * @param annotatedParameters
+     *         in case that access to the other parameters is necessary to determine the possible values.
+     * @param constructor
+     *         having parameter
+     * @param parameterIndex
+     *         of parameter
+     * @return possible values
+     */
     Object[] getPossibleValues(Constructor constructor, int parameterIndex, AnnotatedParameters annotatedParameters);
 
     boolean isArrayOrCollection();
 
+    /**
+     * Is this action input parameter required, based on the presence of a default value,
+     * the parameter annotations and the kind of input parameter.
+     *
+     * @return true if required
+     */
     boolean isRequired();
 
     String getDefaultValue();
@@ -48,6 +113,7 @@ public interface AnnotatedParameter {
     boolean hasCallValue();
 
     String getParameterName();
+
     Class<?> getDeclaringClass();
 
     Class<?> getParameterType();
