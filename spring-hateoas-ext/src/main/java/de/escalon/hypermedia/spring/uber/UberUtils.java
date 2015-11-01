@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2015. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring.uber;
@@ -39,8 +42,10 @@ public class UberUtils {
     /**
      * Recursively converts object to nodes of uber data.
      *
-     * @param objectNode to append to
-     * @param object     to convert
+     * @param objectNode
+     *         to append to
+     * @param object
+     *         to convert
      */
     public static void toUberData(AbstractUberNode objectNode, Object object) {
         Set<String> filtered = FILTER_RESOURCE_SUPPORT;
@@ -100,7 +105,8 @@ public class UberUtils {
                     }
                 }
             } else {
-                PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(object);// BeanUtils.getPropertyDescriptors(bean.getClass());
+                PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(object);// BeanUtils
+                // .getPropertyDescriptors(bean.getClass());
                 for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
                     String name = propertyDescriptor.getName();
                     if (filtered.contains(name)) {
@@ -153,8 +159,12 @@ public class UberUtils {
     /**
      * Converts single link to uber node.
      *
-     * @param href             to use
-     * @param actionDescriptor to use for action and model, never null
+     * @param href
+     *         to use
+     * @param actionDescriptor
+     *         to use for action and model, never null
+     * @param rels
+     *         of the link
      * @return uber link
      */
     public static UberNode toUberLink(String href, ActionDescriptor actionDescriptor, String... rels) {
@@ -164,15 +174,20 @@ public class UberUtils {
     /**
      * Converts single link to uber node.
      *
-     * @param href             to use
-     * @param actionDescriptor to use for action and model, never null
+     * @param href
+     *         to use
+     * @param actionDescriptor
+     *         to use for action and model, never null
+     * @param rels
+     *         of the link
      * @return uber link
      */
     public static UberNode toUberLink(String href, ActionDescriptor actionDescriptor, List<String> rels) {
         Assert.notNull(actionDescriptor, "actionDescriptor must not be null");
         UberNode uberLink = new UberNode();
         uberLink.setRel(rels);
-        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(href).expand(Collections.<String, Object>emptyMap());
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(href).expand(Collections
+                .<String, Object>emptyMap());
         uberLink.setUrl(partialUriTemplateComponents.getBaseUri());
         uberLink.setModel(getModelProperty(href, actionDescriptor));
         if (actionDescriptor != null) {
@@ -226,7 +241,8 @@ public class UberUtils {
     }
 
     private static String getUrlProperty(Link link) {
-        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(link.getHref()).expand(Collections.<String, Object>emptyMap());
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(link.getHref()).expand
+                (Collections.<String, Object>emptyMap());
         return partialUriTemplateComponents.getBaseUri();
 //		return UriComponentsBuilder.fromUriString(baseUri).build().normalize().toString();
     }

@@ -1,31 +1,265 @@
 {
-  "performer": "Walk off the Earth",
-  "@type": "Event",
-  "review": {
-    "hydra:template": "http:\/\/localhost\/reviews\/events\/1{?rating}",
-    "@type": "hydra:IriTemplate",
-    "hydra:mapping": [
-      {
-        "@type": "hydra:IriTemplateMapping",
-        "hydra:variable": "rating",
-        "hydra:property": "rating",
-        "hydra:required": true
-      }
-    ]
-  },
-  "workPerformed": {
-    "@type": "CreativeWork",
-    "name": "Gang of Rhythm Tour"
-  },
-  "eventStatus": "EVENT_SCHEDULED",
-  "location": "Wiesbaden",
-  "id": 1,
-  "@id": "http:\/\/localhost\/events\/1",
   "@context": {
-    "@vocab": "http:\/\/schema.org\/",
+    "@vocab": "http://schema.org/",
+    "hydra": "http://www.w3.org/ns/hydra/core#",
     "eventStatus": {
       "@type": "@vocab"
     },
     "EVENT_SCHEDULED": "EventScheduled"
-  }
+  },
+  "@type": "hydra:Collection",
+  "hydra:search": {
+    "@type": "hydra:IriTemplate",
+    "hydra:template": "http://localhost/events{?eventName}",
+    "hydra:mapping": [
+      {
+        "@type": "hydra:IriTemplateMapping",
+        "hydra:variable": "eventName",
+        "hydra:required": true,
+        "hydra:property": "http://schema.org/name"
+      }
+    ]
+  },
+  "ex:regex": {
+    "@type": "hydra:IriTemplate",
+    "hydra:template": "http://localhost/events/regex/{eventId}",
+    "hydra:mapping": [
+      {
+        "@type": "hydra:IriTemplateMapping",
+        "hydra:variable": "eventId",
+        "hydra:required": true,
+        "hydra:property": "ex:eventId"
+      }
+    ]
+  },
+  "@id": "http://localhost/events",
+  "hydra:operation": [
+    {
+      "hydra:method": "POST",
+      "hydra:expects": {
+        "@type": "Event",
+        "hydra:supportedProperty": [
+          {
+            "hydra:property": "typicalAgeRange"
+          },
+          {
+            "hydra:property": "performer"
+          },
+          {
+            "hydra:property": "workPerformed",
+            "rangeIncludes": {
+              "rdfs:subClassOf": "CreativeWork",
+              "hydra:supportedProperty": [
+                {
+                  "hydra:property": "name"
+                }
+              ]
+            }
+          },
+          {
+            "hydra:property": "eventStatus"
+          },
+          {
+            "hydra:property": "location"
+          }
+        ]
+      }
+    }
+  ],
+  "hydra:member": [
+    {
+      "@type": "Event",
+      "performer": "Walk off the Earth",
+      "workPerformed": {
+        "@type": "CreativeWork",
+        "name": "Gang of Rhythm Tour",
+        "hydra:collection": [
+          {
+            "@type": "hydra:Collection",
+            "@id": "http://localhost/reviews/events/1",
+            "hydra:manages": {
+              "hydra:property": "review"
+            },
+            "hydra:operation": [
+              {
+                "hydra:method": "POST",
+                "hydra:expects": {
+                  "@type": "Review",
+                  "hydra:supportedProperty": [
+                    {
+                      "@type": "PropertyValueSpecification",
+                      "hydra:property": "reviewBody",
+                      "valuePattern": ".{10,}"
+                    },
+                    {
+                      "hydra:property": "reviewRating",
+                      "rangeIncludes": {
+                        "rdfs:subClassOf": "Rating",
+                        "hydra:supportedProperty": [
+                          {
+                            "@type": "PropertyValueSpecification",
+                            "hydra:property": "ratingValue",
+                            "defaultValue": 3,
+                            "maxValue": 5,
+                            "minValue": 1,
+                            "stepValue": 1
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "location": "Wiesbaden",
+      "eventStatus": "EVENT_SCHEDULED",
+      "id": 1,
+      "@id": "http://localhost/events/1",
+      "hydra:operation": [
+        {
+          "hydra:method": "GET"
+        },
+        {
+          "hydra:method": "PUT",
+          "hydra:expects": {
+            "@type": "Event",
+            "hydra:supportedProperty": [
+              {
+                "hydra:property": "typicalAgeRange"
+              },
+              {
+                "@type": "PropertyValueSpecification",
+                "hydra:property": "performer",
+                "defaultValue": "Walk off the Earth"
+              },
+              {
+                "hydra:property": "workPerformed",
+                "rangeIncludes": {
+                  "rdfs:subClassOf": "CreativeWork",
+                  "hydra:supportedProperty": [
+                    {
+                      "hydra:property": "name"
+                    }
+                  ]
+                }
+              },
+              {
+                "@type": "PropertyValueSpecification",
+                "hydra:property": "eventStatus",
+                "defaultValue": "EVENT_SCHEDULED"
+              },
+              {
+                "@type": "PropertyValueSpecification",
+                "hydra:property": "location",
+                "defaultValue": "Wiesbaden"
+              }
+            ]
+          }
+        },
+        {
+          "hydra:method": "DELETE"
+        }
+      ]
+    },
+    {
+      "@type": "Event",
+      "performer": "Cornelia Bielefeldt",
+      "workPerformed": {
+        "@type": "CreativeWork",
+        "name": "Mein letzter Film",
+        "hydra:collection": [
+          {
+            "@type": "hydra:Collection",
+            "@id": "http://localhost/reviews/events/2",
+            "hydra:manages": {
+              "hydra:property": "review"
+            },
+            "hydra:operation": [
+              {
+                "hydra:method": "POST",
+                "hydra:expects": {
+                  "@type": "Review",
+                  "hydra:supportedProperty": [
+                    {
+                      "@type": "PropertyValueSpecification",
+                      "hydra:property": "reviewBody",
+                      "valuePattern": ".{10,}"
+                    },
+                    {
+                      "hydra:property": "reviewRating",
+                      "rangeIncludes": {
+                        "rdfs:subClassOf": "Rating",
+                        "hydra:supportedProperty": [
+                          {
+                            "@type": "PropertyValueSpecification",
+                            "hydra:property": "ratingValue",
+                            "defaultValue": 3,
+                            "maxValue": 5,
+                            "minValue": 1,
+                            "stepValue": 1
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "location": "Heilbronn",
+      "eventStatus": "EVENT_SCHEDULED",
+      "id": 2,
+      "@id": "http://localhost/events/2",
+      "hydra:operation": [
+        {
+          "hydra:method": "GET"
+        },
+        {
+          "hydra:method": "PUT",
+          "hydra:expects": {
+            "@type": "Event",
+            "hydra:supportedProperty": [
+              {
+                "hydra:property": "typicalAgeRange"
+              },
+              {
+                "@type": "PropertyValueSpecification",
+                "hydra:property": "performer",
+                "defaultValue": "Cornelia Bielefeldt"
+              },
+              {
+                "hydra:property": "workPerformed",
+                "rangeIncludes": {
+                  "rdfs:subClassOf": "CreativeWork",
+                  "hydra:supportedProperty": [
+                    {
+                      "hydra:property": "name"
+                    }
+                  ]
+                }
+              },
+              {
+                "@type": "PropertyValueSpecification",
+                "hydra:property": "eventStatus",
+                "defaultValue": "EVENT_SCHEDULED"
+              },
+              {
+                "@type": "PropertyValueSpecification",
+                "hydra:property": "location",
+                "defaultValue": "Heilbronn"
+              }
+            ]
+          }
+        },
+        {
+          "hydra:method": "DELETE"
+        }
+      ]
+    }
+  ]
 }

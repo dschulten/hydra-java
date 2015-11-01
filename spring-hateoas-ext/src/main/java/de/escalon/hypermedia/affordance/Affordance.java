@@ -534,11 +534,9 @@ public class Affordance extends Link {
      * affordance is not semantically <em>holding</em> the collection items, but just has a loose relationship to the
      * collection. E.g. a product "has" no orderedItems, but it may have a loose relationship to a collection of ordered
      * items where the product can be POSTed to. The thing that semantically <em>holds</em> ordered items is an order,
-     * not a product. Use {@link #rel(TypedResource, String, String...)} or {@link #reverseRel(String, TypedResource, String...)} to define the collection holder.
+     * not a product. Hence the order would be the collection holder.
      *
      * @return collection holder
-     * @see #rel(TypedResource, String, String...)
-     * @see #reverseRel(String, TypedResource, String...)
      */
     @JsonIgnore
     public TypedResource getCollectionHolder() {

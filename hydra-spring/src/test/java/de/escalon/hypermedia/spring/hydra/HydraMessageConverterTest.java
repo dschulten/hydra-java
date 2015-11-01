@@ -178,31 +178,32 @@ public class HydraMessageConverterTest {
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
                         ".['hydra:method']").value("POST"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[0].['hydra:property']").value("reviewBody"))
+                        ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewBody')]").exists())
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[0].['valuePattern']")
                         .value(".{10,}"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0]" +
-                        ".['hydra:operation'].[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['hydra:property']").value("reviewRating"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewRating')]").exists())
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
+                        ".[0]" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewRating')].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['hydra:property']").value("ratingValue"))
-                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
+                .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
+                        ".[0]" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewRating')].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['minValue']").value(1))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewRating')].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['maxValue']").value(5))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewRating')].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['stepValue']").value(1))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[1].['rangeIncludes']" +
+                        ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewRating')].['rangeIncludes']" +
                         ".['hydra:supportedProperty'][0].['defaultValue']").value(3))
                 .andReturn();
         System.out.println(result.getResponse()

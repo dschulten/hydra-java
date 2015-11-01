@@ -258,7 +258,7 @@ public class AffordanceBuilder implements LinkBuilder {
      * to the product, but to an order. You can express that by saying:
      * <pre>
      * TypedResource order = new TypedResource("http://schema.org/Order"); // holds the ordered items
-     * Resource&lt;Product> product = new Resource&lt;>(); // has a loose relationship to ordered items
+     * Resource&lt;Product&gt; product = new Resource&lt;&gt;(); // has a loose relationship to ordered items
      * product.add(linkTo(methodOn(OrderController.class).postOrderedItem()
      *    .rel(order, "orderedItem")); // order has ordered items, not product has ordered items
      * </pre>
