@@ -181,7 +181,7 @@ public class HydraMessageConverterTest {
                         ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewBody')]").exists())
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
                         ".[0]" +
-                        ".['hydra:expects'].['hydra:supportedProperty'].[0].['valuePattern']")
+                        ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewBody')].['valuePattern']")
                         .value(".{10,}"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation'].[0]" +
                         ".['hydra:expects'].['hydra:supportedProperty'].[?(@.['hydra:property']=='reviewRating')]").exists())
