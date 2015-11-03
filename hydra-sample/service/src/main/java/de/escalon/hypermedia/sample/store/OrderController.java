@@ -90,7 +90,7 @@ public class OrderController {
         return new ResponseEntity<Order>(order, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/{orderId}/items/{orderedItemId}/addOns", method = RequestMethod.POST)
+    @RequestMapping(value = "/{orderId}/items/{orderedItemId}/accessories", method = RequestMethod.POST)
     public ResponseEntity<Void> orderAccessory(@PathVariable int orderId, @PathVariable int orderedItemId,
                                                @RequestBody @Input(include = "productID") Product product) {
         // TODO should write a productBackend to avoid this resolution nonsense:
