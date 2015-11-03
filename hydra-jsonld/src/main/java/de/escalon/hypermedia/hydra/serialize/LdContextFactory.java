@@ -141,25 +141,28 @@ public class LdContextFactory {
         if (annotatedTerms != null) {
             final Term[] terms = annotatedTerms.value();
             for (Term term : terms) {
-                final String define = term.define();
-                final String as = term.as();
-                final boolean reverse = term.reverse();
-                if (annotatedTermsMap.containsKey(as)) {
-                    throw new IllegalStateException("duplicate definition of term '" + define + "' in " + name);
-                }
-                if (!reverse) {
-                    annotatedTermsMap.put(define, as);
-                } else {
-                    Map<String, String> reverseTerm = new LinkedHashMap<String, String>();
-                    reverseTerm.put("@reverse", as);
-                    annotatedTermsMap.put(define, reverseTerm);
-                }
+                collectTerms(name, annotatedTermsMap, term);
             }
-        }
-        if (annotatedTerm != null) {
-            annotatedTermsMap.put(annotatedTerm.define(), annotatedTerm.as());
+        } else if(annotatedTerm != null) { // only one term
+            collectTerms(name, annotatedTermsMap, annotatedTerm);
         }
         return annotatedTermsMap;
+    }
+
+    private void collectTerms(String name, Map<String, Object> annotatedTermsMap, Term term) {
+        final String define = term.define();
+        final String as = term.as();
+        final boolean reverse = term.reverse();
+        if (annotatedTermsMap.containsKey(as)) {
+            throw new IllegalStateException("duplicate definition of term '" + define + "' in " + name);
+        }
+        if (!reverse) {
+            annotatedTermsMap.put(define, as);
+        } else {
+            Map<String, String> reverseTerm = new LinkedHashMap<String, String>();
+            reverseTerm.put(JsonLdKeywords.AT_REVERSE, as);
+            annotatedTermsMap.put(define, reverseTerm);
+        }
     }
 
     private Object getNestedContextProviderFromMixin(MixinSource mixinSource, Object bean, Class<?> mixinClass) {

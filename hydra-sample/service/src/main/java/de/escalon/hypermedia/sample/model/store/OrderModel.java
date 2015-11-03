@@ -7,14 +7,14 @@ import java.util.List;
  * Created by Dietrich on 17.02.2015.
  */
 public class OrderModel {
-    private List<ProductModel> products = new ArrayList<ProductModel>();
+    private List<OrderedItemModel> products = new ArrayList<OrderedItemModel>();
     private int id;
 
-    public List<ProductModel> getProducts() {
+    public List<OrderedItemModel> getOrderedItems() {
         return products;
     }
 
-    public void setProducts(List<ProductModel> products) {
+    public void setProducts(List<OrderedItemModel> products) {
         this.products = products;
     }
 

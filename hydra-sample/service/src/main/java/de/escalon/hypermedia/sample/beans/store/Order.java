@@ -22,7 +22,4 @@ public class Order extends ResourceSupport {
         return items;
     }
 
-    public void setAcceptedOffer(Offer acceptedOffer) {
-        this.acceptedOffer = acceptedOffer;
-    }
 }

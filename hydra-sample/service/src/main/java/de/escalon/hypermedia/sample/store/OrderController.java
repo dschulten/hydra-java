@@ -6,6 +6,7 @@ import de.escalon.hypermedia.action.ResourceHandler;
 import de.escalon.hypermedia.affordance.TypedResource;
 import de.escalon.hypermedia.sample.beans.store.Offer;
 import de.escalon.hypermedia.sample.beans.store.Order;
+import de.escalon.hypermedia.sample.beans.store.OrderedItem;
 import de.escalon.hypermedia.sample.beans.store.Product;
 import de.escalon.hypermedia.sample.model.store.OrderModel;
 import de.escalon.hypermedia.sample.model.store.ProductModel;
@@ -70,7 +71,8 @@ public class OrderController {
         for (int i = 0; i < items.size(); i++) {
             Product product = items.get(i);
             Offer offer = new Offer();
-            if (!product.hasExtra("9052006")) {
+            if (!product
+                    .hasExtra("9052006")) {
                 Offer shot = createAddOnOffer(product, "9052006", 0.2, orderId, i);
                 offer.addOn(shot);
             }

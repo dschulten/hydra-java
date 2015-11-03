@@ -8,6 +8,7 @@ public class JsonLdKeywords {
     public static final String AT_VOCAB = "@vocab";
     public static final String AT_TYPE = "@type";
     public static final String AT_ID = "@id";
+    public static final String AT_REVERSE = "@reverse";
 
     private JsonLdKeywords(){};
 
