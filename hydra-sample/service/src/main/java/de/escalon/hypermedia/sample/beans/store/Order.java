@@ -12,6 +12,16 @@ import java.util.List;
 public class Order extends ResourceSupport {
     private List<Product> items = new ArrayList<Product>();
     private Offer acceptedOffer;
+    private Store seller;
+
+    public void setSeller(Store seller) {
+        this.seller = seller;
+    }
+
+    public Store getSeller() {
+        return seller;
+    }
+
 
     public void addItem(Product orderedItem) {
         this.items.add(orderedItem);
@@ -21,5 +31,7 @@ public class Order extends ResourceSupport {
     public List<? extends Product> getItems() {
         return items;
     }
+
+
 
 }

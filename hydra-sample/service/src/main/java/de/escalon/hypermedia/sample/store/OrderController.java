@@ -4,17 +4,16 @@ import de.escalon.hypermedia.action.Cardinality;
 import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.ResourceHandler;
 import de.escalon.hypermedia.affordance.TypedResource;
-import de.escalon.hypermedia.sample.beans.store.Offer;
-import de.escalon.hypermedia.sample.beans.store.Order;
-import de.escalon.hypermedia.sample.beans.store.OrderedItem;
-import de.escalon.hypermedia.sample.beans.store.Product;
+import de.escalon.hypermedia.sample.beans.store.*;
 import de.escalon.hypermedia.sample.model.store.OrderModel;
+import de.escalon.hypermedia.sample.model.store.OrderStatus;
 import de.escalon.hypermedia.sample.model.store.ProductModel;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +44,9 @@ public class OrderController {
     @Autowired
     private ProductController productController;
 
+    @Autowired
+    private StoreController storeController;
+
 
     @ResourceHandler(Cardinality.COLLECTION)
     @RequestMapping(method = RequestMethod.POST)
@@ -54,10 +56,7 @@ public class OrderController {
         Product resolvedProduct = productController.getProduct(product.productID);
         orderModel = orderBackend.addOrderedItem(orderModel.getId(),
                 new ProductModel(resolvedProduct.name, resolvedProduct.productID));
-        AffordanceBuilder location = linkTo(methodOn(this.getClass()).getOrder(orderModel.getId()));
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(location.toUri());
-        return new ResponseEntity<Void>(headers, HttpStatus.SEE_OTHER);
+        return redirectToUpdatedOrder(orderModel.getId());
 
     }
 
@@ -86,6 +85,10 @@ public class OrderController {
             }
         }
 
+        Store store = storeController.createStoreWithoutOffers();
+        store.add(linkTo(methodOn(this.getClass()).getOffersForOrder(orderId)).withRel("makesOffer"));
+        order.setSeller(store);
+
         order.add(linkTo(methodOn(PaymentController.class).makePayment(orderId)).withRel("paymentUrl"));
         return new ResponseEntity<Order>(order, HttpStatus.OK);
     }
@@ -97,9 +100,24 @@ public class OrderController {
         Product resolvedProduct = productController.getProduct(product.productID);
         orderBackend.orderAccessoryForOrderedItem(orderId, orderedItemId, new ProductModel(resolvedProduct.name,
                 resolvedProduct.productID));
+        return redirectToUpdatedOrder(orderId);
+    }
+
+    private ResponseEntity<Void> redirectToUpdatedOrder(int orderId) {
+        AffordanceBuilder location = linkTo(methodOn(this.getClass()).getOrder(orderId));
         HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(linkTo(methodOn(this.getClass()).getOrder(orderId)).toUri());
+        headers.setLocation(location.toUri());
         return new ResponseEntity<Void>(headers, HttpStatus.SEE_OTHER);
+    }
+
+    @RequestMapping(value = "/{orderId}/items", method = RequestMethod.POST)
+    public ResponseEntity<Void> orderAdditionalItem(
+            @PathVariable int orderId, @RequestBody @Input(include = "productID") Product product) {
+
+        Product resolvedProduct = productController.getProduct(product.productID);
+        OrderModel orderModel = orderBackend.addOrderedItem(orderId,
+                new ProductModel(resolvedProduct.name, resolvedProduct.productID));
+        return redirectToUpdatedOrder(orderId);
     }
 
     private Offer createAddOnOffer(Product product, String addOnProductID, double price, int orderId, int
@@ -121,8 +139,30 @@ public class OrderController {
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<Resources<Order>> getOrders() {
-        Resources<Order> orderResources = new Resources<Order>(orderAssembler.toResources(orderBackend.getOrders()));
+    public ResponseEntity<Resources<Order>> getOrders(@RequestParam(required = false) OrderStatus orderStatus) {
+        Resources<Order> orderResources = new Resources<Order>(orderAssembler.toResources(orderBackend
+                .getOrdersByStatus(orderStatus)));
         return new ResponseEntity<Resources<Order>>(orderResources, HttpStatus.OK);
+    }
+
+
+    @RequestMapping("/{orderId}/offers")
+    public HttpEntity<Resources<Offer>> getOffersForOrder(@PathVariable int orderId) {
+        HttpEntity<Resources<Offer>> offers = storeController.getOffers();
+        for (Offer offer : offers.getBody()
+                .getContent()) {
+            Product itemOffered = offer.getItemOffered();
+
+            // we can determine the subject URI of the order
+            TypedResource subject = new TypedResource("Order",
+                    linkTo(methodOn(this.getClass()).getOrder(orderId)).toString());
+
+            itemOffered.add(linkTo(methodOn(OrderController.class)
+                    .orderAdditionalItem(orderId, itemOffered))
+                    .rel(subject, "orderedItem")
+                    .build());
+        }
+
+        return offers;
     }
 }

@@ -15,15 +15,13 @@ import java.util.List;
 @Term(define="accessories", as="isAccessoryOrSparePartFor", reverse = true)
 public class Product extends ResourceSupport {
     public final String name;
-
     public final String productID;
-
+    private Offer offer;
     public List<Product> accessories = new ArrayList<Product>();
+
     public Offer getOffers() {
         return offer;
     }
-
-    private Offer offer;
 
     @JsonCreator
     public Product(@JsonProperty("name") String name, @JsonProperty("productID") String productID) {

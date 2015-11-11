@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -41,7 +42,7 @@ public class LdContextFactory {
         }
 
         // determine vocab in context
-        String classVocab = vocabFromClassOrPackage(bean.getClass());
+        String classVocab = bean == null ? null : vocabFromClassOrPackage(bean.getClass());
 
         final Vocab mixinVocab = getAnnotation(mixInClass, Vocab.class);
 
@@ -71,45 +72,50 @@ public class LdContextFactory {
             if (proxyUnwrapper != null) {
                 bean = proxyUnwrapper.unwrapProxy(bean);
             }
-            final Class<?> beanClass = bean.getClass();
-            Map<String, Object> termsMap = termsFromClass(beanClass);
-            Map<String, Object> mixinTermsMap = getAnnotatedTerms(mixInClass, beanClass
-                    .getName());
 
-            // mixin terms override class terms
-            termsMap.putAll(mixinTermsMap);
+            Map<String, Object> termsMap = new LinkedHashMap<String, Object>();
+            if (bean != null) {
+                final Class<?> beanClass = bean.getClass();
+                termsMap.putAll(termsFromClass(beanClass));
+                Map<String, Object> mixinTermsMap = getAnnotatedTerms(mixInClass, beanClass
+                        .getName());
 
-            Object nestedContextProviderFromMixin = getNestedContextProviderFromMixin(mixinSource, bean, mixInClass);
-            if (nestedContextProviderFromMixin != null) {
-                termsMap.putAll(getTerms(mixinSource, nestedContextProviderFromMixin, null));
-            }
+                // mixin terms override class terms
+                termsMap.putAll(mixinTermsMap);
 
-            final Field[] fields = beanClass
-                    .getDeclaredFields();
-            for (Field field : fields) {
-                if (Modifier.isPublic(field.getModifiers())) {
-                    final Expose expose = field.getAnnotation(Expose.class);
-                    if (Enum.class.isAssignableFrom(field.getType())) {
-                        addEnumTerms(termsMap, expose, field.getName(), (Enum) field.get(bean));
-                    } else {
-                        if (expose != null) {
-                            termsMap.put(field.getName(), expose.value());
+                Object nestedContextProviderFromMixin = getNestedContextProviderFromMixin(mixinSource, bean, mixInClass);
+
+                if (nestedContextProviderFromMixin != null) {
+                    termsMap.putAll(getTerms(mixinSource, nestedContextProviderFromMixin, null));
+                }
+
+                final Field[] fields = beanClass
+                        .getDeclaredFields();
+                for (Field field : fields) {
+                    if (Modifier.isPublic(field.getModifiers())) {
+                        final Expose expose = field.getAnnotation(Expose.class);
+                        if (Enum.class.isAssignableFrom(field.getType())) {
+                            addEnumTerms(termsMap, expose, field.getName(), (Enum) field.get(bean));
+                        } else {
+                            if (expose != null) {
+                                termsMap.put(field.getName(), expose.value());
+                            }
                         }
                     }
                 }
-            }
 
-            final BeanInfo beanInfo = Introspector.getBeanInfo(beanClass);
-            final PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
-            for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-                final Method method = propertyDescriptor.getReadMethod();
-                if (method != null) {
-                    final Expose expose = method.getAnnotation(Expose.class);
-                    if (Enum.class.isAssignableFrom(method.getReturnType())) {
-                        addEnumTerms(termsMap, expose, propertyDescriptor.getName(), (Enum) method.invoke(bean));
-                    } else {
-                        if (expose != null) {
-                            termsMap.put(propertyDescriptor.getName(), expose.value());
+                final BeanInfo beanInfo = Introspector.getBeanInfo(beanClass);
+                final PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+                for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+                    final Method method = propertyDescriptor.getReadMethod();
+                    if (method != null) {
+                        final Expose expose = method.getAnnotation(Expose.class);
+                        if (Enum.class.isAssignableFrom(method.getReturnType())) {
+                            addEnumTerms(termsMap, expose, propertyDescriptor.getName(), (Enum) method.invoke(bean));
+                        } else {
+                            if (expose != null) {
+                                termsMap.put(propertyDescriptor.getName(), expose.value());
+                            }
                         }
                     }
                 }
@@ -143,7 +149,7 @@ public class LdContextFactory {
             for (Term term : terms) {
                 collectTerms(name, annotatedTermsMap, term);
             }
-        } else if(annotatedTerm != null) { // only one term
+        } else if (annotatedTerm != null) { // only one term
             collectTerms(name, annotatedTermsMap, annotatedTerm);
         }
         return annotatedTermsMap;

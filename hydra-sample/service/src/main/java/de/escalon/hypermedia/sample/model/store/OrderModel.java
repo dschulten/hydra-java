@@ -9,12 +9,13 @@ import java.util.List;
 public class OrderModel {
     private List<OrderedItemModel> products = new ArrayList<OrderedItemModel>();
     private int id;
+    private OrderStatus orderStatus;
 
     public List<OrderedItemModel> getOrderedItems() {
         return products;
     }
 
-    public void setProducts(List<OrderedItemModel> products) {
+    public void setOrderedItems(List<OrderedItemModel> products) {
         this.products = products;
     }
 
@@ -24,5 +25,13 @@ public class OrderModel {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
     }
 }

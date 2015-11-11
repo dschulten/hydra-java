@@ -52,14 +52,26 @@ public class PartialUriTemplateComponents {
         return baseUri;
     }
 
+    /**
+     * Query head starting with ? continued by expanded query parameters, separated by &amp;
+     * @return query head, may be empty
+     */
     public String getQueryHead() {
         return queryHead;
     }
 
+    /**
+     * Query tail containing unexpanded query parameters as comma-separated list.
+     * @return query tail, may be empty
+     */
     public String getQueryTail() {
         return queryTail;
     }
 
+    /**
+     * Query consisting of expanded parameters and unexpanded parameters.
+     * @return query, may be empty
+     */
     public String getQuery() {
         StringBuilder query = new StringBuilder();
         if (queryTail.length() > 0) {

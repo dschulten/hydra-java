@@ -72,7 +72,8 @@ public class Affordance extends Link {
 
     /**
      * Creates affordance, usually for a pre-expanded uriTemplate. Link header params may be added later.
-     *
+     * Optional variables will be stripped before passing it to the underlying link.
+     * Use {@link #getUriTemplateComponents()} to access the base uri, query head, query tail with optional variables etc.
      * @param uriTemplate
      *         pre-expanded uri or uritemplate of the affordance
      * @param actionDescriptors
@@ -88,6 +89,8 @@ public class Affordance extends Link {
         // the template to the underlying Link. That way the href of an Affordance stays compatible with a Link that
         // has been created with ControllerLinkBuilder. Only serializers that make use of Affordance will see the
         // optional variables, too.
+        // They can access the base uri, query etc. via getUriTemplateComponents.
+        // TODO allow manual creation of affordance which does not strip optional vars?
         super(uriTemplate.stripOptionalVariables(actionDescriptors)
                 .toString());
         this.partialUriTemplate = uriTemplate;
@@ -373,8 +376,17 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Object... arguments) {
+        // TODO expanding Affordance with rev, super mandates rel
         return new Affordance(super.expand(arguments)
-                .getHref(), linkParams, actionDescriptors);
+                    .getHref(), linkParams, actionDescriptors);
+    }
+
+    /**
+     * Gets parts of the uri template such as base uri, expanded query part, unexpanded query part etc.
+     * @return
+     */
+    public PartialUriTemplateComponents getUriTemplateComponents() {
+        return partialUriTemplate.asComponents();
     }
 
     /**
@@ -386,8 +398,9 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Map<String, ? extends Object> arguments) {
+        // TODO expanding Affordance with rev, super mandates rel
         return new Affordance(super.expand(arguments)
-                .getHref(), linkParams, actionDescriptors);
+                    .getHref(), linkParams, actionDescriptors);
     }
 
     /**

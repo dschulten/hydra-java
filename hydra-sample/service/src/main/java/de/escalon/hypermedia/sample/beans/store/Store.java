@@ -28,13 +28,6 @@ public class Store extends ResourceSupport {
     private List<Offer> offers = new ArrayList<Offer>();
 
     public List<Offer> getMakesOffer() {
-
-        for (Offer offer : offers) {
-            Product itemOffered = offer.getItemOffered();
-            itemOffered.add(linkTo(methodOn(OrderController.class).makeOrder(itemOffered))
-                    .rel(new TypedResource("Order"), "orderedItem")
-                    .build());
-        }
         return offers;
     }
 

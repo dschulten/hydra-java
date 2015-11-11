@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -20,6 +21,7 @@ import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
  * Created by Dietrich on 02.11.2015.
  */
 @RequestMapping("/orders/{orderId}/items")
+@Controller
 public class OrderedItemController {
 
     @Autowired

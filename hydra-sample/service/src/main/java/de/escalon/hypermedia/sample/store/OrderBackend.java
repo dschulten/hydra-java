@@ -1,6 +1,7 @@
 package de.escalon.hypermedia.sample.store;
 
 import de.escalon.hypermedia.sample.model.store.OrderModel;
+import de.escalon.hypermedia.sample.model.store.OrderStatus;
 import de.escalon.hypermedia.sample.model.store.OrderedItemModel;
 import de.escalon.hypermedia.sample.model.store.ProductModel;
 import org.springframework.stereotype.Component;
@@ -46,5 +47,15 @@ public class OrderBackend {
 
     public List<OrderModel> getOrders() {
         return orderModels;
+    }
+
+    public List<OrderModel> getOrdersByStatus(OrderStatus orderStatus) {
+        List<OrderModel> ret = new ArrayList<OrderModel>();
+        for (OrderModel orderModel : orderModels) {
+            if (orderModel.getOrderStatus() == orderStatus) {
+                ret.add(orderModel);
+            }
+        }
+        return ret;
     }
 }
