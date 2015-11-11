@@ -262,7 +262,8 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
       "@id": "http://localhost/events/1",
       "performer": "Walk off the Earth",
       "location": "Wiesbaden",
-      "name": "Gang of Rhythm Tour"
+      "name": "Gang of Rhythm Tour",
+      "eventStatus" : "EVENT_SCHEDULED",
       "hydra:operation": [
          {
              "hydra:method": "GET"
@@ -275,8 +276,15 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
                  "hydra:supportedProperty": [
                      {
                          "hydra:property": "eventStatus",
-                         "hydra:required": "true"
-                     }
+                         "hydra:required": "true",
+                         "readonlyValue": false
+                     },
+                     {
+                         "hydra:property": "location",
+                         "defaultValue": "Wiesbaden",
+                         "readonlyValue": false
+                     },
+                     ... other properties required for a replacing PUT
                  ]
              }
          },
