@@ -64,6 +64,7 @@ public class OrderController {
     public ResponseEntity<Order> getOrder(@PathVariable int orderId) {
         OrderModel orderModel = orderBackend.getOrder(orderId);
         Order order = orderAssembler.toResource(orderModel);
+        //TODO need to add additional action for delete to self rel
 
         // offer extras for each product
         List<? extends Product> items = order.getItems();
@@ -120,6 +121,12 @@ public class OrderController {
         return redirectToUpdatedOrder(orderId);
     }
 
+    @RequestMapping(value = "/{orderId}/items/{orderedItemId}", method = RequestMethod.DELETE)
+    public ResponseEntity<Void> deleteOrderedItem(@PathVariable int orderId, @PathVariable int orderedItemId) {
+        orderBackend.deleteOrderedItem(orderId, orderedItemId);
+        return redirectToUpdatedOrder(orderId);
+    }
+
     private Offer createAddOnOffer(Product product, String addOnProductID, double price, int orderId, int
             orderedItemId) {
         Offer addOnOffer = new Offer();
@@ -140,8 +147,15 @@ public class OrderController {
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<Resources<Order>> getOrders(@RequestParam(required = false) OrderStatus orderStatus) {
-        Resources<Order> orderResources = new Resources<Order>(orderAssembler.toResources(orderBackend
-                .getOrdersByStatus(orderStatus)));
+        List<OrderModel> orders;
+        if (orderStatus == null) {
+            orders = orderBackend.getOrders();
+        } else {
+            orders = orderBackend
+                    .getOrdersByStatus(orderStatus);
+        }
+        Resources<Order> orderResources = new Resources<Order>(
+                orderAssembler.toResources(orders));
         return new ResponseEntity<Resources<Order>>(orderResources, HttpStatus.OK);
     }
 

@@ -35,6 +35,7 @@ public class OrderAssembler extends ResourceAssemblerSupport<OrderModel, Order> 
     @Override
     protected Order instantiateResource(OrderModel entity) {
         Order order = super.instantiateResource(entity);
+        order.setOrderStatus(entity.getOrderStatus());
         List<OrderedItemModel> orderedItems = entity.getOrderedItems();
         for (OrderedItemModel orderedItemModel : orderedItems) {
             Product product = itemAssembler.instantiateResource(orderedItemModel.orderedItem);

@@ -43,6 +43,7 @@ public class XhtmlWriter extends Writer {
             "<!DOCTYPE html>" + //
             "<html xmlns='http://www.w3.org/1999/xhtml'>" + //
             "  <head>" + //
+            "    <meta charset=\"utf-8\"/>" + //
             "    <title>%s</title>";
 
 
@@ -291,8 +292,8 @@ public class XhtmlWriter extends Writer {
      * @param actionDescriptor
      *         describing the form action
      * @throws IOException
-     * @see <a href="http://docs.spring.io/spring/docs/3.0
-     * .x/javadoc-api/org/springframework/web/filter/HiddenHttpMethodFilter.html">Spring
+     * @see
+     * <a href="http://docs.spring.io/spring/docs/3.0 .x/javadoc-api/org/springframework/web/filter/HiddenHttpMethodFilter.html">Spring
      * MVC HiddenHttpMethodFilter</a>
      */
     private void appendForm(Affordance affordance, ActionDescriptor actionDescriptor) throws IOException {
@@ -511,7 +512,6 @@ public class XhtmlWriter extends Writer {
     }
 
 
-
     /**
      * Renders input fields for bean properties of bean to add or update or patch.
      *
@@ -563,7 +563,8 @@ public class XhtmlWriter extends Writer {
                                 // TODO duplicate below for PropertyDescriptors
                                 if (DataType.isSingleValueType(parameterType)) {
 
-                                    Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, paramName);
+                                    Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue,
+                                            paramName);
 
                                     ActionInputParameter constructorParamInputParameter = new ActionInputParameter
                                             (new MethodParameter(constructor, paramIndex), propertyValue);
@@ -678,8 +679,6 @@ public class XhtmlWriter extends Writer {
             }
         }
     }
-
-
 
 
     private BeanInfo getBeanInfo(Class<?> beanType) {

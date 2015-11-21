@@ -282,7 +282,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
     protected void writeInternal(Object t, HttpOutputMessage outputMessage) throws IOException,
             HttpMessageNotWritableException {
 
-        XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody()));
+        XhtmlWriter xhtmlWriter = new XhtmlWriter(new OutputStreamWriter(outputMessage.getBody(), "UTF-8"));
         xhtmlWriter.setMethodParam(methodParam);
         xhtmlWriter.setStylesheets(stylesheets);
         xhtmlWriter.setDocumentationProvider(documentationProvider);

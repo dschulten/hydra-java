@@ -58,4 +58,9 @@ public class OrderBackend {
         }
         return ret;
     }
+
+    public void deleteOrderedItem(int orderId, int orderedItemId) {
+        OrderModel order = getOrder(orderId);
+        order.getOrderedItems().remove(orderedItemId);
+    }
 }

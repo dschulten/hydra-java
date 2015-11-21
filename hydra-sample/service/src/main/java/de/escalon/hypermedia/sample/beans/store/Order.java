@@ -1,6 +1,7 @@
 package de.escalon.hypermedia.sample.beans.store;
 
 import de.escalon.hypermedia.hydra.mapping.Expose;
+import de.escalon.hypermedia.sample.model.store.OrderStatus;
 import org.springframework.hateoas.ResourceSupport;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ public class Order extends ResourceSupport {
     private List<Product> items = new ArrayList<Product>();
     private Offer acceptedOffer;
     private Store seller;
+    private OrderStatus orderStatus;
 
     public void setSeller(Store seller) {
         this.seller = seller;
@@ -33,5 +35,11 @@ public class Order extends ResourceSupport {
     }
 
 
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
 
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
+    }
 }

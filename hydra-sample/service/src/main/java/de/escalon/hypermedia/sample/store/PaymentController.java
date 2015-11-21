@@ -16,7 +16,7 @@ import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
 @Controller
 public class PaymentController {
 
-    @RequestMapping("/{id}")
+    @RequestMapping("/{id}/payment")
     public ResponseEntity<Void> makePayment(int id) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(linkTo(AffordanceBuilder.methodOn(this.getClass()).getPayment()).toUri());

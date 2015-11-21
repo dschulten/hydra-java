@@ -9,7 +9,7 @@ import java.util.List;
 public class OrderModel {
     private List<OrderedItemModel> products = new ArrayList<OrderedItemModel>();
     private int id;
-    private OrderStatus orderStatus;
+    private OrderStatus orderStatus = OrderStatus.ORDER_PROCESSING;
 
     public List<OrderedItemModel> getOrderedItems() {
         return products;

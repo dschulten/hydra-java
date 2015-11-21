@@ -44,6 +44,9 @@ public class StoreController {
                     .rel(new TypedResource("Order"), "orderedItem")
                     .build());
         }
+        // TODO: support rev for links and make hydra collection aware of @reverse terms in context - both should work
+//        store.add(linkTo(methodOn(OrderController.class).getOrders(null)).reverseRel("seller")
+//                .build());
         return store;
     }
 
@@ -77,8 +80,6 @@ public class StoreController {
         store.add(AffordanceBuilder.linkTo(methodOn(this
                 .getClass()).getStoreWithOffers())
                 .withSelfRel());
-        store.add(linkTo(methodOn(OrderController.class).getOrders(null)).reverseRel("seller")
-                .build());
 //                make it an error if manages blcok is incompliet
         return store;
     }

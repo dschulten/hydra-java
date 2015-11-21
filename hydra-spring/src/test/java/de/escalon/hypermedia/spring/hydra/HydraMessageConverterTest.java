@@ -301,14 +301,13 @@ public class HydraMessageConverterTest {
                         .isOk())
                 .andExpect(content().contentType("application/ld+json"))
 
+
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:method']")
-                        .value("GET"))
-                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:method']")
                         .value("PUT"))
-                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:expects']" +
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:expects']" +
                         ".['@type']")
                         .value("Event"))
-                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[2]['hydra:method']")
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:method']")
                         .value("DELETE"))
 
 //                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].['hydra:expects']
