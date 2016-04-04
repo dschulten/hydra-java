@@ -207,7 +207,7 @@ public class AffordanceBuilderTest {
                 .rel("next").rel("thing")
                 .reverseRel("reverted", "for-hal")
                 .build();
-        Assert.assertEquals("Link: <http://example.com/things>; rel=\"for-hal next thing\"; rev=\"reverted turned-around\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next thing for-hal\"; rev=\"reverted\"",
                 affordance.toString());
     }
 

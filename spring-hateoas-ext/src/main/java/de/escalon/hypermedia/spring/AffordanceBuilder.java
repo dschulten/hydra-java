@@ -202,7 +202,7 @@ public class AffordanceBuilder implements LinkBuilder {
      * @return builder
      */
     public AffordanceBuilder reverseRel(String rev, String revertedRel) {
-        this.rels.add(0, revertedRel);
+        this.rels.add(revertedRel);
         this.reverseRels.add(rev);
         return this;
     }
