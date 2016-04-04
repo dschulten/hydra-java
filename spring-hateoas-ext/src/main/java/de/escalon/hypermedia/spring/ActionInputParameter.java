@@ -44,10 +44,10 @@ public class ActionInputParameter implements AnnotatedParameter {
     private final RequestParam requestParam;
     private final PathVariable pathVariable;
     private final RequestHeader requestHeader;
+    private Input inputAnnotation;
     private MethodParameter methodParameter;
     private Object value;
     private Boolean arrayOrCollection = null;
-    private Input inputAnnotation;
     private Map<String, Object> inputConstraints = new HashMap<String, Object>();
 
     private ConversionService conversionService = new DefaultFormattingConversionService();
@@ -166,6 +166,15 @@ public class ActionInputParameter implements AnnotatedParameter {
         return requestHeader != null;
     }
 
+    public boolean isInputParameter() {
+        return inputAnnotation != null
+                && requestBody == null
+                && pathVariable == null
+                && requestHeader == null
+                && requestParam == null;
+    }
+
+
     @Override
     public String getRequestHeaderName() {
         return isRequestHeader() ? requestHeader.value() : null;
@@ -228,6 +237,7 @@ public class ActionInputParameter implements AnnotatedParameter {
 
     /**
      * Find out if property is included by searching through all annotations.
+     *
      * @param property
      * @return
      */
@@ -346,8 +356,8 @@ public class ActionInputParameter implements AnnotatedParameter {
 
 
     /**
-     * Is this action input parameter required, based on the presence of a default value,
-     * the parameter annotations and the kind of input parameter.
+     * Is this action input parameter required, based on the presence of a default value, the parameter annotations and
+     * the kind of input parameter.
      *
      * @return true if required
      */

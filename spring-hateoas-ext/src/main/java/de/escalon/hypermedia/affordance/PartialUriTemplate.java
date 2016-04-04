@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  */
 public class PartialUriTemplate {
 
-    private static final Pattern VARIABLE_REGEX = Pattern.compile("\\{([\\?\\&#/]?)([\\w\\,]+)(:??.*?)\\}");
+    private static final Pattern VARIABLE_REGEX = Pattern.compile("\\{([\\?\\&#/]?)([\\w\\,\\.]+)(:??.*?)\\}");
 
     private final List<String> urlComponents = new ArrayList<String>();
 
@@ -233,7 +233,7 @@ public class PartialUriTemplate {
 
 
         return new PartialUriTemplateComponents(baseUrl.toString(), queryHead.toString(), queryTail.toString(),
-                fragmentIdentifier.toString());
+                fragmentIdentifier.toString(), variableNames);
     }
 
     private String urlEncode(String s) {

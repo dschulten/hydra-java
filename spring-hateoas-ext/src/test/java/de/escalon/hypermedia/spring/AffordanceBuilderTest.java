@@ -195,7 +195,7 @@ public class AffordanceBuilderTest {
     public void testBuild() throws Exception {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))
-                .rel("next", "thing")
+                .rel("next").rel("thing")
                 .build();
         Assert.assertEquals("Link: <http://example.com/things>; rel=\"next thing\"", affordance.toString());
     }
@@ -204,10 +204,10 @@ public class AffordanceBuilderTest {
     public void testBuildNoArgs() throws Exception {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))
-                .rel("next", "thing")
-                .reverseRel("reverted", "turned-around")
+                .rel("next").rel("thing")
+                .reverseRel("reverted", "for-hal")
                 .build();
-        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next thing\"; rev=\"reverted turned-around\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"for-hal next thing\"; rev=\"reverted turned-around\"",
                 affordance.toString());
     }
 

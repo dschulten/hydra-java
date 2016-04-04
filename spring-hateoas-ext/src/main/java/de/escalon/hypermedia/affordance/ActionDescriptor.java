@@ -1,34 +1,36 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.affordance;
 
+import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.action.Cardinality;
 import de.escalon.hypermedia.spring.ActionInputParameter;
+import org.springframework.beans.*;
+import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
 
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.util.*;
 
 /**
- * Describes an HTTP method independently of a specific rest framework.
- * Has knowledge about possible request data, i.e. which types and values
- * are suitable for an action. For example, an action descriptor can be used to create a form with select options and
- * typed input fields that calls a POST handler. It has {@link ActionInputParameter}s which represent method handler
- * arguments. Supported method handler arguments are:
- * <ul>
- * <li>path variables</li>
- * <li>request params (url query params)</li>
- * <li>request headers</li>
- * <li>request body</li>
- * </ul>
+ * Describes an HTTP method independently of a specific rest framework. Has knowledge about possible request data, i.e.
+ * which types and values are suitable for an action. For example, an action descriptor can be used to create a form
+ * with select options and typed input fields that calls a POST handler. It has {@link ActionInputParameter}s which
+ * represent method handler arguments. Supported method handler arguments are: <ul> <li>path variables</li> <li>request
+ * params (url query params)</li> <li>request headers</li> <li>request body</li> </ul>
  *
  * @author Dietrich Schulten
  */
@@ -41,6 +43,7 @@ public class ActionDescriptor implements AnnotatedParameters {
     private Map<String, AnnotatedParameter> requestParams = new LinkedHashMap<String, AnnotatedParameter>();
     private Map<String, AnnotatedParameter> pathVariables = new LinkedHashMap<String, AnnotatedParameter>();
     private Map<String, AnnotatedParameter> requestHeaders = new LinkedHashMap<String, AnnotatedParameter>();
+    private Map<String, AnnotatedParameter> inputParams = new LinkedHashMap<String, AnnotatedParameter>();
 
     private ActionInputParameter requestBody;
     private Cardinality cardinality = Cardinality.SINGLE;
@@ -48,9 +51,11 @@ public class ActionDescriptor implements AnnotatedParameters {
     /**
      * Creates an {@link ActionDescriptor}.
      *
-     * @param actionName name of the action, e.g. the method name of the handler method.
-     *                   Can be used by an action representation, e.g. to identify the action using a form name.
-     * @param httpMethod used during submit
+     * @param actionName
+     *         name of the action, e.g. the method name of the handler method. Can be used by an action representation,
+     *         e.g. to identify the action using a form name.
+     * @param httpMethod
+     *         used during submit
      */
     public ActionDescriptor(String actionName, String httpMethod) {
         Assert.notNull(actionName);
@@ -70,6 +75,7 @@ public class ActionDescriptor implements AnnotatedParameters {
 
     /**
      * Gets the http method of this action.
+     *
      * @return method, never null
      */
     public String getHttpMethod() {
@@ -78,6 +84,7 @@ public class ActionDescriptor implements AnnotatedParameters {
 
     /**
      * Gets the path variable names.
+     *
      * @return names or empty collection, never null
      */
     public Collection<String> getPathVariableNames() {
@@ -86,6 +93,7 @@ public class ActionDescriptor implements AnnotatedParameters {
 
     /**
      * Gets the request header names.
+     *
      * @return names or empty collection, never null
      */
     public Collection<String> getRequestHeaderNames() {
@@ -94,6 +102,7 @@ public class ActionDescriptor implements AnnotatedParameters {
 
     /**
      * Gets the request parameter (query param) names.
+     *
      * @return names or empty collection, never null
      */
     public Collection<String> getRequestParamNames() {
@@ -102,17 +111,38 @@ public class ActionDescriptor implements AnnotatedParameters {
 
     /**
      * Adds descriptor for request param.
-     * @param key name of request param
-     * @param actionInputParameter descriptor
+     *
+     * @param key
+     *         name of request param
+     * @param actionInputParameter
+     *         descriptor
      */
     public void addRequestParam(String key, ActionInputParameter actionInputParameter) {
         requestParams.put(key, actionInputParameter);
     }
 
     /**
+     * Adds descriptor for params annotated with <code>@Input</code> which are not also annotated as
+     * <code>@RequestParam</code>, <code>@PathVariable</code>, <code>@RequestBody</code> or <code>@RequestHeader</code>. Input
+     * parameter beans or maps are filled from query params by Spring, and this allows to describe them with
+     * UriTemplates.
+     *
+     * @param key
+     *         name of request param
+     * @param actionInputParameter
+     *         descriptor
+     */
+    public void addInputParam(String key, ActionInputParameter actionInputParameter) {
+        inputParams.put(key, actionInputParameter);
+    }
+
+    /**
      * Adds descriptor for path variable.
-     * @param key name of path variable
-     * @param actionInputParameter descriptor
+     *
+     * @param key
+     *         name of path variable
+     * @param actionInputParameter
+     *         descriptor
      */
 
     public void addPathVariable(String key, ActionInputParameter actionInputParameter) {
@@ -121,8 +151,11 @@ public class ActionDescriptor implements AnnotatedParameters {
 
     /**
      * Adds descriptor for request header.
-     * @param key name of request header
-     * @param actionInputParameter descriptor
+     *
+     * @param key
+     *         name of request header
+     * @param actionInputParameter
+     *         descriptor
      */
     public void addRequestHeader(String key, ActionInputParameter actionInputParameter) {
         requestHeaders.put(key, actionInputParameter);
@@ -131,7 +164,8 @@ public class ActionDescriptor implements AnnotatedParameters {
     /**
      * Gets input parameter info which is part of the URL mapping, both request parameters and path variables.
      *
-     * @param name to retrieve
+     * @param name
+     *         to retrieve
      * @return parameter descriptor or null
      */
     @Override
@@ -140,15 +174,65 @@ public class ActionDescriptor implements AnnotatedParameters {
         if (ret == null) {
             ret = pathVariables.get(name);
         }
+        if (ret == null) {
+            for (AnnotatedParameter annotatedParameter : getInputParameters()) {
+                // TODO create AnnotatedParameter for bean property at property path
+                // TODO field access in addition to bean?
+                PropertyDescriptor pd = getPropertyDescriptorForPropertyPath(name,
+                        annotatedParameter.getParameterType());
+                if (pd != null) {
+                    if (pd.getWriteMethod() != null) {
+
+                        Object callValue = annotatedParameter.getCallValue();
+                        Object propertyValue = null;
+                        if (callValue != null) {
+                            BeanWrapper beanWrapper = PropertyAccessorFactory
+                                    .forBeanPropertyAccess(callValue);
+                            propertyValue = beanWrapper.getPropertyValue(name);
+                        }
+                        ret = new ActionInputParameter(new MethodParameter(pd
+                                .getWriteMethod(), 0), propertyValue);
+                    }
+                    break;
+                }
+            }
+        }
         return ret;
+    }
+
+    /**
+     * Recursively navigate to return a BeanWrapper for the nested property path.
+     *
+     * @param propertyPath
+     *         property property path, which may be nested
+     * @return a BeanWrapper for the target bean
+     */
+    PropertyDescriptor getPropertyDescriptorForPropertyPath(String propertyPath, Class<?> propertyType) {
+        int pos = PropertyAccessorUtils.getFirstNestedPropertySeparatorIndex(propertyPath);
+        // Handle nested properties recursively.
+        if (pos > -1) {
+            String nestedProperty = propertyPath.substring(0, pos);
+            String nestedPath = propertyPath.substring(pos + 1);
+            PropertyDescriptor propertyDescriptor = BeanUtils.getPropertyDescriptor(propertyType, nestedProperty);
+//            BeanWrapperImpl nestedBw = getNestedBeanWrapper(nestedProperty);
+            return getPropertyDescriptorForPropertyPath(nestedPath, propertyDescriptor.getPropertyType());
+        } else {
+            return BeanUtils.getPropertyDescriptor(propertyType, propertyPath);
+        }
+    }
+
+    public Collection<AnnotatedParameter> getInputParameters() {
+        return inputParams.values();
     }
 
     /**
      * Gets request header info.
      *
-     * @param name of the request header
+     * @param name
+     *         of the request header
      * @return request header descriptor or null
      */
+
     public AnnotatedParameter getRequestHeader(String name) {
         return requestHeaders.get(name);
     }
@@ -158,7 +242,7 @@ public class ActionDescriptor implements AnnotatedParameters {
      *
      * @return request body descriptor or null
      */
-    public ActionInputParameter getRequestBody() {
+    public AnnotatedParameter getRequestBody() {
         return requestBody;
     }
 
@@ -174,15 +258,16 @@ public class ActionDescriptor implements AnnotatedParameters {
     /**
      * Allows to set request body descriptor.
      *
-     * @param requestBody descripto
+     * @param requestBody
+     *         descriptor to set
      */
     public void setRequestBody(ActionInputParameter requestBody) {
         this.requestBody = requestBody;
     }
 
     /**
-     * Gets semantic type of action, e.g. a subtype of hydra:Operation or schema:Action.
-     * Use {@link Action} on a method handler to define the semantic type of an action.
+     * Gets semantic type of action, e.g. a subtype of hydra:Operation or schema:Action. Use {@link Action} on a method
+     * handler to define the semantic type of an action.
      *
      * @return URL identifying the type
      */
@@ -193,7 +278,8 @@ public class ActionDescriptor implements AnnotatedParameters {
     /**
      * Sets semantic type of action, e.g. a subtype of hydra:Operation or schema:Action.
      *
-     * @param semanticActionType URL identifying the type
+     * @param semanticActionType
+     *         URL identifying the type
      */
     public void setSemanticActionType(String semanticActionType) {
         this.semanticActionType = semanticActionType;
@@ -222,9 +308,11 @@ public class ActionDescriptor implements AnnotatedParameters {
 
 
     /**
-     * Allows to set the cardinality, i.e. specify if the action refers to a collection or a single resource.
-     * Default is {@link Cardinality#SINGLE}
-     * @param cardinality to set
+     * Allows to set the cardinality, i.e. specify if the action refers to a collection or a single resource. Default is
+     * {@link Cardinality#SINGLE}
+     *
+     * @param cardinality
+     *         to set
      */
     public void setCardinality(Cardinality cardinality) {
         this.cardinality = cardinality;
@@ -232,6 +320,7 @@ public class ActionDescriptor implements AnnotatedParameters {
 
     /**
      * Allows to decide whether or not the action refers to a collection resource.
+     *
      * @return cardinality
      */
     public Cardinality getCardinality() {

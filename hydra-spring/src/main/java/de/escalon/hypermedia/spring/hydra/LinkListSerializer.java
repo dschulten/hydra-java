@@ -74,7 +74,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     final Affordance affordance = (Affordance) link;
                     final List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
                     if (!actionDescriptors.isEmpty()) {
-                        if (affordance.isTemplated() && affordance.hasUnsatisfiedRequiredVariables()) {
+                        // TODO: consider to use Link href for template even if it is not compatible
+                        if (affordance.getUriTemplateComponents()
+                                .hasVariables()) {
                             // TODO resolve rel against context
                             if ("hydra:search".equals(affordance.getRel())
                                     || Cardinality.SINGLE == affordance
@@ -84,6 +86,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                                 collectionAffordances.add(affordance);
                             }
                         } else {
+                            // if all required variables are satisfied, the url can be used as identifier
+                            // by stripping optional variables
                             if (!affordance.isSelfRel() && Cardinality.COLLECTION == affordance.getCardinality()) {
                                 collectionAffordances.add(affordance);
                             } else {
@@ -113,22 +117,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 ActionDescriptor actionDescriptorForHttpGet = getActionDescriptorForHttpGet(templatedLink);
                 // TODO handle rev here
                 String rel = templatedLink.getRel();
-                writeIriTemplate(rel, templatedLink, actionDescriptorForHttpGet, jgen);
+                writeIriTemplate(rel, templatedLink.getHref(), templatedLink.getVariableNames(),
+                        actionDescriptorForHttpGet, jgen);
             }
-//            for (Link templatedLink : templatedLinks) {
-//                // we only have the template, no access to method params
-//                jgen.writeObjectFieldStart(templatedLink.getRel());
-//
-//                jgen.writeStringField("@type", "hydra:IriTemplate");
-//                jgen.writeStringField("hydra:template", templatedLink.getHref());
-//
-//                jgen.writeArrayFieldStart("hydra:mapping");
-//                writeHydraVariableMapping(jgen, null, templatedLink.getVariableNames());
-//                jgen.writeEndArray();
-//
-//                jgen.writeEndObject();
-//            }
-
             @SuppressWarnings("unchecked")
             Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(JacksonHydraSerializer
                     .KEY_LD_CONTEXT);
@@ -143,17 +134,20 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 for (Affordance collectionAffordance : collectionAffordances) {
                     jgen.writeStartObject();
                     jgen.writeStringField(JsonLdKeywords.AT_TYPE, "hydra:Collection");
-                    if (!collectionAffordance.isBaseUriTemplated() && !collectionAffordance
-                            .hasUnsatisfiedRequiredVariables()) {
-                        PartialUriTemplateComponents uriTemplateComponents = collectionAffordance
-                                .getUriTemplateComponents();
-                        String collectionUri = uriTemplateComponents.getBaseUri() + uriTemplateComponents.getQueryHead();
+                    PartialUriTemplateComponents templateComponents =
+                            collectionAffordance.getUriTemplateComponents();
+                    if (!collectionAffordance.isBaseUriTemplated() &&
+                            !collectionAffordance.hasUnsatisfiedRequiredVariables()) {
+                        String collectionUri = templateComponents.getBaseUri()
+                                + templateComponents.getQueryHead();
                         jgen.writeStringField(JsonLdKeywords.AT_ID, collectionUri);
                     }
-                    if (collectionAffordance.isTemplated()) {
+                    if (templateComponents.hasVariables()) {
                         ActionDescriptor actionDescriptorForHttpGet = getActionDescriptorForHttpGet
                                 (collectionAffordance);
-                        writeIriTemplate("hydra:search", collectionAffordance, actionDescriptorForHttpGet, jgen);
+                        writeIriTemplate("hydra:search", templateComponents.toString(),
+                                templateComponents.getVariableNames(), actionDescriptorForHttpGet,
+                                jgen);
                     }
                     jgen.writeObjectFieldStart("hydra:manages");
                     // do we have a collection holder which is not owner of the affordance?
@@ -233,14 +227,15 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         }
     }
 
-    private void writeIriTemplate(String rel, Link templatedLink, ActionDescriptor actionDescriptorForHttpGet,
+    private void writeIriTemplate(String rel, String href, List<String> variableNames, ActionDescriptor
+            actionDescriptorForHttpGet,
                                   JsonGenerator jgen) throws IOException {
         jgen.writeObjectFieldStart(rel);
 
         jgen.writeStringField("@type", "hydra:IriTemplate");
-        jgen.writeStringField("hydra:template", templatedLink.getHref());
+        jgen.writeStringField("hydra:template", href);
         jgen.writeArrayFieldStart("hydra:mapping");
-        writeHydraVariableMapping(jgen, actionDescriptorForHttpGet, templatedLink.getVariableNames());
+        writeHydraVariableMapping(jgen, actionDescriptorForHttpGet, variableNames);
         jgen.writeEndArray();
 
         jgen.writeEndObject();
@@ -277,7 +272,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     private void writeActionDescriptors(JsonGenerator jgen, String currentVocab, List<ActionDescriptor>
             actionDescriptors) throws IOException, IntrospectionException {
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
-            if("GET".equals(actionDescriptor.getHttpMethod())) {
+            if ("GET".equals(actionDescriptor.getHttpMethod())) {
                 continue;
             }
 
@@ -289,7 +284,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             }
             jgen.writeStringField("hydra:method", actionDescriptor.getHttpMethod());
 
-            final ActionInputParameter requestBodyInputParameter = actionDescriptor.getRequestBody();
+            final AnnotatedParameter requestBodyInputParameter = actionDescriptor.getRequestBody();
             if (requestBodyInputParameter != null) {
 
                 jgen.writeObjectFieldStart("hydra:expects"); // begin hydra:expects
@@ -697,9 +692,11 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                                            Collection<String> variableNames) throws IOException {
         if (annotatedParameters != null) {
             for (String variableName : variableNames) {
+                // TODO: find also @Input
                 AnnotatedParameter annotatedParameter = annotatedParameters.getAnnotatedParameter(variableName);
+                // TODO access @Input parameter, too
                 // only unsatisfied parameters become hydra variables
-                if (annotatedParameter.getCallValue() == null) {
+                if (annotatedParameter != null && annotatedParameter.getCallValue() == null) {
                     jgen.writeStartObject();
                     jgen.writeStringField("@type", "hydra:IriTemplateMapping");
                     jgen.writeStringField("hydra:variable", variableName);

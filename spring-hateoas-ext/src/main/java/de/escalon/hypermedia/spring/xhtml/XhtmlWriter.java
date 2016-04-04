@@ -267,10 +267,12 @@ public class XhtmlWriter extends Writer {
                             if ("GET".equals(actionDescriptor.getHttpMethod()) &&
                                     actionDescriptor.getRequestParamNames()
                                             .isEmpty()) {
+                                beginDiv();
                                 // GET without params is simple <a href>
                                 writeAnchor(OptionalAttributes.attr("href", affordance.expand()
                                         .getHref())
-                                        .and("rel", affordance.getRel()), actionDescriptor.getActionName());
+                                        .and("rel", affordance.getRel()), affordance.getRel());
+                                endDiv();
                             } else {
                                 appendForm(affordance, actionDescriptor);
                             }
@@ -371,8 +373,7 @@ public class XhtmlWriter extends Writer {
         } else {
             String rel = link.getRel();
             String title = (rel != null ? rel : link.getHref());
-            // TODO: write link instead of anchor here?
-            writeAnchor(OptionalAttributes.attr("href", link.getHref()), title);
+            // TODO: write html <link> instead of anchor  <a> here?
             writeAnchor(OptionalAttributes.attr("href", link.getHref())
                     .and("rel", link.getRel()), title);
         }
@@ -469,6 +470,10 @@ public class XhtmlWriter extends Writer {
 
     public void endAnchor() throws IOException {
         write("</a>");
+    }
+
+    public void writeBr() throws IOException {
+        write("<br />");
     }
 
     private void writeAnchor(OptionalAttributes attrs, String value) throws IOException {

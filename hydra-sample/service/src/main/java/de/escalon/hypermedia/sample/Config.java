@@ -92,7 +92,7 @@ public class Config extends WebMvcConfigurerAdapter {
     @Bean
     public ObjectMapper jacksonObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         return objectMapper;
     }
 
@@ -107,7 +107,7 @@ public class Config extends WebMvcConfigurerAdapter {
 
     @Bean
     public CurieProvider curieProvider() {
-        return new DefaultCurieProvider("schema", new UriTemplate("http://schema.org/{rel}"));
+        return new DefaultCurieProvider("ex", new UriTemplate("http://example.org/{rel}"));
     }
 
     @Bean
@@ -117,7 +117,7 @@ public class Config extends WebMvcConfigurerAdapter {
         RelProvider relProvider = new DelegatingRelProvider(relProviderRegistry);
         ObjectMapper halObjectMapper = new ObjectMapper();
 
-        halObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        halObjectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 
         halObjectMapper.registerModule(new Jackson2HalModule());
         halObjectMapper.setHandlerInstantiator(new

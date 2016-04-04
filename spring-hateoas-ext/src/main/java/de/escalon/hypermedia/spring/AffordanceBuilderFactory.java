@@ -1,17 +1,22 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.action.*;
 import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.BeanUtil;
 import de.escalon.hypermedia.affordance.PartialUriTemplate;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
@@ -33,12 +38,13 @@ import java.util.*;
 
 /**
  * Factory for {@link AffordanceBuilder}s. Normally one should use the static methods of AffordanceBuilder to get an
- * AffordanceBuilder.
- * Created by dschulten on 03.10.2014.
+ * AffordanceBuilder. Created by dschulten on 03.10.2014.
  */
 public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<AffordanceBuilder> {
 
     private static final MappingDiscoverer MAPPING_DISCOVERER = new AnnotationMappingDiscoverer(RequestMapping.class);
+
+    private ObjectMapper objectMapper;
 
     @Override
     public AffordanceBuilder linkTo(Method method, Object... parameters) {
@@ -50,7 +56,8 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
         String pathMapping = MAPPING_DISCOVERER.getMapping(controller, method);
 
-        final List<String> params = getRequestParamNames(method);
+        MethodParameters methodParameters = new MethodParameters(method);
+        final List<String> params = getTemplateVariableNames(methodParameters);
         String query = StringUtils.join(params, ',');
         String mapping = StringUtils.isBlank(query) ? pathMapping : pathMapping + "{?" + query + "}";
 
@@ -58,7 +65,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 .build()
                 .toString() + mapping);
 
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> valuesForTemplateExpansion = new HashMap<String, Object>();
 
         Iterator<String> names = partialUriTemplate.getVariableNames()
                 .iterator();
@@ -67,12 +74,13 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             if (!names.hasNext()) {
                 break;
             }
-            values.put(names.next(), parameter);
+            valuesForTemplateExpansion.put(names.next(), parameter);
         }
 
-        ActionDescriptor actionDescriptor = createActionDescriptor(method, values, parameters);
+        ActionDescriptor actionDescriptor = createActionDescriptor(method, valuesForTemplateExpansion, parameters);
 
-        return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
+        return new AffordanceBuilder(partialUriTemplate.expand(valuesForTemplateExpansion), Collections.singletonList
+                (actionDescriptor));
     }
 
     @Override
@@ -105,14 +113,17 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     public AffordanceBuilder linkTo(Object invocationValue) {
 
         Assert.isInstanceOf(DummyInvocationUtils.LastInvocationAware.class, invocationValue);
-        DummyInvocationUtils.LastInvocationAware invocations = (DummyInvocationUtils.LastInvocationAware) invocationValue;
+        DummyInvocationUtils.LastInvocationAware invocations = (DummyInvocationUtils.LastInvocationAware)
+                invocationValue;
 
         DummyInvocationUtils.MethodInvocation invocation = invocations.getLastInvocation();
         Method invokedMethod = invocation.getMethod();
 
         String pathMapping = MAPPING_DISCOVERER.getMapping(invokedMethod);
 
-        List<String> params = getRequestParamNames(invokedMethod);
+        MethodParameters methodParameters = new MethodParameters(invokedMethod);
+        final List<String> params = getTemplateVariableNames(methodParameters);
+
         String query = StringUtils.join(params, ',');
         String mapping = StringUtils.isBlank(query) ? pathMapping : pathMapping + "{?" + query + "}";
 
@@ -122,30 +133,60 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
         Iterator<Object> classMappingParameters = invocations.getObjectParameters();
 
-        Map<String, Object> values = new HashMap<String, Object>();
+        Map<String, Object> valuesForTemplateExpansion = new HashMap<String, Object>();
         Iterator<String> names = partialUriTemplate.getVariableNames()
                 .iterator();
         while (classMappingParameters.hasNext()) {
-            values.put(names.next(), classMappingParameters.next());
+            valuesForTemplateExpansion.put(names.next(), classMappingParameters.next());
         }
 
         for (Object argument : invocation.getArguments()) {
             if (names.hasNext()) {
-                values.put(names.next(), argument);
+                valuesForTemplateExpansion.put(names.next(), argument);
             }
         }
 
+        // valuesForTemplateExpansion are in-out
         ActionDescriptor actionDescriptor = createActionDescriptor(
-                invocation.getMethod(), values, invocation.getArguments());
+                invocation.getMethod(), valuesForTemplateExpansion, invocation.getArguments());
 
-
-        return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
+        // TODO: valuesForTemplateExpansion become template variable names, seems quite wrong
+        // here: foo1, foo2, bar - these three are wrong, don't know where they come from
+        return new AffordanceBuilder(partialUriTemplate.expand(valuesForTemplateExpansion), Collections.singletonList
+                (actionDescriptor));
 
     }
 
-    private List<String> getRequestParamNames(Method invokedMethod) {
-        MethodParameters parameters = new MethodParameters(invokedMethod);
-        final List<MethodParameter> requestParams = parameters.getParametersWith(RequestParam.class);
+    private List<String> getTemplateVariableNames(MethodParameters methodParameters) {
+        List<String> ret = new ArrayList<String>();
+        List<String> requestParamNames = getRequestParamNames(methodParameters);
+
+        List<String> inputBeanPropertyPaths = getInputBeanPropertyPaths(methodParameters);
+        ret.addAll(requestParamNames);
+        ret.addAll(inputBeanPropertyPaths);
+        return ret;
+    }
+
+    private List<String> getInputBeanPropertyPaths(MethodParameters methodParameters) {
+        List<String> ret = new ArrayList<String>();
+        List<MethodParameter> inputParams = methodParameters.getParametersWith(Input.class);
+        for (MethodParameter inputParam : inputParams) {
+
+            if (!(inputParam.hasParameterAnnotation(RequestParam.class) ||
+                    inputParam.hasParameterAnnotation(RequestBody.class) ||
+                    inputParam.hasParameterAnnotation(RequestHeader.class) ||
+                    inputParam.hasParameterAnnotation(PathVariable.class) ||
+                    inputParam.hasParameterAnnotation(MatrixVariable.class))) {
+
+                ret.addAll(BeanUtil.getPropertyPaths(inputParam.getParameterType()));
+            }
+        }
+        return ret;
+    }
+
+    private List<String> getRequestParamNames(MethodParameters methodParameters) {
+
+        final List<MethodParameter> requestParams = methodParameters.getParametersWith(RequestParam.class);
         List<String> params = new ArrayList<String>(requestParams.size());
         for (MethodParameter requestParam : requestParams) {
             params.add(requestParam.getParameterName());
@@ -154,7 +195,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     }
 
     private ActionDescriptor createActionDescriptor(Method invokedMethod,
-                                                    Map<String, Object> values, Object[] arguments) {
+                                                    Map<String, Object> expansionValues, Object[] arguments) {
         RequestMethod httpMethod = getHttpMethod(invokedMethod);
         Type genericReturnType = invokedMethod.getGenericReturnType();
 
@@ -185,7 +226,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 final String key = entry.getKey();
                 actionDescriptor.addRequestParam(key, value);
                 if (!value.isRequestBody()) {
-                    values.put(key, value.getCallValueFormatted());
+                    expansionValues.put(key, value.getCallValueFormatted());
                 }
             }
         }
@@ -198,7 +239,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 final String key = entry.getKey();
                 actionDescriptor.addPathVariable(key, actionInputParameter);
                 if (!actionInputParameter.isRequestBody()) {
-                    values.put(key, actionInputParameter.getCallValueFormatted());
+                    expansionValues.put(key, actionInputParameter.getCallValueFormatted());
                 }
             }
         }
@@ -212,12 +253,52 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 final String key = entry.getKey();
                 actionDescriptor.addRequestHeader(key, actionInputParameter);
                 if (!actionInputParameter.isRequestBody()) {
-                    values.put(key, actionInputParameter.getCallValueFormatted());
+                    expansionValues.put(key, actionInputParameter.getCallValueFormatted());
                 }
             }
         }
 
+        // parameters annotated with @Input and not one of the above
+        Map<String, ActionInputParameter> inputParameterMap =
+                getActionInputParameters(Input.class, invokedMethod, arguments);
+        for (Map.Entry<String, ActionInputParameter> entry : inputParameterMap.entrySet()) {
+            ActionInputParameter actionInputParameter = entry.getValue();
+            String paramName = entry.getKey();
+            if (actionInputParameter != null) {
+                if (!(requestParamMap.containsKey(paramName) || pathVariableMap.containsKey(paramName) ||
+                        requestBodyMap.containsKey(paramName) || requestHeadersMap.containsKey(paramName))) {
+                    actionDescriptor.addInputParam(paramName, actionInputParameter);
+                    Object callValue = actionInputParameter.getCallValue();
+                    // TODO: @Input could allow to choose between explode and enumerate
+                    // TODO: no partial expansion would be possible then
+                    if (callValue != null) {
+                        Map<String, Object> callValueMap = getStringObjectMap(callValue);
+                        expansionValues.putAll(callValueMap);
+                    }
+                }
+            }
+        }
+
+
         return actionDescriptor;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getStringObjectMap(Object callValue) {
+        Map<String, Object> callValueMap;
+        if (!(callValue instanceof Map)) {
+            callValueMap = lazyGetMapper().convertValue(callValue, Map.class);
+        } else {
+            callValueMap = (Map) callValue;
+        }
+        return callValueMap;
+    }
+
+    private ObjectMapper lazyGetMapper() {
+        if (objectMapper == null) {
+            objectMapper = new ObjectMapper();
+        }
+        return objectMapper;
     }
 
     private Cardinality getCardinality(Method invokedMethod, RequestMethod httpMethod, Type genericReturnType) {
@@ -298,9 +379,12 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     /**
      * Returns {@link ActionInputParameter}s contained in the method link.
      *
-     * @param annotation to inspect
-     * @param method     must not be {@literal null}.
-     * @param arguments  to the method link
+     * @param annotation
+     *         to inspect
+     * @param method
+     *         must not be {@literal null}.
+     * @param arguments
+     *         to the method link
      * @return maps parameter names to parameter info
      */
     private static Map<String, ActionInputParameter> getActionInputParameters(Class<? extends Annotation> annotation,

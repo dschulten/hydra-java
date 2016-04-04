@@ -433,8 +433,10 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
     private void writeObjectAttributeRecursively(XhtmlWriter writer, String name, Object content, String documentationUrl)
             throws IOException {
-        writeDtWithDoc(writer, name, documentationUrl);
         Object value = getContentAsScalarValue(content);
+        if (!contentIsEmpty(content)) {
+            writeDtWithDoc(writer, name, documentationUrl);
+        }
         if (value != null) {
             if (value != NULL_VALUE) {
                 writeDdForScalarValue(writer, value);
@@ -446,6 +448,24 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             writeNewResource(writer, content);
             writer.endDd();
         }
+    }
+
+    private boolean contentIsEmpty(Object content) {
+        final boolean ret;
+        if(content != null) {
+            if (content instanceof Collection) {
+                ret = ((Collection) content).isEmpty();
+            } else if (content instanceof Map) {
+                ret = ((Map) content).isEmpty();
+            } else if (content instanceof String) {
+                ret = ((String) content).isEmpty();
+            } else {
+                ret = false;
+            }
+        } else {
+            ret = true;
+        }
+        return ret;
     }
 
     private void writeDtWithDoc(XhtmlWriter writer, String name, String documentationUrl) throws IOException {

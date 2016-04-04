@@ -45,8 +45,8 @@ public class StoreController {
                     .build());
         }
         // TODO: support rev for links and make hydra collection aware of @reverse terms in context - both should work
-//        store.add(linkTo(methodOn(OrderController.class).getOrders(null)).reverseRel("seller")
-//                .build());
+        store.add(linkTo(methodOn(OrderController.class).getOrders(null)).reverseRel("seller", "orders")
+                .build());
         return store;
     }
 

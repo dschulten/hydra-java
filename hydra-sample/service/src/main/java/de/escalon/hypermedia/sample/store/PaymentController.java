@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
@@ -17,7 +18,7 @@ import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
 public class PaymentController {
 
     @RequestMapping("/{id}/payment")
-    public ResponseEntity<Void> makePayment(int id) {
+    public ResponseEntity<Void> makePayment(@PathVariable int id) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setLocation(linkTo(AffordanceBuilder.methodOn(this.getClass()).getPayment()).toUri());
         return new ResponseEntity<Void>(httpHeaders, HttpStatus.CREATED);

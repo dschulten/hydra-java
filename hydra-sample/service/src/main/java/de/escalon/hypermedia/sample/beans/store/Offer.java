@@ -1,6 +1,7 @@
 package de.escalon.hypermedia.sample.beans.store;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.springframework.hateoas.ResourceSupport;
 
 import java.math.BigDecimal;
@@ -12,6 +13,7 @@ import java.util.List;
  * Created by Dietrich on 17.02.2015.
  *
  */
+@JsonPropertyOrder({"itemOffered", "price", "priceCurrency", "addOns"})
 public class Offer extends ResourceSupport {
     private Product itemOffered;
     private BigDecimal price;

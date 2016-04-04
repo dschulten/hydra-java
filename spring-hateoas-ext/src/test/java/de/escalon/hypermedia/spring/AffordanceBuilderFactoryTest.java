@@ -120,8 +120,8 @@ public class AffordanceBuilderFactoryTest {
     public void testLinkToMethodInvocationReverseRel() throws Exception {
         final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "findEventByName", String.class);
         final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
-                .getEvent((String) null)).rel("ex:children")
-                .reverseRel("schema:parent")
+                .getEvent((String) null))
+                .reverseRel("schema:parent", "ex:children")
                 .build();
         assertEquals("http://example.com/events/{eventId}", affordance.getHref());
         assertEquals("schema:parent", affordance.getRev());

@@ -26,6 +26,8 @@ public interface AnnotatedParameter {
 
     boolean isPathVariable();
 
+    boolean isInputParameter();
+
     String getRequestHeaderName();
 
     boolean hasInputConstraints();

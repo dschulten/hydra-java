@@ -139,7 +139,7 @@ public class OrderController {
         String productSelfRel = product.getLink(Link.REL_SELF)
                 .getHref();
         addOnProduct.add(linkTo(methodOn(OrderController.class).orderAccessory(orderId, orderedItemId, addOnProduct))
-                .reverseRel("isAccessoryOrSparePartFor", new TypedResource("Product", productSelfRel))
+                .reverseRel("isAccessoryOrSparePartFor", "extras", new TypedResource("Product", productSelfRel))
                 .build());
 
         return addOnOffer;

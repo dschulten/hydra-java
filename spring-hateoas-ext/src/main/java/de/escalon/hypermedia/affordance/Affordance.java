@@ -13,6 +13,7 @@
 
 package de.escalon.hypermedia.affordance;
 
+import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.escalon.hypermedia.action.Cardinality;
 import org.springframework.hateoas.Link;
@@ -22,10 +23,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents an http affordance for purposes of a ReST service as described by <a
@@ -71,9 +69,10 @@ public class Affordance extends Link {
     }
 
     /**
-     * Creates affordance, usually for a pre-expanded uriTemplate. Link header params may be added later.
-     * Optional variables will be stripped before passing it to the underlying link.
-     * Use {@link #getUriTemplateComponents()} to access the base uri, query head, query tail with optional variables etc.
+     * Creates affordance, usually for a pre-expanded uriTemplate. Link header params may be added later. Optional
+     * variables will be stripped before passing it to the underlying link. Use {@link #getUriTemplateComponents()} to
+     * access the base uri, query head, query tail with optional variables etc.
+     *
      * @param uriTemplate
      *         pre-expanded uri or uritemplate of the affordance
      * @param actionDescriptors
@@ -377,14 +376,27 @@ public class Affordance extends Link {
     @Override
     public Affordance expand(Object... arguments) {
         // TODO expanding Affordance with rev, super mandates rel
-        return new Affordance(super.expand(arguments)
-                    .getHref(), linkParams, actionDescriptors);
+//        if(StringUtils.hasText(super.getRel())) {
+//            return new Affordance(super.expand(arguments)
+//                    .getHref(), linkParams, actionDescriptors);
+//        } else {
+        UriTemplate uriTemplate = UriTemplate.fromTemplate(getHref());
+        String[] variables = uriTemplate.getVariables();
+        Map<String, Object> values = new HashMap<String, Object>();
+        for (int i = 0; i < arguments.length; i++) {
+            values.put(variables[i], arguments[i]);
+        }
+        String expanded = UriTemplate.expand(getHref(), values);
+        return new Affordance(expanded, linkParams, actionDescriptors);
+//        }
     }
 
     /**
      * Gets parts of the uri template such as base uri, expanded query part, unexpanded query part etc.
-     * @return
+     *
+     * @return template component parts
      */
+    @JsonIgnore
     public PartialUriTemplateComponents getUriTemplateComponents() {
         return partialUriTemplate.asComponents();
     }
@@ -398,9 +410,9 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Map<String, ? extends Object> arguments) {
-        // TODO expanding Affordance with rev, super mandates rel
-        return new Affordance(super.expand(arguments)
-                    .getHref(), linkParams, actionDescriptors);
+        @SuppressWarnings("unchecked")
+        String expanded = UriTemplate.expand(getHref(), (Map<String, Object>)arguments);
+        return new Affordance(expanded, linkParams, actionDescriptors);
     }
 
     /**
@@ -469,6 +481,7 @@ public class Affordance extends Link {
      *
      * @return first defined rev or null
      */
+    @JsonIgnore
     public String getRev() {
         return linkParams.getFirst("rev");
     }
@@ -520,9 +533,9 @@ public class Affordance extends Link {
 
 
     /**
-     * Determines if the affordance has unsatisfied required variables.
-     * This allows to decide if the affordance can also be treated
-     * as a plain Link without template variables if the caller omits all optional variables. Serializers can use this to render it as a resource with optional search features.
+     * Determines if the affordance has unsatisfied required variables. This allows to decide if the affordance can also
+     * be treated as a plain Link without template variables if the caller omits all optional variables. Serializers can
+     * use this to render it as a resource with optional search features.
      *
      * @return true if the affordance has unsatisfied required variables
      */
@@ -533,7 +546,7 @@ public class Affordance extends Link {
             Map<String, AnnotatedParameter> requiredParameters =
                     actionDescriptor.getRequiredParameters();
             for (AnnotatedParameter annotatedParameter : requiredParameters.values()) {
-                if(!annotatedParameter.hasCallValue()) {
+                if (!annotatedParameter.hasCallValue()) {
                     return true;
                 }
             }

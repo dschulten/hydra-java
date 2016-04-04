@@ -7,7 +7,9 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -97,7 +99,6 @@ public class PropertyUtils {
             throw new RuntimeException("Failed to read field " + fieldName + " from " + currentCallValue.toString(), e);
         }
     }
-
 
     public static Object getBeanPropertyValue(Object currentCallValue, String paramName) {
         if (currentCallValue == null) {
