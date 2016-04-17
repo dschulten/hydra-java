@@ -66,7 +66,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             Collection<Link> simpleLinks = new ArrayList<Link>();
             Collection<Affordance> affordances = new ArrayList<Affordance>();
             Collection<Link> templatedLinks = new ArrayList<Link>();
-            // Collection<Affordance> templatedAffordances = new ArrayList<Affordance>();
             Collection<Affordance> collectionAffordances = new ArrayList<Affordance>();
             Link selfRel = null;
             for (Link link : links) {

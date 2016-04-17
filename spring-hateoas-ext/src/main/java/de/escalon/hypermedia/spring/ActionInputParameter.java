@@ -218,7 +218,7 @@ public class ActionInputParameter implements AnnotatedParameter {
      */
     @Override
     public boolean isReadOnly(String property) {
-        return inputAnnotation != null && arrayContains(inputAnnotation.readOnly(), property);
+        return inputAnnotation != null && (!inputAnnotation.editable() || arrayContains(inputAnnotation.readOnly(), property));
     }
 
     /**
@@ -231,8 +231,14 @@ public class ActionInputParameter implements AnnotatedParameter {
      */
     @Override
     public boolean isIncluded(String property) {
-        return inputAnnotation == null
-                || (hasExplicitOrImplicitPropertyIncludeValue() && containsPropertyIncludeValue(property));
+        boolean ret;
+        if (inputAnnotation == null) {
+            ret = true;
+        } else {
+            boolean hasExplicitOrImplicitIncludes = hasExplicitOrImplicitPropertyIncludeValue();
+            ret = !hasExplicitOrImplicitIncludes || containsPropertyIncludeValue(property);
+        }
+        return ret;
     }
 
     /**
@@ -487,4 +493,21 @@ public class ActionInputParameter implements AnnotatedParameter {
         return inputConstraints;
     }
 
+    @Override
+    public String toString() {
+        String kind;
+        if (isRequestBody()) {
+            kind = "RequestBody";
+        } else if (isPathVariable()) {
+            kind = "PathVariable";
+        } else if (isRequestParam()) {
+            kind = "RequestParam";
+        } else if (isRequestHeader()) {
+            kind = "RequestHeader";
+        } else {
+            kind = "nested bean property";
+        }
+        return kind + (getParameterName() != null ? " " + getParameterName() : "") + ": " + (value != null ? value
+                .toString() : "no value");
+    }
 }

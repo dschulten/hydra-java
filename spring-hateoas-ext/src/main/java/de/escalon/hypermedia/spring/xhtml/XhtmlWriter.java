@@ -3,6 +3,7 @@ package de.escalon.hypermedia.spring.xhtml;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.PropertyUtils;
+import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.Affordance;
@@ -10,7 +11,6 @@ import de.escalon.hypermedia.affordance.AnnotatedParameter;
 import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.spring.ActionInputParameter;
 import org.springframework.core.MethodParameter;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.Property;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -195,6 +194,11 @@ public class XhtmlWriter extends Writer {
 
         private Map<String, String> attributes = new LinkedHashMap<String, String>();
 
+        @Override
+        public String toString() {
+            return attributes.toString();
+        }
+
         /**
          * Creates OptionalAttributes with one optional attribute having name if value is not null.
          *
@@ -314,17 +318,17 @@ public class XhtmlWriter extends Writer {
 
         writeHiddenHttpMethodField(httpMethod);
         // build the form
-        if (actionDescriptor.hasRequestBody()) {
+        if (actionDescriptor.hasRequestBody()) { // parameter bean
             AnnotatedParameter requestBody = actionDescriptor.getRequestBody();
             Class<?> parameterType = requestBody.getParameterType();
             recurseBeanProperties(parameterType, actionDescriptor, requestBody, requestBody.getCallValue());
-        } else {
+        } else { // plain parameter list
             Collection<String> requestParams = actionDescriptor.getRequestParamNames();
             for (String requestParamName : requestParams) {
                 AnnotatedParameter actionInputParameter = actionDescriptor.getAnnotatedParameter(requestParamName);
 
-                // TODO support list and matrix parameters?
                 Object[] possibleValues = actionInputParameter.getPossibleValues(actionDescriptor);
+                // TODO duplication with appendInputOrSelect
                 if (possibleValues.length > 0) {
                     if (actionInputParameter.isArrayOrCollection()) {
                         appendSelectMulti(requestParamName, possibleValues, actionInputParameter);
@@ -333,7 +337,8 @@ public class XhtmlWriter extends Writer {
                     }
                 } else {
                     if (actionInputParameter.isArrayOrCollection()) {
-                        // TODO support for free list input?
+                        // have as many inputs as there are call values, list of 5 nulls gives you five input fields
+                        // TODO support for free list input instead, code on demand?
                         Object[] callValues = actionInputParameter.getCallValues();
                         int items = callValues.length;
                         for (int i = 0; i < items; i++) {
@@ -343,11 +348,11 @@ public class XhtmlWriter extends Writer {
                             } else {
                                 value = null;
                             }
-                            appendInput(requestParamName, actionInputParameter, value);
+                            appendInput(requestParamName, actionInputParameter, value, actionInputParameter.isReadOnly(requestParamName)); // not readonly
                         }
                     } else {
                         String callValueFormatted = actionInputParameter.getCallValueFormatted();
-                        appendInput(requestParamName, actionInputParameter, callValueFormatted);
+                        appendInput(requestParamName, actionInputParameter, callValueFormatted, actionInputParameter.isReadOnly(requestParamName)); // not readonly
                     }
                 }
             }
@@ -565,29 +570,23 @@ public class XhtmlWriter extends Writer {
                                 String paramName = jsonProperty.value();
                                 Class parameterType = parameters[paramIndex];
 
-                                // TODO duplicate below for PropertyDescriptors
+                                // TODO duplicate below for PropertyDescriptors and in appendForm
                                 if (DataType.isSingleValueType(parameterType)) {
 
-                                    Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue,
-                                            paramName);
+                                    if (actionInputParameter.isIncluded(paramName)) {
 
-                                    ActionInputParameter constructorParamInputParameter = new ActionInputParameter
-                                            (new MethodParameter(constructor, paramIndex), propertyValue);
+                                        Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue,
+                                                paramName);
 
-                                    final Object[] possibleValues =
-                                            actionInputParameter.getPossibleValues(
-                                                    constructor, paramIndex, actionDescriptor);
-                                    if (possibleValues.length > 0) {
-                                        if (actionInputParameter.isArrayOrCollection()) {
-                                            // TODO multiple formatted callvalues
-                                            appendSelectMulti(paramName, possibleValues,
-                                                    constructorParamInputParameter);
-                                        } else {
-                                            appendSelectOne(paramName, possibleValues, constructorParamInputParameter);
-                                        }
-                                    } else {
-                                        appendInput(paramName, constructorParamInputParameter,
-                                                constructorParamInputParameter.getCallValue());
+                                        ActionInputParameter constructorParamInputParameter = new ActionInputParameter
+                                                (new MethodParameter(constructor, paramIndex), propertyValue);
+
+                                        final Object[] possibleValues =
+                                                actionInputParameter.getPossibleValues(
+                                                        constructor, paramIndex, actionDescriptor);
+
+                                        appendInputOrSelect(actionInputParameter, paramName,
+                                                constructorParamInputParameter, possibleValues);
                                     }
                                 } else if (DataType.isArrayOrCollection(parameterType)) {
                                     Object[] callValues = actionInputParameter.getCallValues();
@@ -647,18 +646,7 @@ public class XhtmlWriter extends Writer {
                     final Object[] possibleValues = actionInputParameter.getPossibleValues(propertyDescriptor
                                     .getWriteMethod(), 0,
                             actionDescriptor);
-                    if (possibleValues.length > 0) {
-                        if (actionInputParameter.isArrayOrCollection()) {
-                            // TODO multiple formatted callvalues
-                            appendSelectMulti(propertyName, possibleValues, propertySetterInputParameter);
-                        } else {
-                            appendSelectOne(propertyName, possibleValues, propertySetterInputParameter);
-                        }
-                    } else {
-                        //String callValueFormatted = actionInputParameter.getCallValueFormatted();
-                        appendInput(propertyName, propertySetterInputParameter, propertySetterInputParameter
-                                .getCallValue());
-                    }
+                    appendInputOrSelect(actionInputParameter, propertyName, propertySetterInputParameter, possibleValues);
                 } else if (actionInputParameter.isArrayOrCollection()) {
                     Object[] callValues = actionInputParameter.getCallValues();
                     int items = callValues.length;
@@ -676,12 +664,36 @@ public class XhtmlWriter extends Writer {
                     beginDiv();
                     write(propertyName + ":");
                     Object propertyValue = PropertyUtils.getPropertyValue(currentCallValue, propertyDescriptor);
-
-
                     recurseBeanProperties(propertyType, actionDescriptor, actionInputParameter, propertyValue);
                     endDiv();
                 }
             }
+        }
+    }
+
+    /**
+     * Appends simple input or select, depending on availability of possible values.
+     * @param parentInputParameter the parent during bean recursion
+     * @param paramName of the child input parameter
+     * @param childInputParameter the current input to be rendered
+     * @param possibleValues suitable for childInputParameter
+     * @throws IOException
+     */
+    private void appendInputOrSelect(AnnotatedParameter parentInputParameter, String paramName, ActionInputParameter
+            childInputParameter, Object[] possibleValues) throws IOException {
+        if (possibleValues.length > 0) {
+            if (childInputParameter.isArrayOrCollection()) {
+                // TODO multiple formatted callvalues
+                appendSelectMulti(paramName, possibleValues,
+                        childInputParameter);
+            } else {
+                appendSelectOne(paramName, possibleValues,
+                        childInputParameter);
+            }
+        } else {
+            appendInput(paramName, childInputParameter,
+                    childInputParameter.getCallValue(),
+                    parentInputParameter.isReadOnly(paramName));
         }
     }
 
@@ -694,14 +706,13 @@ public class XhtmlWriter extends Writer {
         }
     }
 
-    private void appendInput(String requestParamName, AnnotatedParameter actionInputParameter, Object value) throws
+    private void appendInput(String requestParamName, AnnotatedParameter actionInputParameter, Object value, boolean
+            readOnly) throws
             IOException {
         if (actionInputParameter.isRequestBody()) { // recurseBeanProperties does that
             throw new IllegalArgumentException("cannot append input field for requestBody");
         }
         String fieldLabel = requestParamName;
-
-
         Type htmlInputFieldType = actionInputParameter.getHtmlInputFieldType();
         Assert.notNull(htmlInputFieldType);
         String val = value == null ? "" : value.toString();
@@ -710,20 +721,20 @@ public class XhtmlWriter extends Writer {
             input(requestParamName, htmlInputFieldType, OptionalAttributes.attr("value", val));
         } else {
             String documentationUrl = documentationProvider.getDocumentationUrl(actionInputParameter, value);
+            // TODO consider @Input-include/exclude/hidden here
+            OptionalAttributes attrs = OptionalAttributes.attr("value", val);
+            if (readOnly) {
+                attrs.and(Input.READONLY, Input.READONLY);
+            }
+            writeLabelWithDoc(fieldLabel, requestParamName, documentationUrl);
             if (actionInputParameter.hasInputConstraints()) {
-                writeLabelWithDoc(fieldLabel, requestParamName, documentationUrl);
-                OptionalAttributes attrs = OptionalAttributes.attr();
-                for (Map.Entry<String, Object> entry : actionInputParameter.getInputConstraints()
+                for (Map.Entry<String, Object> inputConstraint : actionInputParameter.getInputConstraints()
                         .entrySet()) {
-                    attrs.and(entry.getKey(), entry.getValue()
+                    attrs.and(inputConstraint.getKey(), inputConstraint.getValue()
                             .toString());
                 }
-                attrs.and("value", val);
-                input(requestParamName, htmlInputFieldType, attrs);
-            } else {
-                writeLabelWithDoc(fieldLabel, requestParamName, documentationUrl);
-                input(requestParamName, htmlInputFieldType, attr("value", val));
             }
+            input(requestParamName, htmlInputFieldType, attrs);
         }
         endDiv();
 

@@ -37,6 +37,7 @@ public @interface Input {
     String MIN_LENGTH = "minLength";
     String MAX_LENGTH = "maxLength";
     String PATTERN = "pattern";
+    String READONLY = "readonly";
 
     /**
      * Input type. With the default type FROM_JAVA the type will be number or text for scalar values (depending on the
@@ -57,6 +58,12 @@ public @interface Input {
     String pattern() default "";
 
     int step() default 0;
+
+    /**
+     * Parameter is not editable, refers to single values as well as properties of a bean parameter.
+     * @return
+     */
+    boolean editable() default true;
 
     /**
      * Property names or dot-separated property paths of read-only properties on input bean. Allows to define expected

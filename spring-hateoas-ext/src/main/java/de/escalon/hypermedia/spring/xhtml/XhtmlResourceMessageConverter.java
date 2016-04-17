@@ -288,7 +288,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         xhtmlWriter.setDocumentationProvider(documentationProvider);
 
 
-        xhtmlWriter.beginHtml("Input Data");
+        xhtmlWriter.beginHtml("Form");
         writeNewResource(xhtmlWriter, t);
         xhtmlWriter.endHtml();
         xhtmlWriter.flush();
@@ -314,7 +314,6 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             return;
         }
         try {
-//            beginListGroupWithItem(writer);
             if (object instanceof Resource) {
                 Resource<?> resource = (Resource<?>) object;
                 writer.beginListItem();
@@ -350,10 +349,6 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                 for (Object item : collection) {
                     writeResource(writer, item);
                 }
-//            } else if (!DataType.isSingleValueType(object.getClass())) {
-//                writer.beginListItem();
-//                writeObject(writer, object);
-//                writer.endListItem();
             } else { // TODO: write li for simple objects in Resources Collection
                 writeObject(writer, object);
             }

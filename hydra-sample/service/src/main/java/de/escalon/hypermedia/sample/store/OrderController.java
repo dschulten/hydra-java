@@ -50,7 +50,7 @@ public class OrderController {
 
     @ResourceHandler(Cardinality.COLLECTION)
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Void> makeOrder(@Input(include = "productID") @RequestBody Product product) {
+    public ResponseEntity<Void> makeOrder(@Input(readOnly={"productID"}) @RequestBody Product product) {
 
         OrderModel orderModel = orderBackend.createOrder();
         Product resolvedProduct = productController.getProduct(product.productID);
