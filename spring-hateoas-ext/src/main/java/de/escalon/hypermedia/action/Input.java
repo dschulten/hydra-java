@@ -60,7 +60,7 @@ public @interface Input {
     int step() default 0;
 
     /**
-     * Parameter is not editable, refers to single values as well as properties of a bean parameter.
+     * Entire parameter is not editable, refers both to single values and to all properties of a bean parameter.
      * @return
      */
     boolean editable() default true;
@@ -124,7 +124,7 @@ public @interface Input {
      * If included attributes are present, the assumption is that all other attributes should be considered ignored
      * inputs.
      *
-     * @return property paths which should be ignored
+     * @return property paths which should be expected
      */
     String[] include() default {};
 
