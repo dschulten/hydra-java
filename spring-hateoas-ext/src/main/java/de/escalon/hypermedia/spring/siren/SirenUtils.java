@@ -37,7 +37,7 @@ public class SirenUtils {
         SirenUtils.NAVIGATIONAL_RELS = navigationalRels;
     }
 
-    public static void toSirenEntity(AbstractSirenEntity objectNode, Object object, RelProvider relProvider) {
+    public static void toSirenEntity(SirenEntityContainer objectNode, Object object, RelProvider relProvider) {
         if (object == null) {
             return;
         }
@@ -76,22 +76,20 @@ public class SirenUtils {
                 for (Object item : collection) {
                     // TODO name must be repeated for each collection item
                     // TODO: how create collection item?
-//                    SirenEntity sirenEntity = new SirenEntity()
-//                    objectNode.addData(itemNode);
-//                    toUberData(itemNode, item);
-
-//                    toUberData(objectNode, item);
+                    SirenEmbeddedRepresentation child = new SirenEmbeddedRepresentation();
+                    toSirenEntity(child, item, relProvider);
+                    objectNode.addSubEntity(child);
                 }
                 return;
             }
             if (object instanceof Map) {
-                Map<?, ?> map = (Map<?, ?>) object;
-                for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    String key = entry.getKey()
-                            .toString();
-                    Object content = entry.getValue();
-                    Object value = getContentAsScalarValue(content);
-                    // TODO how create map item?
+//                Map<?, ?> map = (Map<?, ?>) object;
+//                for (Map.Entry<?, ?> entry : map.entrySet()) {
+//                    String key = entry.getKey()
+//                            .toString();
+//                    Object content = entry.getValue();
+//                    Object value = getContentAsScalarValue(content);
+//                    // TODO how create map item?
 //                    SirenEntity entryNode = new SirenEntity();
 //                    objectNode.addData(entryNode);
 //                    entryNode.setName(key);
@@ -100,7 +98,7 @@ public class SirenUtils {
 //                    } else {
 //                        toUberData(entryNode, content);
 //                    }
-                }
+//                }
             } else { // bean or ResourceSupport
                 // TODO fields
                 Map<String, Object> propertiesNode = new HashMap<String, Object>();
@@ -166,8 +164,9 @@ public class SirenUtils {
     }
 
 
-    private static void recurseEntities(AbstractSirenEntity objectNode, Map<String, Object> propertiesNode,
-                                        Object object, RelProvider relProvider) throws InvocationTargetException, IllegalAccessException {
+    private static void recurseEntities(SirenEntityContainer objectNode, Map<String, Object> propertiesNode,
+                                        Object object, RelProvider relProvider) throws InvocationTargetException,
+            IllegalAccessException {
         PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(object);
         for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
             String name = propertyDescriptor.getName();
@@ -203,7 +202,8 @@ public class SirenUtils {
         }
     }
 
-    private static void traverseSubEntity(AbstractSirenEntity objectNode, Object content, RelProvider relProvider) throws InvocationTargetException, IllegalAccessException {
+    private static void traverseSubEntity(SirenEntityContainer objectNode, Object content, RelProvider relProvider)
+            throws InvocationTargetException, IllegalAccessException {
         Object bean;
         List<Link> links;
         if (content instanceof Resource) {
@@ -221,7 +221,7 @@ public class SirenUtils {
         Map<String, Object> properties = new HashMap<String, Object>();
         SirenEmbeddedRepresentation subEntity = new SirenEmbeddedRepresentation(
                 Collections.<String>emptyList(), properties, null, toSirenActions(getActions(links)),
-                toSirenLinks(getNavigationalLinks(links)), Arrays.asList(rel));
+                toSirenLinks(getNavigationalLinks(links)), Arrays.asList(rel), null);
         //subEntity.setProperties(properties);
         objectNode.addSubEntity(subEntity);
         List<SirenEmbeddedLink> sirenEmbeddedLinks = toSirenEmbeddedLinks(getEmbeddedLinks(links));
@@ -440,9 +440,9 @@ public class SirenUtils {
         List<SirenLink> ret = new ArrayList<SirenLink>();
         for (Link link : links) {
             if (link instanceof Affordance) {
-                ret.add(new SirenLink(((Affordance) link).getRels(), link.getHref()));
+                ret.add(new SirenLink(null, ((Affordance) link).getRels(), link.getHref(), null, null));
             } else {
-                ret.add(new SirenLink(Arrays.asList(link.getRel()), link.getHref()));
+                ret.add(new SirenLink(null, Arrays.asList(link.getRel()), link.getHref(), null, null));
             }
         }
         return ret;
@@ -453,11 +453,11 @@ public class SirenUtils {
         for (Link link : links) {
             if (link instanceof Affordance) {
                 // TODO: how to determine classes? type of target resource? collection/item?
-                ret.add(new SirenEmbeddedLink(Collections.<String>emptyList(), ((Affordance) link).getRels(), link
-                        .getHref()));
+                ret.add(new SirenEmbeddedLink(null, ((Affordance) link).getRels(), link
+                        .getHref(), null, null));
             } else {
-                ret.add(new SirenEmbeddedLink(Collections.<String>emptyList(), Arrays.asList(link.getRel()), link
-                        .getHref()));
+                ret.add(new SirenEmbeddedLink(null, Arrays.asList(link.getRel()), link
+                        .getHref(), null, null));
             }
         }
         return ret;

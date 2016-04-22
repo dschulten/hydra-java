@@ -10,109 +10,24 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * All entities that have classes and a title.
  * Created by Dietrich on 17.04.2016.
  */
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonPropertyOrder({"class", "rel", "properties", "entities", "actions", "links"})
-public abstract class AbstractSirenEntity {
-    @JsonProperty("class")
+public abstract class AbstractSirenEntity  extends AbstractSirenNode {
+
     private List<String> sirenClasses;
 
-    // content may have nested attributes, see https://groups.google.com/forum/#!msg/api-craft/GYNZBED1a-8/ekpeDZXpeF0J
-    protected Map<String, Object> properties;
-
-    protected List<? super SirenSubEntity> entities;
-
-    protected List<SirenAction> actions;
-
-    // Navigational GET Affordances: self, next, prev
-    protected List<SirenLink> links;
-
-    protected List<String> rel;
-
-    protected String href;
-
-    protected String title;
-
-    protected AbstractSirenEntity() {
-
+    AbstractSirenEntity() {
+        
     }
 
-    /**
-     * Siren link
-     */
-    public AbstractSirenEntity(List<String> rels, String href) {
-        this.rel = rels;
-        this.href = href;
-    }
-
-    /**
-     * Siren entity.
-     */
-    public AbstractSirenEntity(List<String> sirenClasses, Map<String, Object> properties, List<SirenSubEntity> entities,
-                               List<SirenAction> actions, List<SirenLink> links) {
-
+    public AbstractSirenEntity(String title, List<String> sirenClasses) {
+        super(title);
         this.sirenClasses = sirenClasses;
-        this.properties = properties;
-        this.entities = entities;
-        this.actions = actions;
-        this.links = links;
     }
 
-    /**
-     * Siren embedded representation.
-     * @param sirenClasses classes
-     * @param properties object
-     * @param entities sub-entities
-     * @param actions actions
-     * @param links navigational links
-     * @param rels rels
-     */
-    public AbstractSirenEntity(List<String> sirenClasses, Map<String, Object> properties, List<SirenSubEntity> entities,
-                               List<SirenAction> actions, List<SirenLink> links, List<String> rels) {
-
-        this.sirenClasses = sirenClasses;
-        this.rel = rels;
-        this.properties = properties;
-        this.entities = entities;
-        this.actions = actions;
-        this.links = links;
-    }
-
-    /**
-     * Siren embedded link.
-     */
-    public AbstractSirenEntity(List<String> sirenClasses, List<String> rels, String href) {
-
-        this.sirenClasses = sirenClasses;
-        this.rel = rels;
-        this.href = href;
-    }
-
-    // TODO remove links from ctors?
-    public void setLinks(List<SirenLink> links) {
-        this.links = links;
-    }
-
-    public void setProperties(Map<String,Object> properties) {
-        this.properties = properties;
-    }
-
-    public void addSubEntity(SirenSubEntity sirenSubEntity) {
-        if(this.entities == null) {
-            this.entities = new ArrayList<SirenSubEntity>();
-        }
-        entities.add(sirenSubEntity);
-    }
-
-    public void setEmbeddedLinks(List<SirenEmbeddedLink> embeddedLinks) {
-        if(this.entities == null) {
-            this.entities = new ArrayList<SirenSubEntity>();
-        }
-        this.entities.addAll(embeddedLinks);
-    }
-
-    public void setActions(List<SirenAction> actions) {
-        this.actions = actions;
+    @JsonProperty("class")
+    public List<String> getSirenClasses() {
+        return sirenClasses;
     }
 }
