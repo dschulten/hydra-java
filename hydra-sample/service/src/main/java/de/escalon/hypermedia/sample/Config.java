@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
 import de.escalon.hypermedia.spring.hydra.JsonLdDocumentationProvider;
+import de.escalon.hypermedia.spring.siren.SirenMessageConverter;
 import de.escalon.hypermedia.spring.uber.UberJackson2HttpMessageConverter;
 import de.escalon.hypermedia.spring.xhtml.XhtmlResourceMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,6 +55,7 @@ public class Config extends WebMvcConfigurerAdapter {
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(hydraMessageConverter());
+        converters.add(sirenMessageConverter());
         converters.add(halConverter());
         converters.add(uberConverter());
         converters.add(xhtmlMessageConverter());
@@ -87,6 +90,12 @@ public class Config extends WebMvcConfigurerAdapter {
         return new HydraMessageConverter();
     }
 
+    public SirenMessageConverter sirenMessageConverter() {
+        SirenMessageConverter sirenMessageConverter = new SirenMessageConverter(new DelegatingRelProvider(relProviderRegistry));
+        sirenMessageConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.parseMediaType("application/vnd.siren+json")));
+        return sirenMessageConverter;
+    }
+
 
 
     @Bean
@@ -107,7 +116,7 @@ public class Config extends WebMvcConfigurerAdapter {
 
     @Bean
     public CurieProvider curieProvider() {
-        return new DefaultCurieProvider("ex", new UriTemplate("http://example.org/{rel}"));
+        return new DefaultCurieProvider("ex", new UriTemplate("http://example.org/{rels}"));
     }
 
     @Bean

@@ -27,6 +27,10 @@ public class Store extends ResourceSupport {
 
     private List<Offer> offers = new ArrayList<Offer>();
 
+    public String getName() {
+        return name;
+    }
+
     public List<Offer> getMakesOffer() {
         return offers;
     }

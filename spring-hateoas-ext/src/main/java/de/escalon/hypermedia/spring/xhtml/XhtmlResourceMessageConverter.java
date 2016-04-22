@@ -385,14 +385,12 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         } else if (object instanceof Enum) {
             String name = ((Enum) object).name();
             String docUrl = documentationProvider.getDocumentationUrl(name, object);
-//            writeDtWithDoc(writer, name, docUrl);
             writeDdForScalarValue(writer, object);
         } else if (object instanceof Currency) {
             // TODO configurable classes which should be rendered with toString
             // or use JsonSerializer or DataType?
             String name = object.toString();
             String docUrl = documentationProvider.getDocumentationUrl(name, object);
-//            writeDtWithDoc(writer, name, docUrl);
             writeDdForScalarValue(writer, object);
         } else {
             Class<?> aClass = object.getClass();

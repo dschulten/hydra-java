@@ -131,7 +131,6 @@ public class UberUtils {
         } catch (Exception ex) {
             throw new RuntimeException("failed to transform object " + object, ex);
         }
-
     }
 
     private static PropertyDescriptor[] getPropertyDescriptors(Object bean) {

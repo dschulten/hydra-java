@@ -40,8 +40,8 @@ public @interface Input {
     String READONLY = "readonly";
 
     /**
-     * Input type. With the default type FROM_JAVA the type will be number or text for scalar values (depending on the
-     * parameter type), and null for arrays, collections or beans.
+     * Input type, to set the input type, e.g. hidden, password. With the default type FROM_JAVA the type will be
+     * number or text for scalar values (depending on the parameter type), and null for arrays, collections or beans.
      *
      * @return input type
      */
@@ -84,7 +84,8 @@ public @interface Input {
     String[] readOnly() default {};
 
     /**
-     * Property names or dot-separated property paths of hidden properties on input bean. Allows to define expected
+     * Property names or dot-separated property paths of hidden properties on input bean, as opposed to
+     * setting @Input(Type.HIDDEN) on a single value input parameter. Allows to define expected
      * input bean attributes with hidden values, so that a media type can render them as hidden attribute. This
      * allows to use the same bean for input and output in different contexts. E.g. all product attributes should be
      * editable when a new product is added, but not when an order is created which contains that product. Thus, if a
@@ -98,6 +99,7 @@ public @interface Input {
      * @return property paths which should be shown as read-only
      * @see #include
      * @see #exclude
+     * @see #value
      */
     String[] hidden() default {};
 
