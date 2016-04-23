@@ -162,7 +162,8 @@ public class ActionDescriptor implements AnnotatedParameters {
     }
 
     /**
-     * Gets input parameter info which is part of the URL mapping, both request parameters and path variables.
+     * Gets input parameter info which is part of the URL mapping,
+     * be it request parameters, path variables or request body attributes.
      *
      * @param name
      *         to retrieve
@@ -221,6 +222,10 @@ public class ActionDescriptor implements AnnotatedParameters {
         }
     }
 
+    /**
+     * Parameters annotated with <code>@Input</code>.
+     * @return parameters or empty list
+     */
     public Collection<AnnotatedParameter> getInputParameters() {
         return inputParams.values();
     }

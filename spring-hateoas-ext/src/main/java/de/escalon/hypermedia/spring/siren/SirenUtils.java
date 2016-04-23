@@ -9,9 +9,7 @@ import de.escalon.hypermedia.affordance.AnnotatedParameter;
 import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.spring.ActionInputParameter;
 import org.springframework.core.MethodParameter;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.*;
-import org.springframework.hateoas.core.Relation;
 import org.springframework.util.Assert;
 
 import java.beans.BeanInfo;
@@ -21,6 +19,7 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -167,8 +166,8 @@ public class SirenUtils {
     private static void recurseEntities(SirenEntityContainer objectNode, Map<String, Object> propertiesNode,
                                         Object object, RelProvider relProvider) throws InvocationTargetException,
             IllegalAccessException {
-        PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(object);
-        for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+        Map<String, PropertyDescriptor> propertyDescriptors = PropertyUtils.getPropertyDescriptors(object);
+        for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
             String name = propertyDescriptor.getName();
             if (FILTER_RESOURCE_SUPPORT.contains(name)) {
                 continue;
@@ -177,28 +176,43 @@ public class SirenUtils {
 
             Object content = propertyDescriptor.getReadMethod()
                     .invoke(object);
-            Object value = getContentAsScalarValue(content);
+            traverseAttribute(objectNode, propertiesNode, relProvider, name, content);
 
-            if (value == NULL_VALUE) {
-                continue;
-            } else if (value != null) {
-                // for each scalar property of a simple bean, add valuepair
-                propertiesNode.put(name, value);
-            } else {
-                if (content instanceof ResourceSupport) {
-                    traverseSubEntity(objectNode, content, relProvider);
-                } else if (content instanceof Collection) {
-                    Collection<?> collection = (Collection<?>) content;
-                    for (Object item : collection) {
-                        traverseSubEntity(objectNode, item, relProvider);
-                    }
-                } else {
-                    Map<String, Object> nested = new HashMap<String, Object>();
-                    propertiesNode.put(name, nested);
-                    recurseEntities(objectNode, nested, content, relProvider);
-                }
+        }
+
+        Field[] fields = object.getClass().getFields();
+        for (Field field : fields) {
+            String name = field.getName();
+            if (!propertyDescriptors.containsKey(name)) {
+                Object content = field.get(object);
+                // String docUrl = documentationProvider.getDocumentationUrl(field, content);
+                //<a href="http://schema.org/review">http://schema.org/performer</a>
+                traverseAttribute(objectNode, propertiesNode, relProvider, name, content);
             }
+        }
+    }
 
+    private static void traverseAttribute(SirenEntityContainer objectNode, Map<String, Object> propertiesNode, RelProvider relProvider, String name, Object content) throws InvocationTargetException, IllegalAccessException {
+        Object value = getContentAsScalarValue(content);
+
+        if (value == NULL_VALUE) {
+            return;
+        } else if (value != null) {
+            // for each scalar property of a simple bean, add valuepair
+            propertiesNode.put(name, value);
+        } else {
+            if (content instanceof ResourceSupport) {
+                traverseSubEntity(objectNode, content, relProvider);
+            } else if (content instanceof Collection) {
+                Collection<?> collection = (Collection<?>) content;
+                for (Object item : collection) {
+                    traverseSubEntity(objectNode, item, relProvider);
+                }
+            } else {
+                Map<String, Object> nestedProperties = new HashMap<String, Object>();
+                propertiesNode.put(name, nestedProperties);
+                recurseEntities(objectNode, nestedProperties, content, relProvider);
+            }
         }
     }
 
@@ -241,7 +255,7 @@ public class SirenUtils {
 
                     List<SirenField> fields = toSirenFields(actionDescriptor);
 
-                    SirenAction sirenAction = new SirenAction(null, null, actionDescriptor.getHttpMethod(),
+                    SirenAction sirenAction = new SirenAction(null, actionDescriptor.getActionName(), null, actionDescriptor.getHttpMethod(),
                             affordance.getHref(), null, fields);
 
                     // simple parameters or request body attributes
@@ -252,9 +266,9 @@ public class SirenUtils {
                 List<SirenField> fields = new ArrayList<SirenField>();
                 List<TemplateVariable> variables = link.getVariables();
                 for (TemplateVariable variable : variables) {
-                    fields.add(new SirenField(variable.getName(), "text", null, variable.getDescription()));
+                    fields.add(new SirenField(variable.getName(), "text", null, variable.getDescription(), null));
                 }
-                SirenAction sirenAction = new SirenAction(null, null, "GET",
+                SirenAction sirenAction = new SirenAction(null, null, null, "GET",
                         link.getHref(), null, fields);
             }
         }
@@ -269,12 +283,13 @@ public class SirenUtils {
                     .getRequestBody()
                     .getCallValue(), "");
         } else {
-            Collection<AnnotatedParameter> inputParameters = actionDescriptor.getInputParameters();
-            for (AnnotatedParameter inputParameter : inputParameters) {
+            Collection<String> paramNames = actionDescriptor.getRequestParamNames();
+            for (String paramName: paramNames) {
+                AnnotatedParameter inputParameter = actionDescriptor.getAnnotatedParameter(paramName);
                 ret.add(new SirenField(inputParameter.getParameterName(),
                         inputParameter.getHtmlInputFieldType()
                                 .name()
-                                .toLowerCase(), inputParameter.getCallValueFormatted(), null));
+                                .toLowerCase(), inputParameter.getCallValueFormatted(), null, null));
             }
         }
         return ret;
@@ -353,7 +368,7 @@ public class SirenUtils {
                                             constructorParamInputParameter.getHtmlInputFieldType()
                                                     .name()
                                                     .toLowerCase(),
-                                            propertyValueAsString, null));
+                                            propertyValueAsString, null, null));
 
                                 }
                             } else if (DataType.isArrayOrCollection(parameterType)) {

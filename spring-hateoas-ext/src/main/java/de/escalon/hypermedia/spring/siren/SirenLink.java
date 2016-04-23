@@ -38,4 +38,6 @@ public class SirenLink extends SirenRelatedEntity {
         return type;
     }
 
+
+
 }
