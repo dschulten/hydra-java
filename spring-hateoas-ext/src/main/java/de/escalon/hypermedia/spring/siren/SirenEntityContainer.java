@@ -13,6 +13,8 @@ public interface SirenEntityContainer {
 
     void setProperties(Map<String, Object> properties);
 
+    void setSirenClasses(List<String> sirenClasses);
+
     void addSubEntity(SirenSubEntity sirenSubEntity);
 
     void setEmbeddedLinks(List<SirenEmbeddedLink> embeddedLinks);

@@ -99,7 +99,8 @@ public class SirenUtils {
 //                    }
 //                }
             } else { // bean or ResourceSupport
-                // TODO fields
+                String sirenClass = relProvider.getItemResourceRelFor(object.getClass());
+                objectNode.setSirenClasses(Collections.singletonList(sirenClass));
                 Map<String, Object> propertiesNode = new HashMap<String, Object>();
                 recurseEntities(objectNode, propertiesNode, object, relProvider);
                 objectNode.setProperties(propertiesNode);
@@ -180,7 +181,8 @@ public class SirenUtils {
 
         }
 
-        Field[] fields = object.getClass().getFields();
+        Field[] fields = object.getClass()
+                .getFields();
         for (Field field : fields) {
             String name = field.getName();
             if (!propertyDescriptors.containsKey(name)) {
@@ -192,7 +194,9 @@ public class SirenUtils {
         }
     }
 
-    private static void traverseAttribute(SirenEntityContainer objectNode, Map<String, Object> propertiesNode, RelProvider relProvider, String name, Object content) throws InvocationTargetException, IllegalAccessException {
+    private static void traverseAttribute(SirenEntityContainer objectNode, Map<String, Object> propertiesNode,
+                                          RelProvider relProvider, String name, Object content) throws
+            InvocationTargetException, IllegalAccessException {
         Object value = getContentAsScalarValue(content);
 
         if (value == NULL_VALUE) {
@@ -202,11 +206,11 @@ public class SirenUtils {
             propertiesNode.put(name, value);
         } else {
             if (content instanceof ResourceSupport) {
-                traverseSubEntity(objectNode, content, relProvider);
+                traverseSubEntity(objectNode, content, relProvider, name);
             } else if (content instanceof Collection) {
                 Collection<?> collection = (Collection<?>) content;
                 for (Object item : collection) {
-                    traverseSubEntity(objectNode, item, relProvider);
+                    traverseSubEntity(objectNode, item, relProvider, name);
                 }
             } else {
                 Map<String, Object> nestedProperties = new HashMap<String, Object>();
@@ -216,7 +220,8 @@ public class SirenUtils {
         }
     }
 
-    private static void traverseSubEntity(SirenEntityContainer objectNode, Object content, RelProvider relProvider)
+    private static void traverseSubEntity(SirenEntityContainer objectNode, Object content, RelProvider relProvider,
+                                          String name)
             throws InvocationTargetException, IllegalAccessException {
         Object bean;
         List<Link> links;
@@ -230,12 +235,12 @@ public class SirenUtils {
             links = ((ResourceSupport) content).getLinks();
         }
 
-        String rel = relProvider.getItemResourceRelFor(bean.getClass());
+        String sirenClass = relProvider.getItemResourceRelFor(bean.getClass());
 
         Map<String, Object> properties = new HashMap<String, Object>();
         SirenEmbeddedRepresentation subEntity = new SirenEmbeddedRepresentation(
-                Collections.<String>emptyList(), properties, null, toSirenActions(getActions(links)),
-                toSirenLinks(getNavigationalLinks(links)), Arrays.asList(rel), null);
+                Collections.singletonList(sirenClass), properties, null, toSirenActions(getActions(links)),
+                toSirenLinks(getNavigationalLinks(links)), Arrays.asList(name), null);
         //subEntity.setProperties(properties);
         objectNode.addSubEntity(subEntity);
         List<SirenEmbeddedLink> sirenEmbeddedLinks = toSirenEmbeddedLinks(getEmbeddedLinks(links));
@@ -252,14 +257,18 @@ public class SirenUtils {
                 Affordance affordance = (Affordance) link;
                 List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
                 for (ActionDescriptor actionDescriptor : actionDescriptors) {
-
                     List<SirenField> fields = toSirenFields(actionDescriptor);
 
-                    SirenAction sirenAction = new SirenAction(null, actionDescriptor.getActionName(), null, actionDescriptor.getHttpMethod(),
-                            affordance.getHref(), null, fields);
+                    String href;
+                    if (affordance.isTemplated()) {
+                        href = affordance.getUriTemplateComponents()
+                                .getBaseUri();
+                    } else {
+                        href = affordance.getHref();
+                    }
 
-                    // simple parameters or request body attributes
-
+                    SirenAction sirenAction = new SirenAction(null, actionDescriptor.getActionName(), null,
+                            actionDescriptor.getHttpMethod(), href, null, fields);
                     ret.add(sirenAction);
                 }
             } else if (link.isTemplated()) {
@@ -268,8 +277,9 @@ public class SirenUtils {
                 for (TemplateVariable variable : variables) {
                     fields.add(new SirenField(variable.getName(), "text", null, variable.getDescription(), null));
                 }
+                String baseUri = new UriTemplate(link.getHref()).expand().toASCIIString();
                 SirenAction sirenAction = new SirenAction(null, null, null, "GET",
-                        link.getHref(), null, fields);
+                        baseUri, null, fields);
             }
         }
         return ret;
@@ -284,7 +294,7 @@ public class SirenUtils {
                     .getCallValue(), "");
         } else {
             Collection<String> paramNames = actionDescriptor.getRequestParamNames();
-            for (String paramName: paramNames) {
+            for (String paramName : paramNames) {
                 AnnotatedParameter inputParameter = actionDescriptor.getAnnotatedParameter(paramName);
                 ret.add(new SirenField(inputParameter.getParameterName(),
                         inputParameter.getHtmlInputFieldType()

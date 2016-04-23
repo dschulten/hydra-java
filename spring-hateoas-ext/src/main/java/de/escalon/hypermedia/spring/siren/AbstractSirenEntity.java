@@ -30,4 +30,8 @@ public abstract class AbstractSirenEntity  extends AbstractSirenNode {
     public List<String> getSirenClasses() {
         return sirenClasses;
     }
+
+    public void setSirenClasses(List<String> sirenClasses) {
+        this.sirenClasses = sirenClasses;
+    }
 }
