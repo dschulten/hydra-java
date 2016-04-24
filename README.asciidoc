@@ -6,7 +6,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
-Latest release: 0.2.0-beta3
+Latest release: 0.2.0-beta4
 
 == Problem
 
@@ -110,6 +110,7 @@ The conversion of a spring-hateoas Resource does the following:
 
 - renders a spring-hateoas `List<Link>` in a `Resource<T>` in json-ld style
 - renders spring-hateoas `Resources<T>` as `hydra:Collection`. If you use this feature, make sure you have a `@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")` annotation in your context.
+- renders spring-hateoas `PagedResources<T>` as `hydra:Collection` with a `hydra:PartialCollectionView`. If you use this feature, make sure you have a `@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")` annotation in your context.
 - renders response with `"@vocab" : "http://schema.org/"` by default, a different `@vocab` can be defined on a class or package using the `@Vocab` annotation.
 - supports vocabularies in addition to the default vocabulary via terms in the `@context`. Use `@Term` in conjunction with `@Terms` on a class or package for this.
 - renders `@type` based on the Java class name by default, a vocabulary class can be produced instead using `@Expose` on the Java class.
@@ -521,7 +522,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.2.0-beta3</version>
+  <version>0.2.0-beta4</version>
 </dependency>
 ----
 
@@ -532,7 +533,7 @@ If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverte
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>spring-hateoas-ext</artifactId>
-  <version>0.2.0-beta3</version>
+  <version>0.2.0-beta4</version>
 </dependency>
 ----
 
