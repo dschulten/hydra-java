@@ -253,4 +253,12 @@ public class SirenUtilsTest {
     public void testMapContainingResource() {
 
     }
+
+    public void testRadio() {
+
+    }
+
+    public void testCheckBox() {
+
+    }
 }

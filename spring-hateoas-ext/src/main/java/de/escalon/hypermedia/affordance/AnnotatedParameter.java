@@ -42,17 +42,21 @@ public interface AnnotatedParameter {
     boolean isHidden(String property);
 
     /**
-     * Property is readOnly according to {@link Input#readOnly()}
-     * @param property name or property path
-     * @return true if hidden
+     * Determines if request body input parameter has a read-only input property.
+     *
+     * @param property
+     *         name or property path
+     * @return true if read-only
      */
     boolean isReadOnly(String property);
 
     /**
-     * Checks if property is included according to {@link Input#include}, {@link
+     * Determines if request body input parameter should be included, considering all of {@link Input#include}, {@link
      * Input#hidden} and {@link Input#readOnly}.
-     * @param property name or property path
-     * @return true if included
+     *
+     * @param property
+     *         name or property path
+     * @return true if included or no include statements found
      */
     boolean isIncluded(String property);
 
@@ -81,7 +85,7 @@ public interface AnnotatedParameter {
      *         having parameter
      * @param parameterIndex
      *         of parameter
-     * @return possible values
+     * @return possible values or null
      */
     Object[] getPossibleValues(Method method, int parameterIndex, AnnotatedParameters annotatedParameters);
 

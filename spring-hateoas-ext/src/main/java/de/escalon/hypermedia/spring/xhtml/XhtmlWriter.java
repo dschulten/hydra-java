@@ -15,6 +15,7 @@ import org.springframework.core.convert.Property;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.beans.BeanInfo;
@@ -793,7 +794,7 @@ public class XhtmlWriter extends Writer {
                 OptionalAttributes.attr("multiple", "multiple")
                         .and("class", formControlClass));
         for (Object possibleValue : possibleValues) {
-            if (arrayContains(actualValues, possibleValue)) {
+            if (ObjectUtils.containsElement(actualValues, possibleValue)) {
                 option(possibleValue.toString(), attr("selected", "selected"));
             } else {
                 option(possibleValue.toString());
@@ -853,13 +854,5 @@ public class XhtmlWriter extends Writer {
     }
 
 
-    private boolean arrayContains(Object[] values, Object value) {
-        for (int i = 0; i < values.length; i++) {
-            Object item = values[i];
-            if (item.equals(value)) {
-                return true;
-            }
-        }
-        return false;
-    }
+
 }

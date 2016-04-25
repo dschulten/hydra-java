@@ -8,9 +8,11 @@ import de.escalon.hypermedia.affordance.Affordance;
 import de.escalon.hypermedia.affordance.AnnotatedParameter;
 import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.spring.ActionInputParameter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.hateoas.*;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -24,6 +26,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
+ * Maps spring-hateoas response data to siren data.
+ *
  * Created by Dietrich on 17.04.2016.
  */
 public class SirenUtils {
@@ -275,9 +279,11 @@ public class SirenUtils {
                 List<SirenField> fields = new ArrayList<SirenField>();
                 List<TemplateVariable> variables = link.getVariables();
                 for (TemplateVariable variable : variables) {
-                    fields.add(new SirenField(variable.getName(), "text", null, variable.getDescription(), null));
+                    fields.add(new SirenField(variable.getName(), "text", (String) null, variable.getDescription(),
+                            null));
                 }
-                String baseUri = new UriTemplate(link.getHref()).expand().toASCIIString();
+                String baseUri = new UriTemplate(link.getHref()).expand()
+                        .toASCIIString();
                 SirenAction sirenAction = new SirenAction(null, null, null, "GET",
                         baseUri, null, fields);
             }
@@ -296,10 +302,10 @@ public class SirenUtils {
             Collection<String> paramNames = actionDescriptor.getRequestParamNames();
             for (String paramName : paramNames) {
                 AnnotatedParameter inputParameter = actionDescriptor.getAnnotatedParameter(paramName);
-                ret.add(new SirenField(inputParameter.getParameterName(),
-                        inputParameter.getHtmlInputFieldType()
-                                .name()
-                                .toLowerCase(), inputParameter.getCallValueFormatted(), null, null));
+                Object[] possibleValues = inputParameter.getPossibleValues(actionDescriptor);
+
+                ret.add(createSirenField(paramName, inputParameter.getCallValueFormatted(), inputParameter,
+                        possibleValues));
             }
         }
         return ret;
@@ -357,8 +363,9 @@ public class SirenUtils {
                             String paramName = jsonProperty.value();
                             Class parameterType = parameters[paramIndex];
 
-                            // TODO duplicate below for PropertyDescriptors and in appendForm
-                            if (DataType.isSingleValueType(parameterType)) {
+                            // TODO duplicate below for PropertyDescriptors
+                            if (DataType.isSingleValueType(parameterType)
+                                    || DataType.isArrayOrCollection(parameterType)) {
 
                                 if (actionInputParameter.isIncluded(paramName)) {
 
@@ -372,26 +379,17 @@ public class SirenUtils {
                                             actionInputParameter.getPossibleValues(
                                                     constructor, paramIndex, actionDescriptor);
 
-                                    String propertyValueAsString = propertyValue == null ? null : propertyValue
-                                            .toString();
-                                    fields.add(new SirenField(parentParamName + paramName,
-                                            constructorParamInputParameter.getHtmlInputFieldType()
-                                                    .name()
-                                                    .toLowerCase(),
-                                            propertyValueAsString, null, null));
-
+                                    // dot-separated property path as field name
+                                    SirenField sirenField = createSirenField(parentParamName + paramName,
+                                            propertyValue, constructorParamInputParameter, possibleValues);
+                                    fields.add(sirenField);
                                 }
-                            } else if (DataType.isArrayOrCollection(parameterType)) {
-                                // not supported by Siren
                             } else {
-//                                beginDiv();
-//                                write(paramName + ":");
                                 // TODO consider to concatenate parent and child param name
                                 Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue,
                                         paramName);
                                 recurseBeanProperties(fields, parameterType, actionDescriptor, actionInputParameter,
-                                        propertyValue, paramName + "_");
-//                                endDiv();
+                                        propertyValue, paramName + ".");
                             }
                             paramIndex++; // increase for each @JsonProperty
                         }
@@ -453,6 +451,45 @@ public class SirenUtils {
 //            }
     }
 
+    @NotNull
+    private static SirenField createSirenField(String paramName, Object propertyValue,
+                                               AnnotatedParameter constructorParamInputParameter, Object[]
+                                                       possibleValues) {
+        SirenField sirenField;
+        if (possibleValues.length == 0) {
+            String propertyValueAsString = propertyValue == null ? null : propertyValue
+                    .toString();
+            String type = constructorParamInputParameter.getHtmlInputFieldType()
+                    .name()
+                    .toLowerCase();
+            sirenField = new SirenField(paramName,
+                    type,
+                    propertyValueAsString, null, null);
+        } else {
+            List<SirenFieldValue> sirenPossibleValues = new ArrayList<SirenFieldValue>();
+            String type;
+            if (constructorParamInputParameter.isArrayOrCollection()) {
+                type = "checkbox";
+                for (Object possibleValue : possibleValues) {
+                    boolean selected = ObjectUtils.containsElement(
+                            constructorParamInputParameter.getCallValues(),
+                            possibleValue);
+                    sirenPossibleValues.add(new SirenFieldValue(possibleValue, selected));
+                }
+            } else {
+                type = "radio";
+                for (Object possibleValue : possibleValues) {
+                    boolean selected = possibleValue.equals(propertyValue);
+                    sirenPossibleValues.add(new SirenFieldValue(possibleValue, selected));
+                }
+            }
+            sirenField = new SirenField(paramName,
+                    type,
+                    sirenPossibleValues, null, null);
+        }
+        return sirenField;
+    }
+
     private static BeanInfo getBeanInfo(Class<?> beanType) {
         try {
             return Introspector.getBeanInfo(beanType);
@@ -467,7 +504,7 @@ public class SirenUtils {
             if (link instanceof Affordance) {
                 ret.add(new SirenLink(null, ((Affordance) link).getRels(), link.getHref(), null, null));
             } else {
-                ret.add(new SirenLink(null, Arrays.asList(link.getRel()), link.getHref(), null, null));
+                ret.add(new SirenLink(null, Collections.singletonList(link.getRel()), link.getHref(), null, null));
             }
         }
         return ret;
@@ -481,7 +518,7 @@ public class SirenUtils {
                 ret.add(new SirenEmbeddedLink(null, ((Affordance) link).getRels(), link
                         .getHref(), null, null));
             } else {
-                ret.add(new SirenEmbeddedLink(null, Arrays.asList(link.getRel()), link
+                ret.add(new SirenEmbeddedLink(null, Collections.singletonList(link.getRel()), link
                         .getHref(), null, null));
             }
         }
@@ -504,15 +541,6 @@ public class SirenUtils {
             value = DataType.asScalarValue(content);
         }
         return value;
-    }
-
-    private static PropertyDescriptor[] getPropertyDescriptors(Object bean) {
-        try {
-            return Introspector.getBeanInfo(bean.getClass())
-                    .getPropertyDescriptors();
-        } catch (IntrospectionException e) {
-            throw new RuntimeException("failed to get property descriptors of bean " + bean, e);
-        }
     }
 
 }

@@ -209,26 +209,13 @@ public class ActionInputParameter implements AnnotatedParameter {
         return inputAnnotation != null && arrayContains(inputAnnotation.hidden(), property);
     }
 
-    /**
-     * Determines if request body input parameter has a read-only input property.
-     *
-     * @param property
-     *         name or property path
-     * @return true if read-only
-     */
+
     @Override
     public boolean isReadOnly(String property) {
         return inputAnnotation != null && (!inputAnnotation.editable() || arrayContains(inputAnnotation.readOnly(), property));
     }
 
-    /**
-     * Determines if request body input parameter should be included, considering all of {@link Input#include}, {@link
-     * Input#hidden} and {@link Input#readOnly}.
-     *
-     * @param property
-     *         name or property path
-     * @return true if included or no include statements found
-     */
+
     @Override
     public boolean isIncluded(String property) {
         boolean ret;
@@ -408,7 +395,7 @@ public class ActionInputParameter implements AnnotatedParameter {
      * Allows convenient access to multiple call values in case that this input parameter is an array or collection.
      * Make sure to check {@link #isArrayOrCollection()} before calling this method.
      *
-     * @return call values
+     * @return call values or empty array
      * @throws UnsupportedOperationException
      *         if this input parameter is not an array or collection
      */
