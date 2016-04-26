@@ -261,4 +261,8 @@ public class SirenUtilsTest {
     public void testCheckBox() {
 
     }
+
+    public void testConstructorArgsAndSetters() {
+
+    }
 }

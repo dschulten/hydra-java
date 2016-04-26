@@ -2,6 +2,7 @@ package de.escalon.hypermedia.affordance;
 
 import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.Type;
+import org.springframework.core.MethodParameter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -101,6 +102,17 @@ public interface AnnotatedParameter {
      * @return possible values
      */
     Object[] getPossibleValues(Constructor constructor, int parameterIndex, AnnotatedParameters annotatedParameters);
+
+    /**
+     * Gets possible values for a constructor parameter.
+     *
+     * @param annotatedParameters
+     *         in case that access to the other parameters is necessary to determine the possible values.
+     * @param methodParameter
+     *         to get possible values for
+     * @return possible values
+     */
+    Object[] getPossibleValues(MethodParameter methodParameter, AnnotatedParameters annotatedParameters);
 
     boolean isArrayOrCollection();
 

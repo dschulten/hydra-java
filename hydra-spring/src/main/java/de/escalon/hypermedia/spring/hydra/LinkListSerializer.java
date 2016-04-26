@@ -395,7 +395,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             if (writeMethod == null) {
                 continue;
             }
-//            final Class<?> propertyType = propertyDescriptor.getPropertyType();
             // TODO: the property name must be a valid URI - need to check context for terms?
             String propertyName = getWritableExposedPropertyOrPropertyName(propertyDescriptor);
 

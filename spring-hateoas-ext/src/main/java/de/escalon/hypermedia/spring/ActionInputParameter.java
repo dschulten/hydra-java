@@ -295,7 +295,7 @@ public class ActionInputParameter implements AnnotatedParameter {
         return getPossibleValues(methodParameter, actionDescriptor);
     }
 
-    private Object[] getPossibleValues(MethodParameter methodParameter, AnnotatedParameters actionDescriptor) {
+    public Object[] getPossibleValues(MethodParameter methodParameter, AnnotatedParameters actionDescriptor) {
         try {
             Class<?> parameterType = methodParameter.getNestedParameterType();
             Object[] possibleValues;
