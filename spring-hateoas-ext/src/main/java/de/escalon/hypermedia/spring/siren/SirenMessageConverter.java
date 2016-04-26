@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import de.escalon.hypermedia.spring.uber.UberMessageModel;
 import org.springframework.hateoas.RelProvider;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -16,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Set;
 
 /**
  * Created by Dietrich on 18.04.2016.
@@ -24,6 +24,9 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
 
     ObjectMapper objectMapper = new ObjectMapper();
     private RelProvider relProvider;
+
+    private String requestMediaType;
+    private Set<String> navigationalRels;
 
     public SirenMessageConverter(RelProvider relProvider) {
 

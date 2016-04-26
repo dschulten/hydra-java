@@ -32,10 +32,10 @@ public class SirenUtils {
 
     static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
 
-    static Set<String> NAVIGATIONAL_RELS = new HashSet<String>(Arrays.asList("self", "next", "previous", "prev"));
+    static Set<String> navigationalRels = new HashSet<String>(Arrays.asList("self", "next", "previous", "prev"));
 
     public static void setNavigationalRels(Set<String> navigationalRels) {
-        SirenUtils.NAVIGATIONAL_RELS = navigationalRels;
+        SirenUtils.navigationalRels = navigationalRels;
     }
 
     public static void toSirenEntity(SirenEntityContainer objectNode, Object object, RelProvider relProvider) {
@@ -60,6 +60,7 @@ public class SirenUtils {
                 objectNode.setLinks(SirenUtils.toSirenLinks(getNavigationalLinks(resources.getLinks())));
                 Collection<?> content = resources.getContent();
                 toSirenEntity(objectNode, content, relProvider);
+                objectNode.setActions(SirenUtils.toSirenActions(getActions(resources.getLinks())));
                 return;
             } else if (object instanceof ResourceSupport) {
                 ResourceSupport resource = (ResourceSupport) object;
@@ -115,7 +116,7 @@ public class SirenUtils {
     private static List<Link> getEmbeddedLinks(List<Link> links) {
         List<Link> ret = new ArrayList<Link>();
         for (Link link : links) {
-            if (!NAVIGATIONAL_RELS.contains(link.getRel())) {
+            if (!navigationalRels.contains(link.getRel())) {
                 if (link instanceof Affordance) {
                     Affordance affordance = (Affordance) link;
                     List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
@@ -135,30 +136,32 @@ public class SirenUtils {
     private static List<Link> getNavigationalLinks(List<Link> links) {
         List<Link> ret = new ArrayList<Link>();
         for (Link link : links) {
-            if (NAVIGATIONAL_RELS.contains(link.getRel())) {
+            if (navigationalRels.contains(link.getRel())) {
                 ret.add(link);
             }
         }
         return ret;
     }
 
+    // TODO: BUG: hydra:search not a template for events collection
     private static List<Link> getActions(List<Link> links) {
         List<Link> ret = new ArrayList<Link>();
         for (Link link : links) {
-            if (!NAVIGATIONAL_RELS.contains(link.getRel())) {
-                if (link instanceof Affordance) {
-                    Affordance affordance = (Affordance) link;
-                    List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
-                    for (ActionDescriptor actionDescriptor : actionDescriptors) {
-                        // non-GET and templated links are actions
-                        if (!("GET".equals(actionDescriptor.getHttpMethod())) || affordance.isTemplated()) {
-                            ret.add(link);
-                        }
-                    }
-                } else {
-                    if (link.isTemplated()) {
+            if (link instanceof Affordance) {
+                Affordance affordance = (Affordance) link;
+
+                List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
+                for (ActionDescriptor actionDescriptor : actionDescriptors) {
+                    // non-self GET non-GET and templated links are actions
+                    if (!("GET".equals(actionDescriptor.getHttpMethod())) || affordance.isTemplated()) {
                         ret.add(link);
+                        // add just once for eligible link
+                        break;
                     }
+                }
+            } else {
+                if (!navigationalRels.contains(link.getRel()) && link.isTemplated()) {
+                    ret.add(link);
                 }
             }
         }
@@ -260,18 +263,21 @@ public class SirenUtils {
                 List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
                 for (ActionDescriptor actionDescriptor : actionDescriptors) {
                     List<SirenField> fields = toSirenFields(actionDescriptor);
+                    // TODO integration getActions and this method so we do not need this check:
+                    // only templated affordances or non-get affordances are actions
+                    if(!"GET".equals(actionDescriptor.getHttpMethod()) || affordance.isTemplated()) {
+                        String href;
+                        if (affordance.isTemplated()) {
+                            href = affordance.getUriTemplateComponents()
+                                    .getBaseUri();
+                        } else {
+                            href = affordance.getHref();
+                        }
 
-                    String href;
-                    if (affordance.isTemplated()) {
-                        href = affordance.getUriTemplateComponents()
-                                .getBaseUri();
-                    } else {
-                        href = affordance.getHref();
+                        SirenAction sirenAction = new SirenAction(null, actionDescriptor.getActionName(), null,
+                                actionDescriptor.getHttpMethod(), href, null, fields);
+                        ret.add(sirenAction);
                     }
-
-                    SirenAction sirenAction = new SirenAction(null, actionDescriptor.getActionName(), null,
-                            actionDescriptor.getHttpMethod(), href, null, fields);
-                    ret.add(sirenAction);
                 }
             } else if (link.isTemplated()) {
                 List<SirenField> fields = new ArrayList<SirenField>();
@@ -292,7 +298,7 @@ public class SirenUtils {
     private static List<SirenField> toSirenFields(ActionDescriptor actionDescriptor) {
         List<SirenField> ret = new ArrayList<SirenField>();
         if (actionDescriptor.hasRequestBody()) {
-            recurseBeanProperties(ret, actionDescriptor.getRequestBody()
+            recurseBeanCreationParams(ret, actionDescriptor.getRequestBody()
                     .getParameterType(), actionDescriptor, actionDescriptor.getRequestBody(), actionDescriptor
                     .getRequestBody()
                     .getCallValue(), "", Collections.<String>emptySet());
@@ -324,10 +330,10 @@ public class SirenUtils {
      *         sample call value
      * @throws IOException
      */
-    private static void recurseBeanProperties(List<SirenField> sirenFields, Class<?> beanType,
-                                              AnnotatedParameters annotatedParameters,
-                                              AnnotatedParameter annotatedParameter, Object currentCallValue,
-                                              String parentParamName, Set<String> knownFields) {
+    private static void recurseBeanCreationParams(List<SirenField> sirenFields, Class<?> beanType,
+                                                  AnnotatedParameters annotatedParameters,
+                                                  AnnotatedParameter annotatedParameter, Object currentCallValue,
+                                                  String parentParamName, Set<String> knownFields) {
         // TODO collection and map
         try {
             Constructor[] constructors = beanType.getConstructors();
@@ -427,7 +433,7 @@ public class SirenUtils {
                 sirenFields.add(sirenField);
             }
         } else {
-            recurseBeanProperties(sirenFields, parameterType, annotatedParameters,
+            recurseBeanCreationParams(sirenFields, parameterType, annotatedParameters,
                     annotatedParameter,
                     propertyValue, paramName + ".", knownFields);
         }
