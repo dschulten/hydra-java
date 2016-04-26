@@ -297,9 +297,16 @@ The resulting json-ld event object has the corresponding GET, PUT and DELETE ope
 
 === Rendering other media types (from V. 0.2.0-alpha8)
 
-Clients should be able to request a media-type they understand by means of content negotiation. Following this principle, the spring-hateoas-ext package provides the foundation to render hypermedia types which describe expected requests - not only as json-ld, but also as other media types. The `XhtmlResourceMessageConverter` is the second message converter in hydra-java which makes use of affordances built by `AffordanceBuilder`.
+Clients should be able to request a media-type they understand by means of content negotiation. Following this principle, the spring-hateoas-ext package provides the foundation to render hypermedia types which describe expected requests - not only as json-ld, but also as other media types. 
+
+==== XhtmlResourceMessageConverter
+
+
+The `XhtmlResourceMessageConverter` is the second message converter in hydra-java which makes use of affordances built by `AffordanceBuilder`.
 
 If you add a `JsonLdDocumentationProvider` on the converter, it will render bean attributes as hyperlinks which point to their documentation on schema.org or other vocabularies, provided that your java beans are annotated with the necessary information.
+
+The xhtml response renders bootstrap conforming markup, you can add bootstrap css as shown below, or your own stylesheets.
 
 [source, Java]
 ----
@@ -341,6 +348,19 @@ To make the API browsable, PUT and DELETE are tunneled through POST. This is nec
         <filter-name>HiddenHttpMethodFilter</filter-name>
         <servlet-name>hypermedia-api</servlet-name>
     </filter-mapping>
+----
+
+
+==== SirenMessageConverter (from V. 0.2.0-beta5)
+The ˋSirenMessageConverterˋ renders Spring Hateoas Responses as https://github.com/kevinswiber/siren[Siren] messages, using the media type ˋapplication/vnd.siren+jsonˋ. It renders a plain Spring Hateoas ˋLinkˋ as embedded link or navigational link and a templated link as a Siren GET action with fields for the template query variables. In order to produce other Siren actions, point to your POST or PUT method using AffordanceBuilders linkTo-methodOn idiom, as shown above in the section AffordanceBuilder.
+
+Possible values are treated as checkbox or radio button fields.
+
+
+The corresponding Siren output looks like this:
+[source, Javascript]
+----
+<tbd>
 ----
 
 
