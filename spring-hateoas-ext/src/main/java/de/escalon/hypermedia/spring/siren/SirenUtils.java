@@ -295,7 +295,7 @@ public class SirenUtils {
             recurseBeanProperties(ret, actionDescriptor.getRequestBody()
                     .getParameterType(), actionDescriptor, actionDescriptor.getRequestBody(), actionDescriptor
                     .getRequestBody()
-                    .getCallValue(), "");
+                    .getCallValue(), "", Collections.<String>emptySet());
         } else {
             Collection<String> paramNames = actionDescriptor.getRequestParamNames();
             for (String paramName : paramNames) {
@@ -327,7 +327,7 @@ public class SirenUtils {
     private static void recurseBeanProperties(List<SirenField> sirenFields, Class<?> beanType,
                                               AnnotatedParameters annotatedParameters,
                                               AnnotatedParameter annotatedParameter, Object currentCallValue,
-                                              String parentParamName) {
+                                              String parentParamName, Set<String> knownFields) {
         // TODO collection and map
         try {
             Constructor[] constructors = beanType.getConstructors();
@@ -361,7 +361,8 @@ public class SirenUtils {
 
                             addSirenFieldsForMethodParameter(sirenFields, methodParameter, annotatedParameter,
                                     annotatedParameters,
-                                    parentParamName, paramName, parameterType, propertyValue);
+                                    parentParamName, paramName, parameterType, propertyValue,
+                                    knownFields);
                             paramIndex++; // increase for each @JsonProperty
                         }
                     }
@@ -371,9 +372,9 @@ public class SirenUtils {
                                 " are annotated with @JsonProperty");
             }
 
-            Set<String> knownFields = new HashSet<String>(sirenFields.size());
+            Set<String> knownConstructorFields = new HashSet<String>(sirenFields.size());
             for (SirenField sirenField : sirenFields) {
-                knownFields.add(sirenField.getName());
+                knownConstructorFields.add(sirenField.getName());
             }
 
             // TODO support Option provider by other method args?
@@ -385,7 +386,7 @@ public class SirenUtils {
                 final Method writeMethod = propertyDescriptor.getWriteMethod();
                 String propertyName = propertyDescriptor.getName();
 
-                if (writeMethod == null || knownFields.contains(propertyName)) {
+                if (writeMethod == null || knownFields.contains(parentParamName + propertyName)) {
                     continue;
                 }
                 final Class<?> propertyType = propertyDescriptor.getPropertyType();
@@ -395,7 +396,7 @@ public class SirenUtils {
 
                 addSirenFieldsForMethodParameter(sirenFields, methodParameter, annotatedParameter,
                         annotatedParameters,
-                        parentParamName, propertyName, propertyType, propertyValue);
+                        parentParamName, propertyName, propertyType, propertyValue, knownConstructorFields);
 
             }
         } catch (Exception e) {
@@ -407,12 +408,12 @@ public class SirenUtils {
     private static void addSirenFieldsForMethodParameter(List<SirenField> sirenFields, MethodParameter
             methodParameter, AnnotatedParameter annotatedParameter, AnnotatedParameters annotatedParameters, String
                                                                  parentParamName, String paramName, Class
-                                                                 parameterType, Object propertyValue) {
+                                                                 parameterType, Object propertyValue, Set<String>
+                                                                 knownFields) {
         if (DataType.isSingleValueType(parameterType)
                 || DataType.isArrayOrCollection(parameterType)) {
 
-            if (annotatedParameter.isIncluded(paramName)) {
-
+            if (annotatedParameter.isIncluded(paramName) && !knownFields.contains(parentParamName + paramName)) {
 
                 ActionInputParameter constructorParamInputParameter = new ActionInputParameter
                         (methodParameter, propertyValue);
@@ -426,10 +427,9 @@ public class SirenUtils {
                 sirenFields.add(sirenField);
             }
         } else {
-            // TODO consider to concatenate parent and child param name
             recurseBeanProperties(sirenFields, parameterType, annotatedParameters,
                     annotatedParameter,
-                    propertyValue, paramName + ".");
+                    propertyValue, paramName + ".", knownFields);
         }
     }
 
