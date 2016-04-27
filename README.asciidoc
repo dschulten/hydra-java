@@ -254,7 +254,7 @@ First we wrap the event into a `Resource` so we can add affordances to it. Then 
 
 ----
 
-The resulting json-ld event object has the corresponding GET, PUT and DELETE operations. The PUT operation expects an http://schema.org/Event[Event] with a property http://schema.org/eventStatus[eventStatus]. By default, writable properties (with a setter following the JavaBean conventions) are rendered as `hydra:supportedProperty`. The URI to be used by the operations is the `@id` of the object that has a `hydra:operation`.
+When rendered with the `HydraMessageConverter`, the resulting json-ld event object has the corresponding GET, PUT and DELETE operations. The PUT operation expects an http://schema.org/Event[Event] with a property http://schema.org/eventStatus[eventStatus]. By default, writable properties (with a setter following the JavaBean conventions) are rendered as `hydra:supportedProperty`. The URI to be used by the operations is the `@id` of the object that has a `hydra:operation`.
 
 [source, Javascript]
 ----
