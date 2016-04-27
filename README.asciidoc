@@ -299,6 +299,157 @@ When rendered with the `HydraMessageConverter`, the resulting json-ld event obje
    }
 ----
 
+
+=== Specifying Property Value Requirements (from V. 0.2.0)
+
+Now let us tell the client a range of possible values for a property. We want to allow clients to add reviews for the work performed at an event. For this, we add a `Resource<CreativeWork>` to the `Event`, so that we can define an affordance on the creative work which allows clients to send reviews.
+
+[source, Java]
+----
+  public class Event {
+      ...
+      private final Resource<CreativeWork> workPerformed;
+
+      public Resource<CreativeWork> getWorkPerformed() {
+          return workPerformed;
+      }
+      ...
+  }
+
+  // in EventController:
+  @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
+  public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
+
+      // with an event from backend do this:
+
+      event.getWorkPerformed() //  <-- must be a Resource<CreativeWork>
+          .add(linkTo(methodOn(ReviewController.class) // <-- must use AffordanceBuilder.linkTo here
+              .addReview(event.id, new Review(null, new Rating(3)))) // <-- default ratingValue 3
+              .withRel("review"));
+      ...
+  }
+
+  @Controller
+  @RequestMapping("/reviews")
+  public class ReviewController {
+
+      @RequestMapping(value = "/events/{eventId}", method = RequestMethod.POST)
+      public ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestBody Review review) {
+          // add review and return 201 Created
+      }
+  }
+----
+
+We expect that clients post a Review with a review body and a rating. The review body and the rating value have input constraints, so we annotate the method `setReviewBody` with `@Input(pattern=".{10,}")` and `setRatingValue` with `@Input(min = 1, max = 5, step = 1)`, as shown below.
+
+[source, Java]
+----
+
+  public class Rating {
+      private String ratingValue;
+
+      @JsonCreator
+      public Rating(@JsonProperty("ratingValue") Integer ratingValue) {
+        ..
+      }
+
+
+      public void setRatingValue(@Input(min = 1, max = 5, step = 1) String ratingValue) {
+          this.ratingValue = ratingValue;
+      }
+  }
+
+
+  public class Review {
+
+      private String reviewBody;
+      private Rating reviewRating;
+
+      @JsonCreator
+      public Review(@JsonProperty("reviewBody") String reviewBody,
+          @JsonProperty("reviewRating") Rating reviewRating) {
+             ...
+      }
+
+      public void setReviewBody(@Input(pattern=".{10,}") String reviewBody) {
+        ...
+      }
+
+      public void setReviewRating(Rating rating) {
+          this.reviewRating = rating;
+      }
+  }
+
+----
+
+In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpecification[PropertyValueSpecification] to express the input constraints `minValue`, `maxValue`, `stepValue` and `valuePattern`, as well as `defaultValue` containing the rating value `3` that was passed to the sample method invocation with `methodOn`. Note that the creative work has a `review` attribute now, although the `CreativeWork` pojo has no such property. It appears because we added a rel `review` to the workPerformed resource.
+
+Right now it is not possible to specify a list of expected values, neither with hydra nor with `schema:PropertyValueSpecification`. If you are interested in that, look into https://github.com/HydraCG/Specifications/issues/82[#82 Add support for allowed literals and allowed individuals] and participate in the discussion in the http://lists.w3.org/Archives/Public/public-hydra/2015Jan/0019.html[Hydra-CG mailing list].
+
+[source, Javascript]
+----
+{
+    "@context":
+    {
+        "@vocab": "http://schema.org/",
+        "hydra": "http://www.w3.org/ns/hydra/core#",
+        "eventStatus":
+        {
+            "@type": "@vocab"
+        },
+        "EVENT_SCHEDULED": "EventScheduled"
+    },
+    "@type": "Event",
+    "performer": "Walk off the Earth",
+    "location": "Wiesbaden",
+    "eventStatus": "EVENT_SCHEDULED",
+    "workPerformed": {
+        "@type": "CreativeWork",
+        "name": "Gang of Rhythm Tour",
+        "review": {
+            "@id": "http://localhost:8210/webapp/hypermedia-api/reviews/events/1",
+            "hydra:operation": [
+                {
+                    "@type": "ReviewAction",
+                    "hydra:method": "POST",
+                    "hydra:expects": {
+                        "@type": "Review",
+                        "hydra:supportedProperty": [
+                            {
+                                "@type": "PropertyValueSpecification",
+                                "hydra:property": "reviewBody",
+                                "valuePattern": ".{10,}"
+                            },
+                            {
+                                "hydra:property": "reviewRating",
+                                "rangeIncludes": {
+                                    "@type": "Rating",
+                                    "hydra:supportedProperty": [
+                                        {
+                                            "@type": "PropertyValueSpecification",
+                                            "hydra:property": "ratingValue",
+                                            "defaultValue": 3,
+                                            "maxValue": 5,
+                                            "minValue": 1,
+                                            "stepValue": 1
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}
+
+----
+
+If an expected property on a request object holds a nested json object in turn, hydra-java will render it following a proposal from https://github.com/HydraCG/Specifications/issues/26[Hydra-CG Issue 26] using http://schema.org/rangeIncludes[schema:rangeIncludes]. The fact that this issue is not resolved yet is the main reason why hydra-java 0.2.0 is an alpha release. So be especially wary that changes are likely for the way hydra-java prescribes nested properties.
+
+
+
 === Rendering other media types (from V. 0.2.0-alpha8)
 
 Clients should be able to request a media-type they understand by means of content negotiation. Following this principle, the spring-hateoas-ext package provides the foundation to render hypermedia types which describe expected requests - not only as json-ld, but also as other media types. 
@@ -459,154 +610,6 @@ The Siren output for the sample `EventController` above is shown below. Note tha
 }
 ----
 
-
-=== Specifying Property Value Requirements (from V. 0.2.0)
-
-Now let us tell the client a range of possible values for a property. We want to allow clients to add reviews for the work performed at an event. For this, we add a `Resource<CreativeWork>` to the `Event`, so that we can define an affordance on the creative work which allows clients to send reviews.
-
-[source, Java]
-----
-  public class Event {
-      ...
-      private final Resource<CreativeWork> workPerformed;
-
-      public Resource<CreativeWork> getWorkPerformed() {
-          return workPerformed;
-      }
-      ...
-  }
-
-  // in EventController:
-  @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
-  public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
-
-      // with an event from backend do this:
-
-      event.getWorkPerformed() //  <-- must be a Resource<CreativeWork>
-          .add(linkTo(methodOn(ReviewController.class) // <-- must use AffordanceBuilder.linkTo here
-              .addReview(event.id, new Review(null, new Rating(3)))) // <-- default ratingValue 3
-              .withRel("review"));
-      ...
-  }
-
-  @Controller
-  @RequestMapping("/reviews")
-  public class ReviewController {
-
-      @RequestMapping(value = "/events/{eventId}", method = RequestMethod.POST)
-      public ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestBody Review review) {
-          // add review and return 201 Created
-      }
-  }
-----
-
-We expect that clients post a Review with a review body and a rating. The review body and the rating value have input constraints, so we annotate the method `setReviewBody` with `@Input(pattern=".{10,}")` and `setRatingValue` with `@Input(min = 1, max = 5, step = 1)`, as shown below.
-
-[source, Java]
-----
-
-  public class Rating {
-      private String ratingValue;
-
-      @JsonCreator
-      public Rating(@JsonProperty("ratingValue") Integer ratingValue) {
-        ..
-      }
-
-
-      public void setRatingValue(@Input(min = 1, max = 5, step = 1) String ratingValue) {
-          this.ratingValue = ratingValue;
-      }
-  }
-
-
-  public class Review {
-
-      private String reviewBody;
-      private Rating reviewRating;
-
-      @JsonCreator
-      public Review(@JsonProperty("reviewBody") String reviewBody,
-          @JsonProperty("reviewRating") Rating reviewRating) {
-             ...
-      }
-
-      public void setReviewBody(@Input(pattern=".{10,}") String reviewBody) {
-        ...
-      }
-
-      public void setReviewRating(Rating rating) {
-          this.reviewRating = rating;
-      }
-  }
-
-----
-
-In the resulting json-ld we use schema.org's http://schema.org/PropertyValueSpecification[PropertyValueSpecification] to express the input constraints `minValue`, `maxValue`, `stepValue` and `valuePattern`, as well as `defaultValue` containing the rating value `3` that was passed to the sample method invocation with `methodOn`. Note that the creative work has a `review` attribute now, although the `CreativeWork` pojo has no such property. It appears because we added a rel `review` to the workPerformed resource.
-
-Right now it is not possible to specify a list of expected values, neither with hydra nor with `schema:PropertyValueSpecification`. If you are interested in that, look into https://github.com/HydraCG/Specifications/issues/82[#82 Add support for allowed literals and allowed individuals] and participate in the discussion in the http://lists.w3.org/Archives/Public/public-hydra/2015Jan/0019.html[Hydra-CG mailing list].
-
-[source, Javascript]
-----
-{
-    "@context":
-    {
-        "@vocab": "http://schema.org/",
-        "hydra": "http://www.w3.org/ns/hydra/core#",
-        "eventStatus":
-        {
-            "@type": "@vocab"
-        },
-        "EVENT_SCHEDULED": "EventScheduled"
-    },
-    "@type": "Event",
-    "performer": "Walk off the Earth",
-    "location": "Wiesbaden",
-    "eventStatus": "EVENT_SCHEDULED",
-    "workPerformed": {
-        "@type": "CreativeWork",
-        "name": "Gang of Rhythm Tour",
-        "review": {
-            "@id": "http://localhost:8210/webapp/hypermedia-api/reviews/events/1",
-            "hydra:operation": [
-                {
-                    "@type": "ReviewAction",
-                    "hydra:method": "POST",
-                    "hydra:expects": {
-                        "@type": "Review",
-                        "hydra:supportedProperty": [
-                            {
-                                "@type": "PropertyValueSpecification",
-                                "hydra:property": "reviewBody",
-                                "valuePattern": ".{10,}"
-                            },
-                            {
-                                "hydra:property": "reviewRating",
-                                "rangeIncludes": {
-                                    "@type": "Rating",
-                                    "hydra:supportedProperty": [
-                                        {
-                                            "@type": "PropertyValueSpecification",
-                                            "hydra:property": "ratingValue",
-                                            "defaultValue": 3,
-                                            "maxValue": 5,
-                                            "minValue": 1,
-                                            "stepValue": 1
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-    }
-}
-
-----
-
-If an expected property on a request object holds a nested json object in turn, hydra-java will render it following a proposal from https://github.com/HydraCG/Specifications/issues/26[Hydra-CG Issue 26] using http://schema.org/rangeIncludes[schema:rangeIncludes]. The fact that this issue is not resolved yet is the main reason why hydra-java 0.2.0 is an alpha release. So be especially wary that changes are likely for the way hydra-java prescribes nested properties.
 
 
 == Maven Support
