@@ -6,7 +6,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
-Latest release: 0.2.0-beta4
+Latest release: 0.2.0-beta5
 
 == Problem
 
@@ -363,7 +363,7 @@ The `SirenMessageConverter` renders Spring Hateoas Responses as https://github.c
 * distinguishes navigational and embedded links by a default list of navigational rels. This list can be customized via `SirenMessageConverter.addNavigationalRels`.
 * for sub-entities the property name is used as relation name. The Siren class name is derived from the Java class name. The rel names can be customized using a `DocumentationProvider` implementation, e.g. the `JsonLdDocumentationProvider` from hydra-jsonld will make use of `@Expose` and `@Vocab` annotations on your response bean packages.
 
-The Siren output for the sample `EventController` above looks is shown below. Note that the JsonLdDocumentationProvider has created the link relation type `http://schema.org/workPerformed`. One could also use the UrlPrefixDocumentationProvider for simple URL prefixing.
+The Siren output for the sample `EventController` above is shown below. Note that the JsonLdDocumentationProvider has created the link relation type `http://schema.org/workPerformed`. One could also use the UrlPrefixDocumentationProvider for simple URL prefixing.
 [source, Javascript]
 ----
 {
@@ -614,18 +614,18 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.2.0-beta4</version>
+  <version>0.2.0-beta5</version>
 </dependency>
 ----
 
-If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverter` without the json-ld dependencies, use spring-hateoas-ext alone:
+If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverter` and `SirenMessageConverter`without the json-ld dependencies, use spring-hateoas-ext alone:
 
 [source, XML]
 ----
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>spring-hateoas-ext</artifactId>
-  <version>0.2.0-beta4</version>
+  <version>0.2.0-beta5</version>
 </dependency>
 ----
 
