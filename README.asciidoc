@@ -100,13 +100,13 @@ For a more expressive example consider the json-ld example of http://schema.org/
 In a more complex scenario I want to use my own attribute names and object design and still be able to use schema.org or other vocabs to describe their meaning. In json-ld I can. See below for a listing of vocabularies.
 
 == First Steps
-It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC as Hydra.
+It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC with various message converters.
 
-Look into the https://github.com/dschulten/hydra-java/blob/master/hydra-sample/service/src/main/java/de/escalon/hypermedia/sample/Config.java[sample configuration] to see how you can set up the Hydra message converter, the XHTML message converter and the Siren message converter with Spring MVC.
+Look into the https://github.com/dschulten/hydra-java/blob/master/hydra-sample/service/src/main/java/de/escalon/hypermedia/sample/Config.java[sample configuration] to see how you can set up the hydra message converter, the XHTML message converter and the Siren message converter with Spring MVC.
 The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-jsonld/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Term`.
 
 == Features of hydra-spring
-The conversion of a spring-hateoas Resource does the following:
+The conversion of a spring-hateoas Resource to hydra does the following:
 
 - renders a spring-hateoas `List<Link>` in a `Resource<T>` in json-ld style
 - renders spring-hateoas `Resources<T>` as `hydra:Collection`. If you use this feature, make sure you have a `@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")` annotation in your context.
@@ -134,11 +134,14 @@ Furthermore, if you use these hydra features, make sure you have a `@Term(define
 == Examples
 
 === Designing a Hydra API ===
-See my article https://www.w3.org/community/hydra/wiki/Restbucks_with_Hydra for an example of an ordering flow.
+See my article https://www.w3.org/community/hydra/wiki/Restbucks_with_Hydra for an example of an ordering flow. There is also a http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample Shop] which demonstrates the ideas from the article.
 
 === Live Demo
 
-Use a ReST client to access http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. Browsers will show the html representation of the API by default, which uses the `XhtmlResourceMessageConverter`. Sending `Accept: application/ld+json` will get you hydra, but `application/json` or `application/hal+json` work as well. When you POST or PUT, make sure you add a Content-Type header matching your request.
+Use a ReST client to access http://jbosswildfly-escalon.rhcloud.com/hypermedia-api/events[Sample API] to see the artifact hydra-sample at work. OpenShift sometimes completely shuts down the container, please try several times if you run into server errors when first accessing the sample.
+
+Browsers will show the html representation of the API by default, which uses the `XhtmlResourceMessageConverter`. Sending `Accept: application/ld+json` will get you hydra, but `application/json` or `application/hal+json` work as well. 
+When you POST or PUT, make sure you add a Content-Type header matching your request.
 
 
 === Exposing Java Bean Attributes
