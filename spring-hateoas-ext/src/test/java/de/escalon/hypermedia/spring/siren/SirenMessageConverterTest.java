@@ -204,7 +204,6 @@ public class SirenMessageConverterTest {
     @Test
     public void testActions() throws JsonProcessingException {
 
-
         Order order = new Order();
         order.add(linkTo(methodOn(DummyOrderController.class)
                 .addOrderItems(42, new OrderItem(42, null, null)))

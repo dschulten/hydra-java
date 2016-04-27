@@ -206,9 +206,6 @@ public class SirenUtilsTest {
         with(jsonNode.toString()).assertThat("$.entities[0].rel", contains("address"));
         with(jsonNode.toString()).assertThat("$.entities[0].href",
                 equalTo("http://api.example.com/customers/123/address"));
-
-
-        System.out.println(jsonNode.toString());
     }
 
     public void testListOfBean() {
@@ -231,23 +228,60 @@ public class SirenUtilsTest {
 
     }
 
+    @Test
     public void testResources() {
+        List<Address> addresses = new ArrayList<Address>();
+        for (int i = 0; i < 4; i++) {
+            addresses.add(new Address());
+        }
+
+        Resources<Address> addressResources = new Resources<Address>(addresses);
+        addressResources.add(new Link("http://example.com/addresses", "self"));
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, addressResources);
+
+        JsonNode jsonNode = objectMapper.valueToTree(entity);
+        with(jsonNode.toString()).assertThat("$.entities", hasSize(4));
+        with(jsonNode.toString()).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
+        with(jsonNode.toString()).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
+        with(jsonNode.toString()).assertThat("$.links", hasSize(1));
 
     }
 
+    @Test
+    public void testMap() {
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("name", "Joe");
+        map.put("address", new Address());
+
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, map);
+
+        JsonNode jsonNode = objectMapper.valueToTree(entity);
+
+        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Joe"));
+        with(jsonNode.toString()).assertThat("$.properties.address.city.name", equalTo("Donnbronn"));
+
+    }
+
+    @Test
     public void testMapContainingResource() {
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("name", "Joe");
+        Resource<Address> addressResource = new Resource<Address>(new Address());
+        addressResource.add(new Link("http://example.com/addresses/1", "self"));
+        map.put("address", addressResource);
 
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, map);
+
+        JsonNode jsonNode = objectMapper.valueToTree(entity);
+
+        System.out.println(jsonNode.toString());
+        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Joe"));
+        with(jsonNode.toString()).assertThat("$.entities[0].properties.street", equalTo("Grant Street"));
+        with(jsonNode.toString()).assertThat("$.entities[0].links", hasSize(1));
     }
 
-    public void testRadio() {
 
-    }
-
-    public void testCheckBox() {
-
-    }
-
-    public void testConstructorArgsAndSetters() {
-
-    }
 }

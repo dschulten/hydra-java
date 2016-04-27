@@ -85,22 +85,17 @@ public class SirenUtils {
                 return;
             }
             if (object instanceof Map) {
-//                Map<?, ?> map = (Map<?, ?>) object;
-//                for (Map.Entry<?, ?> entry : map.entrySet()) {
-//                    String key = entry.getKey()
-//                            .toString();
-//                    Object content = entry.getValue();
-//                    Object value = getContentAsScalarValue(content);
-//                    // TODO how create map item?
-//                    SirenEntity entryNode = new SirenEntity();
-//                    objectNode.addData(entryNode);
-//                    entryNode.setName(key);
-//                    if (value != null) {
-//                        entryNode.setValue(value);
-//                    } else {
-//                        toUberData(entryNode, content);
-//                    }
-//                }
+                Map<?, ?> map = (Map<?, ?>) object;
+                Map<String, Object> propertiesNode = new HashMap<String, Object>();
+                objectNode.setProperties(propertiesNode);
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    String key = entry.getKey()
+                            .toString();
+                    Object content = entry.getValue();
+
+                    String docUrl = documentationProvider.getDocumentationUrl(key, content);
+                    traverseAttribute(objectNode, propertiesNode, key, docUrl, content);
+                }
             } else { // bean or ResourceSupport
                 String sirenClass = relProvider.getItemResourceRelFor(object.getClass());
                 objectNode.setSirenClasses(Collections.singletonList(sirenClass));
@@ -430,8 +425,8 @@ public class SirenUtils {
             }
         } else {
             Object callValueBean;
-            if(propertyValue instanceof Resource) {
-                callValueBean = ((Resource)propertyValue).getContent();
+            if (propertyValue instanceof Resource) {
+                callValueBean = ((Resource) propertyValue).getContent();
             } else {
                 callValueBean = propertyValue;
             }
