@@ -357,13 +357,13 @@ The `SirenMessageConverter` renders Spring Hateoas Responses as https://github.c
 
 * maps a plain Spring Hateoas `Link` to an embedded link or navigational link.
 * a templated link becomes a Siren GET action with named siren fields for the template query variables
-* in order to produce more expressive Siren actions, use the `linkTo-methodOn` idiom of `AffordanceBuilder` to point to your POST or PUT method, as shown above for the sample `EventController` in the section AffordanceBuilder.
-* embedded `Resource` objects are shown as embedded representations
-* distinguishes navigational and embedded links by a default list of navigational rels. This list can be customized via `SirenMessageConverter.setNavigationalRels`.
-* possible values are treated as checkbox or radio button fields, following the technique discussed in the https://groups.google.com/forum/#!topic/siren-hypermedia/8mbOX44gguU[Siren group].
-* for sub-entities the attribute name is used as relation name. The Siren class name is derived from the Java class name. These names can be customized using the `@Expose` annotation on a Java class and its getter methods.
+* in order to produce more expressive Siren actions, use the `linkTo-methodOn` idiom of `AffordanceBuilder` to point to your methods, as shown above for the sample `EventController` in the section AffordanceBuilder.
+* possible values found by `AffordanceBuilder` are treated as checkbox or radio button fields, following the technique discussed in the https://groups.google.com/forum/#!topic/siren-hypermedia/8mbOX44gguU[Siren group].
+* nested `Resource` objects are shown as embedded representations
+* distinguishes navigational and embedded links by a default list of navigational rels. This list can be customized via `SirenMessageConverter.addNavigationalRels`.
+* for sub-entities the property name is used as relation name. The Siren class name is derived from the Java class name. The rel names can be customized using a `DocumentationProvider` implementation, e.g. the `JsonLdDocumentationProvider` from hydra-jsonld will make use of `@Expose` and `@Vocab` annotations on your response bean packages.
 
-The Siren output for the sample `EventController` above looks like this:
+The Siren output for the sample `EventController` above looks is shown below. Note that the JsonLdDocumentationProvider has created the link relation type `http://schema.org/workPerformed`. One could also use the UrlPrefixDocumentationProvider for simple URL prefixing.
 [source, Javascript]
 ----
 {
@@ -381,7 +381,7 @@ The Siren output for the sample `EventController` above looks like this:
                 "creativeWork"
             ],
             "rel": [
-                "workPerformed"
+                "http://schema.org/workPerformed"
             ],
             "properties": {
                 "name": "Gang of Rhythm Tour"
@@ -390,7 +390,7 @@ The Siren output for the sample `EventController` above looks like this:
                 {
                     "name": "addReview",
                     "method": "POST",
-                    "href": "http://localhost:8080/webapp/hypermedia-api/reviews/events/1",
+                    "href": "http://example.com/webapp/hypermedia-api/reviews/events/1",
                     "fields": [
                         {
                             "name": "reviewBody",
@@ -410,7 +410,7 @@ The Siren output for the sample `EventController` above looks like this:
         {
             "name": "updateEvent",
             "method": "PUT",
-            "href": "http://localhost:8080/webapp/hypermedia-api/events/1",
+            "href": "http://example.com/webapp/hypermedia-api/events/1",
             "fields": [
                 {
                     "name": "location",
@@ -442,7 +442,7 @@ The Siren output for the sample `EventController` above looks like this:
         {
             "name": "deleteEvent",
             "method": "DELETE",
-            "href": "http://localhost:8080/webapp/hypermedia-api/events/1"
+            "href": "http://example.com/webapp/hypermedia-api/events/1"
         }
     ],
     "links": [
@@ -450,7 +450,7 @@ The Siren output for the sample `EventController` above looks like this:
             "rel": [
                 "self"
             ],
-            "href": "http://localhost:8080/webapp/hypermedia-api/events/1"
+            "href": "http://example.com/webapp/hypermedia-api/events/1"
         }
     ]
 }

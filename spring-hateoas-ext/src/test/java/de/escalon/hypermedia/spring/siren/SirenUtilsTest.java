@@ -1,35 +1,20 @@
 package de.escalon.hypermedia.spring.siren;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonassert.JsonAssert;
-import com.jayway.jsonassert.JsonAsserter;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.Option;
-import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.core.DefaultRelProvider;
 import org.springframework.hateoas.core.EmbeddedWrapper;
-import org.springframework.hateoas.core.EmbeddedWrappers;
 import org.springframework.hateoas.core.Relation;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.*;
 
 import static com.jayway.jsonassert.JsonAssert.with;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
-import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -42,7 +27,7 @@ public class SirenUtilsTest {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    RelProvider relProvider = new DefaultRelProvider();
+    SirenUtils sirenUtils = new SirenUtils();
 
     @Before
     public void setUp() {
@@ -99,7 +84,7 @@ public class SirenUtilsTest {
         }
 
         SirenEntity entity = new SirenEntity();
-        SirenUtils.toSirenEntity(entity, new Customer(), relProvider);
+        sirenUtils.toSirenEntity(entity, new Customer());
 
         assertEquals("pj123", entity.properties.get("customerId"));
         assertEquals("Peter Joseph", entity.properties.get("name"));
@@ -187,7 +172,7 @@ public class SirenUtilsTest {
         }
 
         SirenEntity entity = new SirenEntity();
-        SirenUtils.toSirenEntity(entity, new Customer(), relProvider);
+        sirenUtils.toSirenEntity(entity, new Customer());
 
         JsonNode jsonNode = objectMapper.valueToTree(entity);
         with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Peter Joseph"));
@@ -215,7 +200,7 @@ public class SirenUtilsTest {
         customerResource.add(new Link("http://api.example.com/customers/123/address", "address"));
 
         SirenEntity entity = new SirenEntity();
-        SirenUtils.toSirenEntity(entity, customerResource, relProvider);
+        sirenUtils.toSirenEntity(entity, customerResource);
 
         JsonNode jsonNode = objectMapper.valueToTree(entity);
         with(jsonNode.toString()).assertThat("$.entities[0].rel", contains("address"));
@@ -237,7 +222,7 @@ public class SirenUtilsTest {
             addresses.add(new Resource<Address>(new Address()));
         }
         SirenEntity entity = new SirenEntity();
-        SirenUtils.toSirenEntity(entity, addresses, relProvider);
+        sirenUtils.toSirenEntity(entity, addresses);
 
         JsonNode jsonNode = objectMapper.valueToTree(entity);
         with(jsonNode.toString()).assertThat("$.entities", hasSize(4));

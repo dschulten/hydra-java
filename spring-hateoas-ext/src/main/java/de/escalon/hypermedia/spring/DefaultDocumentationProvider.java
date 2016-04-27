@@ -1,4 +1,4 @@
-package de.escalon.hypermedia.spring.xhtml;
+package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.affordance.AnnotatedParameter;
 

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import de.escalon.hypermedia.spring.DocumentationProvider;
 import org.springframework.hateoas.RelProvider;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -15,23 +16,55 @@ import org.springframework.http.converter.HttpMessageNotWritableException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Set;
+import java.util.Collection;
 
 /**
+ * Http message converter which converts Spring Hateoas resource beans to siren messages.
+ *
+ * Treats the following rels as navigational by default: "self", "next", "previous", "prev".
+ *
  * Created by Dietrich on 18.04.2016.
  */
 public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> {
 
+    private final SirenUtils sirenUtils;
     ObjectMapper objectMapper = new ObjectMapper();
-    private RelProvider relProvider;
-
-    private String requestMediaType;
-    private Set<String> navigationalRels;
-
-    public SirenMessageConverter(RelProvider relProvider) {
-
-        this.relProvider = relProvider;
+    public SirenMessageConverter() {
+        sirenUtils = new SirenUtils();
     }
+
+    /**
+     * Used to derive siren class (because Spring Hateoas rel providers normally derive rels from class names or class annotations).
+     * @param relProvider to determine siren class
+     */
+    public void setRelProvider(RelProvider relProvider) {
+        sirenUtils.setRelProvider(relProvider);
+    }
+
+    /**
+     * Tells converter about rels which should be treated as navigational, in addition to the default ones.
+     * @param additionalNavigationalRels to add
+     */
+    public void setAdditionalNavigationalRels(Collection<String> additionalNavigationalRels) {
+        sirenUtils.setAdditionalNavigationalRels(additionalNavigationalRels);
+    }
+
+    /**
+     * Sets request media type to be used as action type, instead of the default application/x-www-formurlencoded.
+     * @param requestMediaType type
+     */
+    public void setRequestMediaType(String requestMediaType) {
+        sirenUtils.setRequestMediaType(requestMediaType);
+    }
+
+    /**
+     * Sets documentation provider, used to calculate rels.
+     * @param documentationProvider to use
+     */
+    public void setDocumentationProvider(DocumentationProvider documentationProvider) {
+        sirenUtils.setDocumentationProvider(documentationProvider);
+    }
+
 
     @Override
     protected boolean supports(Class<?> clazz) {
@@ -46,7 +79,7 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
     @Override
     protected void writeInternal(Object o, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
         SirenEntity entity = new SirenEntity();
-        SirenUtils.toSirenEntity(entity, o, relProvider);
+        sirenUtils.toSirenEntity(entity, o);
 
         JsonEncoding encoding = getJsonEncoding(outputMessage.getHeaders().getContentType());
         JsonGenerator jsonGenerator = this.objectMapper.getFactory().createGenerator(outputMessage.getBody(), encoding);

@@ -10,6 +10,7 @@ import de.escalon.hypermedia.affordance.Affordance;
 import de.escalon.hypermedia.affordance.AnnotatedParameter;
 import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.spring.ActionInputParameter;
+import de.escalon.hypermedia.spring.DocumentationProvider;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.Property;
 import org.springframework.hateoas.Link;

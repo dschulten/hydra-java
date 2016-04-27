@@ -5,7 +5,7 @@ import de.escalon.hypermedia.AnnotationUtils;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
 import de.escalon.hypermedia.hydra.serialize.MixinSource;
-import de.escalon.hypermedia.spring.xhtml.DocumentationProvider;
+import de.escalon.hypermedia.spring.DocumentationProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 

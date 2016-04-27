@@ -1,15 +1,10 @@
 package de.escalon.hypermedia.spring.siren;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import de.escalon.hypermedia.spring.sample.test.ReviewController;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,7 +36,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExc
 
 import java.util.List;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -57,7 +51,7 @@ public class SirenMessageConverterTest {
     public static final Logger LOG = LoggerFactory.getLogger(SirenMessageConverterTest.class);
     private ObjectMapper objectMapper = new ObjectMapper();
 
-
+    SirenUtils sirenUtils = new SirenUtils();
 
     @Relation("customer")
     class Customer {
@@ -183,7 +177,7 @@ public class SirenMessageConverterTest {
         @Override
         public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
             super.configureMessageConverters(converters);
-            converters.add(new SirenMessageConverter(new DefaultRelProvider()));
+            converters.add(new SirenMessageConverter());
         }
 
         @Override
@@ -226,7 +220,7 @@ public class SirenMessageConverterTest {
                 .withRel("previous"));
 
         SirenEntity entity = new SirenEntity();
-        SirenUtils.toSirenEntity(entity, order, new DefaultRelProvider());
+        sirenUtils.toSirenEntity(entity, order);
 
         System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity));
     }
