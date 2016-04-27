@@ -100,9 +100,9 @@ For a more expressive example consider the json-ld example of http://schema.org/
 In a more complex scenario I want to use my own attribute names and object design and still be able to use schema.org or other vocabs to describe their meaning. In json-ld I can. See below for a listing of vocabularies.
 
 == First Steps
-It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC.
+It is currently possible to render responses from a https://github.com/spring-projects/spring-hateoas[spring-hateoas] service based on Spring MVC as Hydra.
 
-Look into the https://github.com/dschulten/hydra-java/blob/master/hydra-sample/service/src/main/java/de/escalon/hypermedia/sample/Config.java[sample configuration] to see how you can set up the hydra message converter with Spring MVC.
+Look into the https://github.com/dschulten/hydra-java/blob/master/hydra-sample/service/src/main/java/de/escalon/hypermedia/sample/Config.java[sample configuration] to see how you can set up the Hydra message converter, the XHTML message converter and the Siren message converter with Spring MVC.
 The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-jsonld/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Term`.
 
 == Features of hydra-spring
