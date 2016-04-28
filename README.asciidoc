@@ -513,6 +513,7 @@ The `SirenMessageConverter` renders Spring Hateoas Responses as https://github.c
 * a templated link becomes a Siren GET action with named siren fields for the template query variables
 * in order to produce more expressive Siren actions, use the `linkTo-methodOn` idiom of `AffordanceBuilder` to point to your methods, as shown above for the sample `EventController` in the section AffordanceBuilder.
 * possible values found by `AffordanceBuilder` are treated as checkbox or radio button fields, following the technique discussed in the https://groups.google.com/forum/#!topic/siren-hypermedia/8mbOX44gguU[Siren group].
+* Field types can be defined via the value of the `@Input` annotation on method parameters (e.g. `@Input(Type.DATE)`).
 * nested `Resource` objects are shown as embedded representations
 * distinguishes navigational and embedded links by a default list of navigational rels. This list can be customized via `SirenMessageConverter.addNavigationalRels`.
 * for sub-entities the property name is used as relation name. The Siren class name is derived from the Java class name. The rel names can be customized using a `DocumentationProvider` implementation, e.g. the `JsonLdDocumentationProvider` from hydra-jsonld will make use of `@Expose` and `@Vocab` annotations on your response bean packages.
@@ -624,7 +625,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 </dependency>
 ----
 
-If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverter` and `SirenMessageConverter`without the json-ld dependencies, use spring-hateoas-ext alone:
+If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverter` and `SirenMessageConverter` without the json-ld dependencies, use spring-hateoas-ext alone:
 
 [source, XML]
 ----

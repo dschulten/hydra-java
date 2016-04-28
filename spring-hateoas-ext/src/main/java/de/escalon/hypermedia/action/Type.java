@@ -24,8 +24,14 @@ public enum Type {
      * input type text
      */
     TEXT("text"),
-//    /** input type checkbox */
+//    /**
+//     * Input type checkbox
+//     */
 //    CHECKBOX("checkbox"),
+//    /**
+//     * Input type radio
+//     */
+//    RADIO("radio"),
     /**
      * input type hidden
      */
@@ -33,9 +39,59 @@ public enum Type {
     /**
      * input type password
      */
-    PASSWORD("password"), COLOR("color"), DATE("date"), DATETIME("datetime"), DATETIME_LOCAL("datetime-local"), EMAIL(
-            "email"), MONTH("month"), NUMBER("number"), RANGE("range"), SEARCH("search"), TEL("tel"), TIME("time"), URL("url"), WEEK(
-            "week"), SUBMIT("submit");
+    PASSWORD("password"),
+    /**
+     * Color chooser
+     */
+    COLOR("color"),
+    /**
+     * Should contain a date, client may use date picker
+     */
+    DATE("date"),
+    /**
+     * Datetime widget, with timezone.
+     */
+    DATETIME("datetime"),
+    /**
+     * Datetime widget, no timezone.
+     */
+    DATETIME_LOCAL("datetime-local"),
+    /**
+     * Email address, may validate and improve touch entry.
+     */
+    EMAIL("email"),
+    /**
+     * Month/year selector.
+     */
+    MONTH("month"),
+    /**
+     * Numeric value, normally determined automatically. You can set restrictions on the numbers with {@link Input#max}, {@link Input#min} and {@link Input#step}.
+     */
+    NUMBER("number"),
+    /**
+     * Allowed range of values, use with {@link Input#max} and {@link Input#min}. Client may use slider.
+     */
+    RANGE("range"),
+    /**
+     * Search field, may add search entry support, e.g. a delete term widget.
+     */
+    SEARCH("search"),
+    /**
+     * Phone number
+     */
+    TEL("tel"),
+    /**
+     * Select time, may use time picker.
+     */
+    TIME("time"),
+    /**
+     * Field is a URL
+     */
+    URL("url"),
+    /**
+     * Week/Year selector
+     */
+    WEEK("week");
 
     private String value;
 
@@ -54,7 +110,7 @@ public enum Type {
         Type[] values = Type.values();
         Type ret = null;
         for (Type type : values) {
-            if(inputType.equals(type.value)) {
+            if (inputType.equals(type.value)) {
                 ret = type;
                 break;
             }

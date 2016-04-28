@@ -13,6 +13,7 @@ package de.escalon.hypermedia.sample.beans.event;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.action.Input;
+import de.escalon.hypermedia.action.Type;
 
 /**
  * Sample rating.
@@ -28,7 +29,7 @@ public class Rating {
         this.ratingValue = ratingValue;
     }
 
-    public void setRatingValue(@Input(min = 1, max = 5, step = 1) Integer ratingValue) {
+    public void setRatingValue(@Input(value=Type.DATE, min = 1, max = 5, step = 1) Integer ratingValue) {
         this.ratingValue = ratingValue;
     }
 
