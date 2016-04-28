@@ -7,7 +7,6 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.hateoas.*;
-import org.springframework.hateoas.core.DefaultRelProvider;
 import org.springframework.hateoas.core.EmbeddedWrapper;
 import org.springframework.hateoas.core.Relation;
 
@@ -208,9 +207,6 @@ public class SirenUtilsTest {
                 equalTo("http://api.example.com/customers/123/address"));
     }
 
-    public void testListOfBean() {
-
-    }
 
     @Test
     public void testListOfResource() {
@@ -263,6 +259,135 @@ public class SirenUtilsTest {
         with(jsonNode.toString()).assertThat("$.properties.address.city.name", equalTo("Donnbronn"));
 
     }
+
+    @Test
+    public void testAttributeWithListOfBeans() {
+        class Customer {
+            private final String customerId = "pj123";
+            private final String name = "Peter Joseph";
+            private final List<Address> addresses = new ArrayList<Address>();
+
+            Customer() {
+                for (int i = 0; i < 4; i++) {
+                    addresses.add(new Address());
+                }
+            }
+
+            public String getCustomerId() {
+                return customerId;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public List<Address> getAddresses() {
+                return addresses;
+            }
+        }
+        Customer customer = new Customer();
+
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, customer);
+
+        JsonNode jsonNode = objectMapper.valueToTree(entity);
+        System.out.println(jsonNode.toString());
+
+        with(jsonNode.toString()).assertThat("$.entities", hasSize(4));
+        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Peter Joseph"));
+
+        with(jsonNode.toString()).assertThat("$.entities[0].properties.city.postalCode",
+                equalTo("74199"));
+    }
+
+
+    @Test
+    public void testAttributeWithListOfSingleValueTypes() {
+        class Customer {
+            private final String customerId = "pj123";
+            private final String name = "Peter Joseph";
+            private final List<Integer> favoriteNumbers = Arrays.asList(1, 3, 5, 7);
+
+            public String getCustomerId() {
+                return customerId;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public List<Integer> getFavoriteNumbers() {
+                return favoriteNumbers;
+            }
+        }
+        Customer customer = new Customer();
+
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, customer);
+
+        JsonNode jsonNode = objectMapper.valueToTree(entity);
+
+        with(jsonNode.toString()).assertThat("$.properties.favoriteNumbers", hasSize(4));
+        with(jsonNode.toString()).assertThat("$.properties.favoriteNumbers", contains(1, 3, 5, 7));
+        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Peter Joseph"));
+
+    }
+
+    enum Daytime {
+        MORNING, NOON, AFTERNOON, EVENING, NIGHT
+    }
+
+    @Test
+    public void testAttributeWithListOfEnums() {
+
+
+        class Customer {
+            private final String customerId = "pj123";
+            private final String name = "Peter Joseph";
+            private final List<Daytime> favoriteDaytime = Arrays.asList(Daytime.AFTERNOON, Daytime.NIGHT);
+
+            public String getCustomerId() {
+                return customerId;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public List<Daytime> getFavoriteNumbers() {
+                return favoriteDaytime;
+            }
+        }
+        Customer customer = new Customer();
+
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, customer);
+
+        JsonNode jsonNode = objectMapper.valueToTree(entity);
+
+        with(jsonNode.toString()).assertThat("$.properties.favoriteNumbers", hasSize(2));
+        with(jsonNode.toString()).assertThat("$.properties.favoriteNumbers",
+                contains(Daytime.AFTERNOON.name(), Daytime.NIGHT.name()));
+        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Peter Joseph"));
+
+    }
+
+    @Test
+    public void testListOfBean() {
+        List<Address> addresses = new ArrayList<Address>();
+        for (int i = 0; i < 4; i++) {
+            addresses.add(new Address());
+        }
+
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, addresses);
+
+        JsonNode jsonNode = objectMapper.valueToTree(entity);
+        with(jsonNode.toString()).assertThat("$.entities", hasSize(4));
+        with(jsonNode.toString()).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
+        with(jsonNode.toString()).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
+    }
+
 
     @Test
     public void testMapContainingResource() {

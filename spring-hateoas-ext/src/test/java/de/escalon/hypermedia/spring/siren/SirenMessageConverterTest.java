@@ -3,6 +3,7 @@ package de.escalon.hypermedia.spring.siren;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.Before;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.core.DefaultRelProvider;
 import org.springframework.hateoas.core.Relation;
 import org.springframework.http.ResponseEntity;
@@ -24,10 +26,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.AnnotationConfigWebContextLoader;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -36,8 +35,11 @@ import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExc
 
 import java.util.List;
 
+import static com.jayway.jsonassert.JsonAssert.with;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 /**
@@ -157,6 +159,12 @@ public class SirenMessageConverterTest {
             return null;
         }
 
+        @RequestMapping
+        public ResponseEntity<Resources<Order>> getOrders(@RequestParam List<String> attr) {
+            return null;
+        }
+
+
     }
 
     @Configuration
@@ -217,11 +225,24 @@ public class SirenMessageConverterTest {
         order.add(linkTo(methodOn(DummyOrderController.class)
                 .getOrder(41))
                 .withRel("previous"));
+        order.add(linkTo(methodOn(DummyOrderController.class)
+                .getOrders(null)).withRel("orders"));
 
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, order);
+        String json = objectMapper.valueToTree(entity).toString();
 
-        System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(entity));
+        with(json).assertThat("$.actions", hasSize(2));
+        with(json).assertThat("$.actions[0].fields", hasSize(3));
+        with(json).assertThat("$.actions[0].fields[0].name", equalTo("orderNumber"));
+        with(json).assertThat("$.actions[0].fields[0].type", equalTo("number"));
+        with(json).assertThat("$.actions[0].fields[0].value", equalTo("42"));
+        with(json).assertThat("$.actions[0].method", equalTo("POST"));
+
+        // TODO list query parameter: do something smarter
+        with(json).assertThat("$.actions[1].fields[0].name", equalTo("attr"));
+        with(json).assertThat("$.actions[1].fields[0].type", equalTo("text"));
+
     }
 
 }

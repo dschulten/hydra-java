@@ -3,6 +3,7 @@ package de.escalon.hypermedia.spring.siren;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.PropertyUtils;
+import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.affordance.*;
 import de.escalon.hypermedia.spring.ActionInputParameter;
 import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
@@ -209,7 +210,18 @@ public class SirenUtils {
                 } else if (content instanceof Collection) {
                     Collection<?> collection = (Collection<?>) content;
                     for (Object item : collection) {
-                        traverseSubEntity(objectNode, item, name, docUrl);
+                        if (DataType.isSingleValueType(item.getClass())) {
+                            Object listObject = propertiesNode.get(name);
+                            if (listObject == null) {
+                                listObject = new ArrayList();
+                                propertiesNode.put(name, listObject);
+                            }
+                            if (listObject instanceof Collection) {
+                                ((Collection) listObject).add(item);
+                            }
+                        } else if (item != null) {
+                            traverseSubEntity(objectNode, item, name, docUrl);
+                        }
                     }
                 } else {
                     Map<String, Object> nestedProperties = new HashMap<String, Object>();
@@ -225,14 +237,18 @@ public class SirenUtils {
             throws InvocationTargetException, IllegalAccessException {
         Object bean;
         List<Link> links;
+        //
         if (content instanceof Resource) {
             bean = ((Resource) content).getContent();
             links = ((Resource) content).getLinks();
         } else if (content instanceof Resources) {
             throw new UnsupportedOperationException("Resources not supported yet");
-        } else {
+        } else if (content instanceof ResourceSupport) {
             bean = content;
             links = ((ResourceSupport) content).getLinks();
+        } else {
+            bean = content;
+            links = Collections.emptyList();
         }
 
         String sirenClass = relProvider.getItemResourceRelFor(bean.getClass());
@@ -443,9 +459,12 @@ public class SirenUtils {
         if (possibleValues.length == 0) {
             String propertyValueAsString = propertyValue == null ? null : propertyValue
                     .toString();
-            String type = inputParameter.getHtmlInputFieldType()
-                    .name()
-                    .toLowerCase();
+            Type htmlInputFieldType = inputParameter.getHtmlInputFieldType();
+            // TODO: null -> array or bean parameter without possible values
+            String type = htmlInputFieldType == null ? "text" :
+                    htmlInputFieldType
+                            .name()
+                            .toLowerCase();
             sirenField = new SirenField(paramName,
                     type,
                     propertyValueAsString, null, null);
