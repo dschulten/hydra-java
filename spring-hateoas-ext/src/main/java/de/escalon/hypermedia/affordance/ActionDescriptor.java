@@ -65,7 +65,7 @@ public class ActionDescriptor implements AnnotatedParameters {
     }
 
     /**
-     * The name of the action, usually the method name of the handler method.
+     * The name of the action, for use as form name, usually the method name of the handler method.
      *
      * @return action name, never null
      */

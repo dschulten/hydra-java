@@ -6,7 +6,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
-Latest release: 0.2.0-beta5
+Latest release: 0.2.0-beta6
 
 == Problem
 
@@ -622,7 +622,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.2.0-beta5</version>
+  <version>0.2.0-beta6</version>
 </dependency>
 ----
 
@@ -633,7 +633,7 @@ If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverte
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>spring-hateoas-ext</artifactId>
-  <version>0.2.0-beta5</version>
+  <version>0.2.0-beta6</version>
 </dependency>
 ----
 
