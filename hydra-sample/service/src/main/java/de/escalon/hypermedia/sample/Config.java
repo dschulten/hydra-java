@@ -91,6 +91,7 @@ public class Config extends WebMvcConfigurerAdapter {
         return new HydraMessageConverter();
     }
 
+    @Bean
     public SirenMessageConverter sirenMessageConverter() {
         SirenMessageConverter sirenMessageConverter = new SirenMessageConverter();
         sirenMessageConverter.setRelProvider(new DelegatingRelProvider(relProviderRegistry));

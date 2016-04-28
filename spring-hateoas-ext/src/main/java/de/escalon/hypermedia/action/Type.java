@@ -24,14 +24,6 @@ public enum Type {
      * input type text
      */
     TEXT("text"),
-//    /**
-//     * Input type checkbox
-//     */
-//    CHECKBOX("checkbox"),
-//    /**
-//     * Input type radio
-//     */
-//    RADIO("radio"),
     /**
      * input type hidden
      */
@@ -91,7 +83,16 @@ public enum Type {
     /**
      * Week/Year selector
      */
-    WEEK("week");
+    WEEK("week"),
+    /**
+     * Input type checkbox
+     */
+    CHECKBOX("checkbox"),
+    /**
+     * Input type radio
+     */
+    RADIO("radio"),
+    SUBMIT("submit");
 
     private String value;
 
