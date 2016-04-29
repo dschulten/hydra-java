@@ -649,7 +649,7 @@ http://lov.okfn.org/dataset/lov/[Linked Open Vocabularies] you can search for te
 If you are unsure which vocab to use, ask on the http://lists.w3.org/Archives/Public/public-hydra/[ hydra mailing list].
 
 == What's new
-0.3.0: extraction of ActionDescriptor and ActionInputParameter interfaces, coordinating with HDIV to get forms into spring-hateoas
+0.3.0: extraction of ActionDescriptor and ActionInputParameter interfaces, coordinating with http://www.hdiv.org/[HDIV] to get forms into spring-hateoas
 
 	
 == Acknowledgements
