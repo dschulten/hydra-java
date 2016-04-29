@@ -204,21 +204,8 @@ First we wrap the event into a `Resource` so we can add affordances to it. Then 
 [source, Java]
 ----
 
-    public class Event {
-        public final int id;
-        public final String performer;
-        public final String location;
-        private EventStatusType eventStatus;
-        private String name;
-
-        public Event(int id, String performer, String name, String location, EventStatusType eventStatus) {
-            ...
-        }
-
-        public void setEventStatus(EventStatusType eventStatus) {
-            this.eventStatus = eventStatus;
-        }
-    }
+    import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
+    import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
 
     @Controller
     @RequestMapping("/events")
@@ -228,11 +215,14 @@ First we wrap the event into a `Resource` so we can add affordances to it. Then 
         public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
             // get the event from some backend, then:
             Resource<Event> eventResource = new Resource<Event>(event);
+
+            // using AffordanceBuilder.linkTo and AffordanceBuilder.methodOn
+            // instead of ControllerLinkBuilder methods
             eventResource.add(linkTo(methodOn(EventController.class)
                     .getEvent(event.id))
-                .and(linkTo(methodOn(EventController.class)
+                .and(linkTo(methodOn(EventController.class) // 2nd action with .and
                     .updateEvent(event.id, event)))
-                .and(linkTo(methodOn(EventController.class)
+                .and(linkTo(methodOn(EventController.class) // 3rd action with .and
                     .deleteEvent(event.id)))
                 .withSelfRel());
             return eventResource;
@@ -252,6 +242,22 @@ First we wrap the event into a `Resource` so we can add affordances to it. Then 
         @RequestMapping(value = "/{eventId}", method = RequestMethod.DELETE)
         public ResponseEntity<Void> deleteEvent(@PathVariable int eventId) {
             ...
+        }
+    }
+
+    public class Event {
+        public final int id;
+        public final String performer;
+        public final String location;
+        private EventStatusType eventStatus;
+        private String name;
+
+        public Event(int id, String performer, String name, String location, EventStatusType eventStatus) {
+            ...
+        }
+
+        public void setEventStatus(EventStatusType eventStatus) {
+            this.eventStatus = eventStatus;
         }
     }
 
@@ -447,7 +453,6 @@ Right now it is not possible to specify a list of expected values, neither with 
 ----
 
 If an expected property on a request object holds a nested json object in turn, hydra-java will render it following a proposal from https://github.com/HydraCG/Specifications/issues/26[Hydra-CG Issue 26] using http://schema.org/rangeIncludes[schema:rangeIncludes]. The fact that this issue is not resolved yet is the main reason why hydra-java 0.2.0 is an alpha release. So be especially wary that changes are likely for the way hydra-java prescribes nested properties.
-
 
 
 === Rendering other media types (from V. 0.2.0-alpha8)
