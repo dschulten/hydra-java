@@ -408,5 +408,7 @@ public class SirenUtilsTest {
         with(jsonNode.toString()).assertThat("$.entities[0].links", hasSize(1));
     }
 
+    // TODO beans with setters, non-specific input parameter types
+
 
 }
