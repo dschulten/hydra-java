@@ -2,6 +2,7 @@ package de.escalon.hypermedia.spring.siren;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.affordance.*;
@@ -30,7 +31,7 @@ import java.util.*;
 
 /**
  * Maps spring-hateoas response data to siren data.
- * <p>
+ *
  * Created by Dietrich on 17.04.2016.
  */
 public class SirenUtils {
@@ -176,11 +177,13 @@ public class SirenUtils {
             }
 
 
-            Object content = propertyDescriptor.getReadMethod()
-                    .invoke(object);
-            String docUrl = documentationProvider.getDocumentationUrl(propertyDescriptor.getReadMethod(), content);
-
-            traverseAttribute(objectNode, propertiesNode, name, docUrl, content);
+            Method readMethod = propertyDescriptor.getReadMethod();
+            if (readMethod != null) {
+                Object content = readMethod
+                        .invoke(object);
+                String docUrl = documentationProvider.getDocumentationUrl(readMethod, content);
+                traverseAttribute(objectNode, propertiesNode, name, docUrl, content);
+            }
 
         }
 
@@ -298,14 +301,14 @@ public class SirenUtils {
                 boolean queryOnly = false;
                 for (TemplateVariable variable : variables) {
                     queryOnly = isQueryParam(variable);
-                    if (!queryOnly){
+                    if (!queryOnly) {
                         break;
                     }
                     fields.add(new SirenField(variable.getName(), "text", (String) null, variable.getDescription(),
                             null));
                 }
                 // no support for non-query fields in siren
-                if(queryOnly) {
+                if (queryOnly) {
                     String baseUri = new UriTemplate(link.getHref()).expand()
                             .toASCIIString();
                     SirenAction sirenAction = new SirenAction(null, null, null, "GET",
@@ -363,7 +366,11 @@ public class SirenUtils {
                                            ActionDescriptor annotatedParameters,
                                            ActionInputParameter annotatedParameter, Object currentCallValue,
                                            String parentParamName, Set<String> knownFields) {
-        // TODO collection and map
+        // TODO collection, map and object node creation are only describable by an annotation, not via type reflection
+        if(ObjectNode.class.isAssignableFrom(beanType) || Map.class.isAssignableFrom(beanType)
+                || Collection.class.isAssignableFrom(beanType) || beanType.isArray()) {
+            return; // use @Input(include) to list parameter names, at least? Or mix with hdiv's form builder?
+        }
         try {
             Constructor[] constructors = beanType.getConstructors();
             // find default ctor
@@ -375,7 +382,6 @@ public class SirenUtils {
             Assert.notNull(constructor, "no default constructor or JsonCreator found for type " + beanType
                     .getName());
             int parameterCount = constructor.getParameterTypes().length;
-
 
             if (parameterCount > 0) {
                 Annotation[][] annotationsOnParameters = constructor.getParameterAnnotations();
