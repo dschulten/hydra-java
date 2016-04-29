@@ -6,11 +6,11 @@ import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.affordance.Affordance;
-import de.escalon.hypermedia.affordance.AnnotatedParameter;
 import de.escalon.hypermedia.affordance.DataType;
-import de.escalon.hypermedia.spring.ActionInputParameter;
 import de.escalon.hypermedia.spring.DocumentationProvider;
+import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.Property;
 import org.springframework.hateoas.Link;
@@ -321,13 +321,13 @@ public class XhtmlWriter extends Writer {
         writeHiddenHttpMethodField(httpMethod);
         // build the form
         if (actionDescriptor.hasRequestBody()) { // parameter bean
-            AnnotatedParameter requestBody = actionDescriptor.getRequestBody();
+            ActionInputParameter requestBody = actionDescriptor.getRequestBody();
             Class<?> parameterType = requestBody.getParameterType();
             recurseBeanProperties(parameterType, actionDescriptor, requestBody, requestBody.getCallValue());
         } else { // plain parameter list
             Collection<String> requestParams = actionDescriptor.getRequestParamNames();
             for (String requestParamName : requestParams) {
-                AnnotatedParameter actionInputParameter = actionDescriptor.getAnnotatedParameter(requestParamName);
+                ActionInputParameter actionInputParameter = actionDescriptor.getActionInputParameter(requestParamName);
 
                 Object[] possibleValues = actionInputParameter.getPossibleValues(actionDescriptor);
                 // TODO duplication with appendInputOrSelect
@@ -537,7 +537,7 @@ public class XhtmlWriter extends Writer {
      *         sample call value
      * @throws IOException
      */
-    private void recurseBeanProperties(Class<?> beanType, ActionDescriptor actionDescriptor, AnnotatedParameter
+    private void recurseBeanProperties(Class<?> beanType, ActionDescriptor actionDescriptor, ActionInputParameter
             actionInputParameter, Object currentCallValue) throws IOException {
         // TODO support Option provider by other method args?
         final BeanInfo beanInfo = getBeanInfo(beanType);
@@ -580,7 +580,7 @@ public class XhtmlWriter extends Writer {
                                         Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue,
                                                 paramName);
 
-                                        ActionInputParameter constructorParamInputParameter = new ActionInputParameter
+                                        ActionInputParameter constructorParamInputParameter = new SpringActionInputParameter
                                                 (new MethodParameter(constructor, paramIndex), propertyValue);
 
                                         final Object[] possibleValues =
@@ -643,7 +643,7 @@ public class XhtmlWriter extends Writer {
 
                     Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, propertyName);
                     MethodParameter methodParameter = new MethodParameter(propertyDescriptor.getWriteMethod(), 0);
-                    ActionInputParameter propertySetterInputParameter = new ActionInputParameter(methodParameter,
+                    ActionInputParameter propertySetterInputParameter = new SpringActionInputParameter(methodParameter,
                             propertyValue);
                     final Object[] possibleValues = actionInputParameter.getPossibleValues(propertyDescriptor
                                     .getWriteMethod(), 0,
@@ -681,7 +681,7 @@ public class XhtmlWriter extends Writer {
      * @param possibleValues suitable for childInputParameter
      * @throws IOException
      */
-    private void appendInputOrSelect(AnnotatedParameter parentInputParameter, String paramName, ActionInputParameter
+    private void appendInputOrSelect(ActionInputParameter parentInputParameter, String paramName, ActionInputParameter
             childInputParameter, Object[] possibleValues) throws IOException {
         if (possibleValues.length > 0) {
             if (childInputParameter.isArrayOrCollection()) {
@@ -708,7 +708,7 @@ public class XhtmlWriter extends Writer {
         }
     }
 
-    private void appendInput(String requestParamName, AnnotatedParameter actionInputParameter, Object value, boolean
+    private void appendInput(String requestParamName, ActionInputParameter actionInputParameter, Object value, boolean
             readOnly) throws
             IOException {
         if (actionInputParameter.isRequestBody()) { // recurseBeanProperties does that
@@ -757,7 +757,7 @@ public class XhtmlWriter extends Writer {
     }
 
 
-    private void appendSelectOne(String requestParamName, Object[] possibleValues, AnnotatedParameter
+    private void appendSelectOne(String requestParamName, Object[] possibleValues, ActionInputParameter
             actionInputParameter)
             throws IOException {
         beginDiv(OptionalAttributes.attr("class", formGroupClass));
@@ -779,7 +779,7 @@ public class XhtmlWriter extends Writer {
     }
 
 
-    private void appendSelectMulti(String requestParamName, Object[] possibleValues, AnnotatedParameter
+    private void appendSelectMulti(String requestParamName, Object[] possibleValues, ActionInputParameter
             actionInputParameter) throws IOException {
         beginDiv(OptionalAttributes.attr("class", formGroupClass));
         Object[] actualValues = actionInputParameter.getCallValues();

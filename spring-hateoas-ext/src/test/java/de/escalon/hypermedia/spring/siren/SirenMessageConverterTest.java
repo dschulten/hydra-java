@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.Resources;
@@ -227,12 +228,16 @@ public class SirenMessageConverterTest {
                 .withRel("previous"));
         order.add(linkTo(methodOn(DummyOrderController.class)
                 .getOrders(null)).withRel("orders"));
+        // no support for non-query links
+        order.add(new Link("http://example.com/{foo}", "foo"));
+        order.add(new Link("http://example.com{?bar}", "bar"));
+
 
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, order);
         String json = objectMapper.valueToTree(entity).toString();
 
-        with(json).assertThat("$.actions", hasSize(2));
+        with(json).assertThat("$.actions", hasSize(3));
         with(json).assertThat("$.actions[0].fields", hasSize(3));
         with(json).assertThat("$.actions[0].fields[0].name", equalTo("orderNumber"));
         with(json).assertThat("$.actions[0].fields[0].type", equalTo("number"));
@@ -242,6 +247,9 @@ public class SirenMessageConverterTest {
         // TODO list query parameter: do something smarter
         with(json).assertThat("$.actions[1].fields[0].name", equalTo("attr"));
         with(json).assertThat("$.actions[1].fields[0].type", equalTo("text"));
+
+        with(json).assertThat("$.actions[2].fields[0].name", equalTo("bar"));
+        with(json).assertThat("$.actions[2].fields[0].type", equalTo("text"));
 
     }
 

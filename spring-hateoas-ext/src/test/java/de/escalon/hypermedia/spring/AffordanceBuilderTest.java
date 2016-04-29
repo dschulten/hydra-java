@@ -12,7 +12,7 @@ package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.Affordance;
-import de.escalon.hypermedia.affordance.AnnotatedParameter;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -164,7 +164,7 @@ public class AffordanceBuilderTest {
                 affordance.toString());
         final ActionDescriptor actionDescriptor = affordance.getActionDescriptors()
                 .get(0);
-        Assert.assertThat((EventStatusType[]) actionDescriptor.getAnnotatedParameter("eventStatus")
+        Assert.assertThat((EventStatusType[]) actionDescriptor.getActionInputParameter("eventStatus")
                         .getPossibleValues(actionDescriptor),
                 Matchers.arrayContainingInAnyOrder(
                         EventStatusType.EVENT_CANCELLED,
@@ -184,7 +184,7 @@ public class AffordanceBuilderTest {
                 affordance.toString());
         final ActionDescriptor actionDescriptor = affordance.getActionDescriptors()
                 .get(0);
-        final AnnotatedParameter thingParameter = actionDescriptor.getRequestBody();
+        final ActionInputParameter thingParameter = actionDescriptor.getRequestBody();
         Assert.assertEquals("Thing", ((Class) thingParameter.getGenericParameterType()).getSimpleName());
         Assert.assertThat(thingParameter.isRequestBody(), Matchers.is(true));
         Assert.assertEquals("updateThing", actionDescriptor.getActionName());

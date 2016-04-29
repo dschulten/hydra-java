@@ -258,7 +258,7 @@ public class PartialUriTemplate {
     private List<String> getRequiredArgNames(List<ActionDescriptor> actionDescriptors) {
         List<String> ret = new ArrayList<String>();
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
-            Map<String, AnnotatedParameter> required = actionDescriptor.getRequiredParameters();
+            Map<String, ActionInputParameter> required = actionDescriptor.getRequiredParameters();
             ret.addAll(required.keySet());
         }
         return ret;

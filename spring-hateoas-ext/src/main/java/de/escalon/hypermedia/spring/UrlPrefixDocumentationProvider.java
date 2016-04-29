@@ -1,6 +1,6 @@
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.affordance.AnnotatedParameter;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
 import org.springframework.util.Assert;
 
 import java.beans.Introspector;
@@ -26,7 +26,7 @@ public class UrlPrefixDocumentationProvider implements DocumentationProvider {
     }
 
     @Override
-    public String getDocumentationUrl(AnnotatedParameter annotatedParameter, Object content) {
+    public String getDocumentationUrl(ActionInputParameter annotatedParameter, Object content) {
         return defaultUrlPrefix + annotatedParameter.getParameterName();
     }
 

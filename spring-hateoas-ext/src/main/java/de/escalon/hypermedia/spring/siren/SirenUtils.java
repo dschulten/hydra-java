@@ -5,8 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Type;
 import de.escalon.hypermedia.affordance.*;
-import de.escalon.hypermedia.spring.ActionInputParameter;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
+import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import de.escalon.hypermedia.spring.UrlPrefixDocumentationProvider;
 import de.escalon.hypermedia.spring.DocumentationProvider;
 import org.jetbrains.annotations.NotNull;
@@ -294,18 +295,39 @@ public class SirenUtils {
             } else if (link.isTemplated()) {
                 List<SirenField> fields = new ArrayList<SirenField>();
                 List<TemplateVariable> variables = link.getVariables();
+                boolean queryOnly = false;
                 for (TemplateVariable variable : variables) {
+                    queryOnly = isQueryParam(variable);
+                    if (!queryOnly){
+                        break;
+                    }
                     fields.add(new SirenField(variable.getName(), "text", (String) null, variable.getDescription(),
                             null));
                 }
-                String baseUri = new UriTemplate(link.getHref()).expand()
-                        .toASCIIString();
-                SirenAction sirenAction = new SirenAction(null, null, null, "GET",
-                        baseUri, null, fields);
-                ret.add(sirenAction);
+                // no support for non-query fields in siren
+                if(queryOnly) {
+                    String baseUri = new UriTemplate(link.getHref()).expand()
+                            .toASCIIString();
+                    SirenAction sirenAction = new SirenAction(null, null, null, "GET",
+                            baseUri, null, fields);
+                    ret.add(sirenAction);
+                }
             }
         }
         return ret;
+    }
+
+    private boolean isQueryParam(TemplateVariable variable) {
+        boolean queryOnly;
+        switch (variable.getType()) {
+            case REQUEST_PARAM:
+            case REQUEST_PARAM_CONTINUED:
+                queryOnly = true;
+                break;
+            default:
+                queryOnly = false;
+        }
+        return queryOnly;
     }
 
     private List<SirenField> toSirenFields(ActionDescriptor actionDescriptor) {
@@ -318,7 +340,7 @@ public class SirenUtils {
         } else {
             Collection<String> paramNames = actionDescriptor.getRequestParamNames();
             for (String paramName : paramNames) {
-                AnnotatedParameter inputParameter = actionDescriptor.getAnnotatedParameter(paramName);
+                ActionInputParameter inputParameter = actionDescriptor.getActionInputParameter(paramName);
                 Object[] possibleValues = inputParameter.getPossibleValues(actionDescriptor);
 
                 ret.add(createSirenField(paramName, inputParameter.getCallValueFormatted(), inputParameter,
@@ -338,8 +360,8 @@ public class SirenUtils {
      * @param currentCallValue    sample call value
      */
     private void recurseBeanCreationParams(List<SirenField> sirenFields, Class<?> beanType,
-                                           AnnotatedParameters annotatedParameters,
-                                           AnnotatedParameter annotatedParameter, Object currentCallValue,
+                                           ActionDescriptor annotatedParameters,
+                                           ActionInputParameter annotatedParameter, Object currentCallValue,
                                            String parentParamName, Set<String> knownFields) {
         // TODO collection and map
         try {
@@ -419,7 +441,7 @@ public class SirenUtils {
     }
 
     private void addSirenFieldsForMethodParameter(List<SirenField> sirenFields, MethodParameter
-            methodParameter, AnnotatedParameter annotatedParameter, AnnotatedParameters annotatedParameters, String
+            methodParameter, ActionInputParameter annotatedParameter, ActionDescriptor annotatedParameters, String
                                                           parentParamName, String paramName, Class
                                                           parameterType, Object propertyValue, Set<String>
                                                           knownFields) {
@@ -428,8 +450,8 @@ public class SirenUtils {
 
             if (annotatedParameter.isIncluded(paramName) && !knownFields.contains(parentParamName + paramName)) {
 
-                ActionInputParameter constructorParamInputParameter = new ActionInputParameter
-                        (methodParameter, propertyValue);
+                ActionInputParameter constructorParamInputParameter =
+                        new SpringActionInputParameter(methodParameter, propertyValue);
 
                 final Object[] possibleValues =
                         annotatedParameter.getPossibleValues(methodParameter, annotatedParameters);
@@ -454,7 +476,7 @@ public class SirenUtils {
 
     @NotNull
     private SirenField createSirenField(String paramName, Object propertyValue,
-                                        AnnotatedParameter inputParameter, Object[] possibleValues) {
+                                        ActionInputParameter inputParameter, Object[] possibleValues) {
         SirenField sirenField;
         if (possibleValues.length == 0) {
             String propertyValueAsString = propertyValue == null ? null : propertyValue

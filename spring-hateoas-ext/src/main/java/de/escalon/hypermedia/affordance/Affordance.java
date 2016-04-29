@@ -543,9 +543,9 @@ public class Affordance extends Link {
     public boolean hasUnsatisfiedRequiredVariables() {
 
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
-            Map<String, AnnotatedParameter> requiredParameters =
+            Map<String, ActionInputParameter> requiredParameters =
                     actionDescriptor.getRequiredParameters();
-            for (AnnotatedParameter annotatedParameter : requiredParameters.values()) {
+            for (ActionInputParameter annotatedParameter : requiredParameters.values()) {
                 if (!annotatedParameter.hasCallValue()) {
                     return true;
                 }

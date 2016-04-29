@@ -15,9 +15,7 @@ package de.escalon.hypermedia.spring;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.action.*;
-import de.escalon.hypermedia.affordance.ActionDescriptor;
-import de.escalon.hypermedia.affordance.BeanUtil;
-import de.escalon.hypermedia.affordance.PartialUriTemplate;
+import de.escalon.hypermedia.affordance.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -200,8 +198,8 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         Type genericReturnType = invokedMethod.getGenericReturnType();
 
 
-        ActionDescriptor actionDescriptor =
-                new ActionDescriptor(invokedMethod.getName(), httpMethod.name());
+        ActionDescriptorImpl actionDescriptor =
+                new ActionDescriptorImpl(invokedMethod.getName(), httpMethod.name());
 
         actionDescriptor.setCardinality(getCardinality(invokedMethod, httpMethod, genericReturnType));
 
@@ -404,7 +402,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             } else {
                 argument = null;
             }
-            result.put(parameter.getParameterName(), new ActionInputParameter(parameter, argument));
+            result.put(parameter.getParameterName(), new SpringActionInputParameter(parameter, argument));
         }
 
         return result;

@@ -1,6 +1,6 @@
 package de.escalon.hypermedia.spring;
 
-import de.escalon.hypermedia.affordance.AnnotatedParameter;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -14,11 +14,11 @@ public interface DocumentationProvider {
 
     /**
      * Gets documentationUrl for given parameter.
-     * @param annotatedParameter to document
+     * @param actionInputParameter to document
      * @param content current value
      * @return url or null
      */
-    String getDocumentationUrl(AnnotatedParameter annotatedParameter, Object content);
+    String getDocumentationUrl(ActionInputParameter actionInputParameter, Object content);
 
     /**
      * Gets documentationUrl for given field.

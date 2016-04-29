@@ -27,7 +27,8 @@ import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.hydra.serialize.JsonLdKeywords;
 import de.escalon.hypermedia.hydra.serialize.LdContext;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
-import de.escalon.hypermedia.spring.ActionInputParameter;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
+import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -283,7 +284,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             }
             jgen.writeStringField("hydra:method", actionDescriptor.getHttpMethod());
 
-            final AnnotatedParameter requestBodyInputParameter = actionDescriptor.getRequestBody();
+            final ActionInputParameter requestBodyInputParameter = actionDescriptor.getRequestBody();
             if (requestBodyInputParameter != null) {
 
                 jgen.writeObjectFieldStart("hydra:expects"); // begin hydra:expects
@@ -333,14 +334,14 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
      * @throws IOException
      */
     private void recurseSupportedProperties(JsonGenerator jgen, String currentVocab, Class<?>
-            valueType, AnnotatedParameters allRootParameters,
-                                            AnnotatedParameter rootParameter, Object currentCallValue,
+            valueType, ActionDescriptor allRootParameters,
+                                            ActionInputParameter rootParameter, Object currentCallValue,
                                             String propertyPath)
             throws IntrospectionException,
             IOException {
 
 
-        Map<String, AnnotatedParameter> properties = new HashMap<String, AnnotatedParameter>();
+        Map<String, ActionInputParameter> properties = new HashMap<String, ActionInputParameter>();
 
         // collect supported properties from ctor
 
@@ -368,8 +369,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
                         Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, paramName);
 
-                        AnnotatedParameter constructorParamInputParameter = new ActionInputParameter
-                                (new MethodParameter(constructor, paramIndex), propertyValue);
+                        ActionInputParameter constructorParamInputParameter =
+                                new SpringActionInputParameter(
+                                        new MethodParameter(constructor, paramIndex), propertyValue);
 
                         // TODO collect ctor params, setter params and process
                         // TODO then handle single, collection and bean for both
@@ -402,7 +404,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     .getName());
 
             MethodParameter methodParameter = new MethodParameter(propertyDescriptor.getWriteMethod(), 0);
-            AnnotatedParameter propertySetterInputParameter = new ActionInputParameter(
+            ActionInputParameter propertySetterInputParameter = new SpringActionInputParameter(
                     methodParameter, propertyValue);
 
             properties.put(propertyName, propertySetterInputParameter);
@@ -410,7 +412,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
         // write all supported properties
         // TODO we are using the annotatedParameter.parameterName but should use the key of properties here:
-        for (AnnotatedParameter annotatedParameter : properties.values()) {
+        for (ActionInputParameter annotatedParameter : properties.values()) {
             String nextPropertyPathLevel = propertyPath.isEmpty() ? annotatedParameter.getParameterName() :
                     propertyPath + '.' + annotatedParameter.getParameterName();
             if (DataType.isSingleValueType(annotatedParameter.getParameterType())) {
@@ -500,7 +502,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
 
     private void writeSupportedProperty(JsonGenerator jgen, String currentVocab,
-                                        AnnotatedParameter actionInputParameter,
+                                        ActionInputParameter actionInputParameter,
                                         String propertyName, @SuppressWarnings("unused") Object[]
                                                 possiblePropertyValues)
             throws IOException {
@@ -524,7 +526,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         jgen.writeEndObject();
     }
 
-    private void writePossiblePropertyValues(JsonGenerator jgen, String currentVocab, AnnotatedParameter
+    private void writePossiblePropertyValues(JsonGenerator jgen, String currentVocab, ActionInputParameter
             actionInputParameter, @SuppressWarnings("unused") Object[] possiblePropertyValues) throws IOException {
         // Enable the following to list possible values.
         // Problem: how to express individuals only for certain hydra:options
@@ -686,12 +688,12 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 //    }
 
 
-    private void writeHydraVariableMapping(JsonGenerator jgen, @Nullable AnnotatedParameters annotatedParameters,
+    private void writeHydraVariableMapping(JsonGenerator jgen, @Nullable ActionDescriptor annotatedParameters,
                                            Collection<String> variableNames) throws IOException {
         if (annotatedParameters != null) {
             for (String variableName : variableNames) {
                 // TODO: find also @Input
-                AnnotatedParameter annotatedParameter = annotatedParameters.getAnnotatedParameter(variableName);
+                ActionInputParameter annotatedParameter = annotatedParameters.getActionInputParameter(variableName);
                 // TODO access @Input parameter, too
                 // only unsatisfied parameters become hydra variables
                 if (annotatedParameter != null && annotatedParameter.getCallValue() == null) {
@@ -716,7 +718,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
      *         for exposure
      * @return property name
      */
-    private String getExposedPropertyOrParamName(AnnotatedParameter inputParameter) {
+    private String getExposedPropertyOrParamName(ActionInputParameter inputParameter) {
         final Expose expose = inputParameter.getAnnotation(Expose.class);
         String property;
         if (expose != null) {

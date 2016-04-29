@@ -13,11 +13,7 @@
 
 package de.escalon.hypermedia.spring.uber;
 
-import de.escalon.hypermedia.affordance.DataType;
-import de.escalon.hypermedia.affordance.ActionDescriptor;
-import de.escalon.hypermedia.affordance.Affordance;
-import de.escalon.hypermedia.affordance.PartialUriTemplate;
-import de.escalon.hypermedia.affordance.PartialUriTemplateComponents;
+import de.escalon.hypermedia.affordance.*;
 import org.springframework.hateoas.*;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -224,7 +220,7 @@ public class UberUtils {
         if (link instanceof Affordance) {
             actionDescriptors = ((Affordance) link).getActionDescriptors();
         } else {
-            actionDescriptors = Arrays.asList(new ActionDescriptor("get", RequestMethod.GET.name()));
+            actionDescriptors = Arrays.asList((ActionDescriptor)new ActionDescriptorImpl("get", RequestMethod.GET.name()));
         }
         return actionDescriptors;
     }

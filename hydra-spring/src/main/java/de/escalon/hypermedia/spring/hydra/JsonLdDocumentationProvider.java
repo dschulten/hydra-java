@@ -1,11 +1,12 @@
 package de.escalon.hypermedia.spring.hydra;
 
-import de.escalon.hypermedia.affordance.AnnotatedParameter;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.AnnotationUtils;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
 import de.escalon.hypermedia.hydra.serialize.MixinSource;
 import de.escalon.hypermedia.spring.DocumentationProvider;
+import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,12 +29,16 @@ public class JsonLdDocumentationProvider implements DocumentationProvider {
     };
 
     @Override
-    public String getDocumentationUrl(AnnotatedParameter parameter, Object content) {
+    public String getDocumentationUrl(ActionInputParameter parameter, Object content) {
         final Expose expose = parameter.getAnnotation(Expose.class);
         String ret;
         if (content == null) {
-            Class<?> clazz = parameter.getDeclaringClass();
-            ret = getExposedUrl(parameter.getParameterName(), vocabFromClass(clazz), termsFromClazz(clazz), expose);
+            if (parameter instanceof SpringActionInputParameter) {
+                Class<?> clazz = ((SpringActionInputParameter) parameter).getDeclaringClass();
+                ret = getExposedUrl(parameter.getParameterName(), vocabFromClass(clazz), termsFromClazz(clazz), expose);
+            } else {
+                ret = null;
+            }
         } else {
             ret = getExposedUrl(parameter.getParameterName(), vocabFromBean(content), termsFromBean(content), expose);
         }
