@@ -1,18 +1,21 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.affordance.ActionDescriptor;
-import de.escalon.hypermedia.affordance.Affordance;
 import de.escalon.hypermedia.affordance.ActionInputParameter;
+import de.escalon.hypermedia.affordance.Affordance;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -62,7 +65,6 @@ public class AffordanceBuilderTest {
         public ResponseEntity updateThing(@PathVariable int id, @RequestBody Thing thing) {
             return new ResponseEntity(HttpStatus.OK);
         }
-
     }
 
     @Test
@@ -92,7 +94,8 @@ public class AffordanceBuilderTest {
                 .withTitleStar("UTF-8'de'n%c3%a4chstes%20Kapitel")
                 .rel("next")
                 .build();
-        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; title*=\"UTF-8'de'n%c3%a4chstes%20Kapitel\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; " +
+                "title*=\"UTF-8'de'n%c3%a4chstes%20Kapitel\"",
                 affordance.toString());
     }
 
@@ -150,7 +153,8 @@ public class AffordanceBuilderTest {
                 .withLinkParam("param2", "baz")
                 .rel("next")
                 .build();
-        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; param1=\"foo\"; param1=\"bar\"; param2=\"baz\"",
+        Assert.assertEquals("Link: <http://example.com/things>; rel=\"next\"; param1=\"foo\"; param1=\"bar\"; " +
+                "param2=\"baz\"",
                 affordance.toString());
     }
 
@@ -160,7 +164,8 @@ public class AffordanceBuilderTest {
                 .updateThing(1, (EventStatusType) null))
                 .rel("eventStatus")
                 .build();
-        Assert.assertEquals("Link-Template: <http://example.com/things/1/eventStatus{?eventStatus}>; rel=\"eventStatus\"",
+        Assert.assertEquals("Link-Template: <http://example.com/things/1/eventStatus{?eventStatus}>; " +
+                "rel=\"eventStatus\"",
                 affordance.toString());
         final ActionDescriptor actionDescriptor = affordance.getActionDescriptors()
                 .get(0);
@@ -195,7 +200,8 @@ public class AffordanceBuilderTest {
     public void testBuild() throws Exception {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))
-                .rel("next").rel("thing")
+                .rel("next")
+                .rel("thing")
                 .build();
         Assert.assertEquals("Link: <http://example.com/things>; rel=\"next thing\"", affordance.toString());
     }
@@ -204,7 +210,8 @@ public class AffordanceBuilderTest {
     public void testBuildNoArgs() throws Exception {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))
-                .rel("next").rel("thing")
+                .rel("next")
+                .rel("thing")
                 .reverseRel("reverted", "for-hal")
                 .build();
         Assert.assertEquals("Link: <http://example.com/things>; rel=\"next thing for-hal\"; rev=\"reverted\"",
@@ -215,7 +222,8 @@ public class AffordanceBuilderTest {
     public void testRejectsEmptyRel() throws Exception {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))
-                .rel("").build();
+                .rel("")
+                .build();
     }
 
 
@@ -231,7 +239,7 @@ public class AffordanceBuilderTest {
     public void testRejectsNullRel() throws Exception {
         final Affordance affordance = AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyController.class)
                 .createThing(new Thing()))
-                .rel(null).build();
+                .rel(null)
+                .build();
     }
-
 }

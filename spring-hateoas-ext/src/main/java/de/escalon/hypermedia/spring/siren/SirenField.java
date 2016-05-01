@@ -13,6 +13,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 @JsonInclude(NON_EMPTY)
 @JsonPropertyOrder({"class", "name", "title", "type", "value"})
 public class SirenField extends AbstractSirenEntity {
+
     private String name;
     private String type;
     private Object value;
@@ -28,12 +29,12 @@ public class SirenField extends AbstractSirenEntity {
      *         behaviour of clients when parsing a Siren document that violates this constraint is undefined. Required.
      * @param type
      *         The input type of the field. This may include any of the following input types specified in HTML5:
-     *
-     *         <code>hidden, text, search, tel, url, email, password, datetime, date, month, week, time, datetime-local,
-     *         number, range, color, checkbox, radio, file</code>
-     *
-     *         When missing, the default value is text. Serialization of these fields will depend on the value of the
-     *         action's type attribute. See type under Actions, above. Optional.
+     *         <code>hidden, text, search, tel, url, email, password, datetime, date, month, week, time,
+     *         datetime-local,
+     *         number, range, color, checkbox, radio, file</code> When missing, the default value is text.
+     *         Serialization
+     *         of these fields will depend on the value of the action's type attribute. See type under Actions, above.
+     *         Optional.
      * @param value
      *         A value assigned to the field. Optional.
      * @param title
@@ -57,12 +58,12 @@ public class SirenField extends AbstractSirenEntity {
      *         behaviour of clients when parsing a Siren document that violates this constraint is undefined. Required.
      * @param type
      *         The input type of the field. This may include any of the following input types specified in HTML5:
-     *
-     *         <code>hidden, text, search, tel, url, email, password, datetime, date, month, week, time, datetime-local,
-     *         number, range, color, checkbox, radio, file</code>
-     *
-     *         When missing, the default value is text. Serialization of these fields will depend on the value of the
-     *         action's type attribute. See type under Actions, above. Optional.
+     *         <code>hidden, text, search, tel, url, email, password, datetime, date, month, week, time,
+     *         datetime-local,
+     *         number, range, color, checkbox, radio, file</code> When missing, the default value is text.
+     *         Serialization
+     *         of these fields will depend on the value of the action's type attribute. See type under Actions, above.
+     *         Optional.
      * @param value
      *         possible values for radio or checkbox, with actual values selected. Optional.
      * @param title
@@ -86,5 +87,4 @@ public class SirenField extends AbstractSirenEntity {
     public Object getValue() {
         return value;
     }
-
 }

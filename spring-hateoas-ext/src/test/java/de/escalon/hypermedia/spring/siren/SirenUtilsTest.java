@@ -1,27 +1,21 @@
 package de.escalon.hypermedia.spring.siren;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.hateoas.*;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.core.EmbeddedWrapper;
 import org.springframework.hateoas.core.Relation;
 
 import java.util.*;
 
 import static com.jayway.jsonassert.JsonAssert.with;
-import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
-/**
- * Created by Dietrich on 17.04.2016.
- */
 public class SirenUtilsTest {
 
     ObjectMapper objectMapper = new ObjectMapper();
@@ -35,6 +29,7 @@ public class SirenUtilsTest {
 
     @Relation("city")
     class City {
+
         String postalCode = "74199";
         String name = "Donnbronn";
 
@@ -49,6 +44,7 @@ public class SirenUtilsTest {
 
     @Relation("address")
     class Address {
+
         String street = "Grant Street";
         City city = new City();
 
@@ -65,6 +61,7 @@ public class SirenUtilsTest {
     public void testNestedBeansToSirenEntityProperties() throws Exception {
 
         class Customer {
+
             private final String customerId = "pj123";
             private final String name = "Peter Joseph";
             private final Address address = new Address();
@@ -85,18 +82,18 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, new Customer());
 
-        assertEquals("pj123", entity.properties.get("customerId"));
-        assertEquals("Peter Joseph", entity.properties.get("name"));
-        assertThat(entity.properties.get("address"), Matchers.instanceOf(Map.class));
-        assertEquals("Grant Street", ((Map<String, Map<String, Object>>) entity.properties.get("address")).get
-                ("street"));
+        String json = objectMapper.valueToTree(entity)
+                .toString();
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
-        System.out.println(jsonNode.toString());
+        with(json).assertThat("$.properties.customerId", equalTo("pj123"));
+        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
+        with(json).assertThat("$.properties.address", Matchers.instanceOf(Map.class));
+        with(json).assertThat("$.properties.address.street", equalTo("Grant Street"));
     }
 
     @Relation(value = "email", collectionRelation = "emails")
     public class Email {
+
         private final String email;
         private final String type;
 
@@ -116,6 +113,7 @@ public class SirenUtilsTest {
 
     @Relation(value = "profile")
     public class ProfileResource {
+
         private final String firstName;
         private final String lastName;
         @JsonUnwrapped
@@ -157,6 +155,7 @@ public class SirenUtilsTest {
     @Test
     public void testNestedResourceToEmbeddedRepresentation() throws Exception {
         class Customer {
+
             private final String name = "Peter Joseph";
             private final Resource<Address> address = new Resource<Address>(new Address());
 
@@ -173,16 +172,18 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, new Customer());
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
-        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Peter Joseph"));
-        with(jsonNode.toString()).assertThat("$.entities[0].properties.street", equalTo("Grant Street"));
-        with(jsonNode.toString()).assertThat("$.entities[0].rel", contains("address"));
+        String json = objectMapper.valueToTree(entity)
+                .toString();
 
+        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
+        with(json).assertThat("$.entities[0].properties.street", equalTo("Grant Street"));
+        with(json).assertThat("$.entities[0].rel", contains("address"));
     }
 
     @Test
     public void testEmbeddedLink() {
         class Customer {
+
             private final String customerId = "pj123";
             private final String name = "Peter Joseph";
             private final Address address = new Address();
@@ -201,9 +202,10 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, customerResource);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
-        with(jsonNode.toString()).assertThat("$.entities[0].rel", contains("address"));
-        with(jsonNode.toString()).assertThat("$.entities[0].href",
+        String json = objectMapper.valueToTree(entity)
+                .toString();
+        with(json).assertThat("$.entities[0].rel", contains("address"));
+        with(json).assertThat("$.entities[0].href",
                 equalTo("http://api.example.com/customers/123/address"));
     }
 
@@ -217,11 +219,11 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, addresses);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
-        with(jsonNode.toString()).assertThat("$.entities", hasSize(4));
-        with(jsonNode.toString()).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
-        with(jsonNode.toString()).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
-
+        String json = objectMapper.valueToTree(entity)
+                .toString();
+        with(json).assertThat("$.entities", hasSize(4));
+        with(json).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
+        with(json).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
     }
 
     @Test
@@ -236,12 +238,12 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, addressResources);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
-        with(jsonNode.toString()).assertThat("$.entities", hasSize(4));
-        with(jsonNode.toString()).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
-        with(jsonNode.toString()).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
-        with(jsonNode.toString()).assertThat("$.links", hasSize(1));
-
+        String json = objectMapper.valueToTree(entity)
+                .toString();
+        with(json).assertThat("$.entities", hasSize(4));
+        with(json).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
+        with(json).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
+        with(json).assertThat("$.links", hasSize(1));
     }
 
     @Test
@@ -253,16 +255,17 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, map);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
+        String json = objectMapper.valueToTree(entity)
+                .toString();
 
-        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Joe"));
-        with(jsonNode.toString()).assertThat("$.properties.address.city.name", equalTo("Donnbronn"));
-
+        with(json).assertThat("$.properties.name", equalTo("Joe"));
+        with(json).assertThat("$.properties.address.city.name", equalTo("Donnbronn"));
     }
 
     @Test
     public void testAttributeWithListOfBeans() {
         class Customer {
+
             private final String customerId = "pj123";
             private final String name = "Peter Joseph";
             private final List<Address> addresses = new ArrayList<Address>();
@@ -290,13 +293,13 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, customer);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
-        System.out.println(jsonNode.toString());
+        String json = objectMapper.valueToTree(entity)
+                .toString();
 
-        with(jsonNode.toString()).assertThat("$.entities", hasSize(4));
-        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Peter Joseph"));
+        with(json).assertThat("$.entities", hasSize(4));
+        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
 
-        with(jsonNode.toString()).assertThat("$.entities[0].properties.city.postalCode",
+        with(json).assertThat("$.entities[0].properties.city.postalCode",
                 equalTo("74199"));
     }
 
@@ -304,6 +307,7 @@ public class SirenUtilsTest {
     @Test
     public void testAttributeWithListOfSingleValueTypes() {
         class Customer {
+
             private final String customerId = "pj123";
             private final String name = "Peter Joseph";
             private final List<Integer> favoriteNumbers = Arrays.asList(1, 3, 5, 7);
@@ -325,12 +329,12 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, customer);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
+        String json = objectMapper.valueToTree(entity)
+                .toString();
 
-        with(jsonNode.toString()).assertThat("$.properties.favoriteNumbers", hasSize(4));
-        with(jsonNode.toString()).assertThat("$.properties.favoriteNumbers", contains(1, 3, 5, 7));
-        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Peter Joseph"));
-
+        with(json).assertThat("$.properties.favoriteNumbers", hasSize(4));
+        with(json).assertThat("$.properties.favoriteNumbers", contains(1, 3, 5, 7));
+        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
     }
 
     enum Daytime {
@@ -340,8 +344,8 @@ public class SirenUtilsTest {
     @Test
     public void testAttributeWithListOfEnums() {
 
-
         class Customer {
+
             private final String customerId = "pj123";
             private final String name = "Peter Joseph";
             private final List<Daytime> favoriteDaytime = Arrays.asList(Daytime.AFTERNOON, Daytime.NIGHT);
@@ -363,13 +367,13 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, customer);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
+        String json = objectMapper.valueToTree(entity)
+                .toString();
 
-        with(jsonNode.toString()).assertThat("$.properties.favoriteNumbers", hasSize(2));
-        with(jsonNode.toString()).assertThat("$.properties.favoriteNumbers",
+        with(json).assertThat("$.properties.favoriteNumbers", hasSize(2));
+        with(json).assertThat("$.properties.favoriteNumbers",
                 contains(Daytime.AFTERNOON.name(), Daytime.NIGHT.name()));
-        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Peter Joseph"));
-
+        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
     }
 
     @Test
@@ -382,10 +386,11 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, addresses);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
-        with(jsonNode.toString()).assertThat("$.entities", hasSize(4));
-        with(jsonNode.toString()).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
-        with(jsonNode.toString()).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
+        String json = objectMapper.valueToTree(entity)
+                .toString();
+        with(json).assertThat("$.entities", hasSize(4));
+        with(json).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
+        with(json).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
     }
 
 
@@ -400,15 +405,13 @@ public class SirenUtilsTest {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, map);
 
-        JsonNode jsonNode = objectMapper.valueToTree(entity);
+        String json = objectMapper.valueToTree(entity)
+                .toString();
 
-        System.out.println(jsonNode.toString());
-        with(jsonNode.toString()).assertThat("$.properties.name", equalTo("Joe"));
-        with(jsonNode.toString()).assertThat("$.entities[0].properties.street", equalTo("Grant Street"));
-        with(jsonNode.toString()).assertThat("$.entities[0].links", hasSize(1));
+        with(json).assertThat("$.properties.name", equalTo("Joe"));
+        with(json).assertThat("$.entities[0].properties.street", equalTo("Grant Street"));
+        with(json).assertThat("$.entities[0].links", hasSize(1));
     }
 
     // TODO beans with setters, non-specific input parameter types
-
-
 }

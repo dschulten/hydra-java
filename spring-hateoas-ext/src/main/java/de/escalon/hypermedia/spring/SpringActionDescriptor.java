@@ -11,17 +11,24 @@
  * the specific language governing permissions and limitations under the License.
  */
 
-package de.escalon.hypermedia.affordance;
+package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.action.Cardinality;
-import de.escalon.hypermedia.spring.SpringActionInputParameter;
-import org.springframework.beans.*;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.beans.PropertyAccessorUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
 
 import java.beans.PropertyDescriptor;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Describes an HTTP method independently of a specific rest framework. Has knowledge about possible request data, i.e.
@@ -32,7 +39,7 @@ import java.util.*;
  *
  * @author Dietrich Schulten
  */
-public class ActionDescriptorImpl implements ActionDescriptor {
+public class SpringActionDescriptor implements ActionDescriptor {
 
     private String httpMethod;
     private String actionName;
@@ -55,7 +62,7 @@ public class ActionDescriptorImpl implements ActionDescriptor {
      * @param httpMethod
      *         used during submit
      */
-    public ActionDescriptorImpl(String actionName, String httpMethod) {
+    public SpringActionDescriptor(String actionName, String httpMethod) {
         Assert.notNull(actionName);
         Assert.notNull(httpMethod);
         this.httpMethod = httpMethod;
@@ -126,8 +133,9 @@ public class ActionDescriptorImpl implements ActionDescriptor {
 
     /**
      * Adds descriptor for params annotated with <code>@Input</code> which are not also annotated as
-     * <code>@RequestParam</code>, <code>@PathVariable</code>, <code>@RequestBody</code> or <code>@RequestHeader</code>. Input
-     * parameter beans or maps are filled from query params by Spring, and this allows to describe them with
+     * <code>@RequestParam</code>, <code>@PathVariable</code>, <code>@RequestBody</code> or
+     * <code>@RequestHeader</code>.
+     * Input parameter beans or maps are filled from query params by Spring, and this allows to describe them with
      * UriTemplates.
      *
      * @param key
@@ -146,7 +154,6 @@ public class ActionDescriptorImpl implements ActionDescriptor {
      *         name of path variable
      * @param actionInputParameter
      *         descriptorg+ann#2
-     *
      */
 
     public void addPathVariable(String key, ActionInputParameter actionInputParameter) {
@@ -166,8 +173,8 @@ public class ActionDescriptorImpl implements ActionDescriptor {
     }
 
     /**
-     * Gets input parameter info which is part of the URL mapping,
-     * be it request parameters, path variables or request body attributes.
+     * Gets input parameter info which is part of the URL mapping, be it request parameters, path variables or request
+     * body attributes.
      *
      * @param name
      *         to retrieve
@@ -181,7 +188,7 @@ public class ActionDescriptorImpl implements ActionDescriptor {
         }
         if (ret == null) {
             for (ActionInputParameter annotatedParameter : getInputParameters()) {
-                // TODO create AnnotatedParameter for bean property at property path
+                // TODO create ActionInputParameter for bean property at property path
                 // TODO field access in addition to bean?
                 PropertyDescriptor pd = getPropertyDescriptorForPropertyPath(name,
                         annotatedParameter.getParameterType());
@@ -228,6 +235,7 @@ public class ActionDescriptorImpl implements ActionDescriptor {
 
     /**
      * Parameters annotated with <code>@Input</code>.
+     *
      * @return parameters or empty list
      */
     public Collection<ActionInputParameter> getInputParameters() {

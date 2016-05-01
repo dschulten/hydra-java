@@ -47,5 +47,4 @@ public @interface Select {
      * @return names of the arguments whose value should be passed to {@link Options#get}
      */
     String[] args() default {};
-
 }

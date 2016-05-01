@@ -82,7 +82,8 @@ public class LdContextFactory {
                 // mixin terms override class terms
                 termsMap.putAll(mixinTermsMap);
 
-                Object nestedContextProviderFromMixin = getNestedContextProviderFromMixin(mixinSource, bean, mixInClass);
+                Object nestedContextProviderFromMixin = getNestedContextProviderFromMixin(mixinSource, bean,
+                        mixInClass);
 
                 if (nestedContextProviderFromMixin != null) {
                     termsMap.putAll(getTerms(mixinSource, nestedContextProviderFromMixin, null));

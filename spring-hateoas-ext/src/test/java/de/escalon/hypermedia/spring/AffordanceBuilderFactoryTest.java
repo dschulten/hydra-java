@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring;
@@ -30,7 +33,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.lang.reflect.Method;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public class AffordanceBuilderFactoryTest {
 
@@ -39,19 +41,18 @@ public class AffordanceBuilderFactoryTest {
     private MockHttpServletRequest request;
 
     /**
-     * Sample controller.
-     * Created by dschulten on 11.09.2014.
+     * Sample controller. Created by dschulten on 11.09.2014.
      */
     @Controller
     @RequestMapping("/events")
     class EventControllerSample {
+
         @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
         public
         @ResponseBody
         Resource<Object> getEvent(@PathVariable String eventId) {
             return null;
         }
-
     }
 
     @Before
@@ -66,7 +67,8 @@ public class AffordanceBuilderFactoryTest {
     public void testLinkToMethod() throws Exception {
         final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
         final Affordance affordance = factory.linkTo(getEventMethod, new Object[0])
-                .build("foo");
+                .rel("foo")
+                .build();
         assertEquals("http://example.com/events/{eventId}", affordance.getHref());
     }
 
@@ -75,14 +77,16 @@ public class AffordanceBuilderFactoryTest {
         final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
         final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
                 .getEvent((String) null))
-                .build("foo");
+                .rel("foo")
+                .build();
         assertEquals("http://example.com/events/{eventId}", affordance.getHref());
     }
 
     @Test
     public void testLinkToControllerClass() throws Exception {
         final Affordance affordance = factory.linkTo(EventControllerSample.class, new Object[0])
-                .build("foo");
+                .rel("foo")
+                .build();
         assertEquals("http://example.com/events", affordance.getHref());
     }
 
@@ -127,6 +131,4 @@ public class AffordanceBuilderFactoryTest {
         assertEquals("schema:parent", affordance.getRev());
         assertEquals("ex:children", affordance.getRel());
     }
-
-
 }

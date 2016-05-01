@@ -19,23 +19,24 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 
 /**
- * Http message converter which converts Spring Hateoas resource beans to siren messages.
- *
- * Treats the following rels as navigational by default: "self", "next", "previous", "prev".
- *
- * Created by Dietrich on 18.04.2016.
+ * Http message converter which converts Spring Hateoas resource beans to siren messages. Treats the following rels as
+ * navigational by default: "self", "next", "previous", "prev". Created by Dietrich on 18.04.2016.
  */
 public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> {
 
     private final SirenUtils sirenUtils;
     ObjectMapper objectMapper = new ObjectMapper();
+
     public SirenMessageConverter() {
         sirenUtils = new SirenUtils();
     }
 
     /**
-     * Used to derive siren class (because Spring Hateoas rel providers normally derive rels from class names or class annotations).
-     * @param relProvider to determine siren class
+     * Used to derive siren class (because Spring Hateoas rel providers normally derive rels from class names or class
+     * annotations).
+     *
+     * @param relProvider
+     *         to determine siren class
      */
     public void setRelProvider(RelProvider relProvider) {
         sirenUtils.setRelProvider(relProvider);
@@ -43,7 +44,9 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
 
     /**
      * Tells converter about rels which should be treated as navigational, in addition to the default ones.
-     * @param additionalNavigationalRels to add
+     *
+     * @param additionalNavigationalRels
+     *         to add
      */
     public void setAdditionalNavigationalRels(Collection<String> additionalNavigationalRels) {
         sirenUtils.setAdditionalNavigationalRels(additionalNavigationalRels);
@@ -51,7 +54,9 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
 
     /**
      * Sets request media type to be used as action type, instead of the default application/x-www-formurlencoded.
-     * @param requestMediaType type
+     *
+     * @param requestMediaType
+     *         type
      */
     public void setRequestMediaType(String requestMediaType) {
         sirenUtils.setRequestMediaType(requestMediaType);
@@ -59,7 +64,9 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
 
     /**
      * Sets documentation provider, used to calculate rels.
-     * @param documentationProvider to use
+     *
+     * @param documentationProvider
+     *         to use
      */
     public void setDocumentationProvider(DocumentationProvider documentationProvider) {
         sirenUtils.setDocumentationProvider(documentationProvider);
@@ -72,17 +79,21 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
     }
 
     @Override
-    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage) throws IOException,
+            HttpMessageNotReadableException {
         return null;
     }
 
     @Override
-    protected void writeInternal(Object o, HttpOutputMessage outputMessage) throws IOException, HttpMessageNotWritableException {
+    protected void writeInternal(Object o, HttpOutputMessage outputMessage) throws IOException,
+            HttpMessageNotWritableException {
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, o);
 
-        JsonEncoding encoding = getJsonEncoding(outputMessage.getHeaders().getContentType());
-        JsonGenerator jsonGenerator = this.objectMapper.getFactory().createGenerator(outputMessage.getBody(), encoding);
+        JsonEncoding encoding = getJsonEncoding(outputMessage.getHeaders()
+                .getContentType());
+        JsonGenerator jsonGenerator = this.objectMapper.getFactory()
+                .createGenerator(outputMessage.getBody(), encoding);
 
         // A workaround for JsonGenerators not applying serialization features
         // https://github.com/FasterXML/jackson-databind/issues/12
@@ -95,20 +106,21 @@ public class SirenMessageConverter extends AbstractHttpMessageConverter<Object> 
         } catch (JsonProcessingException ex) {
             throw new HttpMessageNotWritableException("Could not write JSON: " + ex.getMessage(), ex);
         }
-
     }
 
     /**
      * Determine the JSON encoding to use for the given content type.
      *
-     * @param contentType the media type as requested by the caller
+     * @param contentType
+     *         the media type as requested by the caller
      * @return the JSON encoding to use (never {@code null})
      */
     protected JsonEncoding getJsonEncoding(MediaType contentType) {
         if (contentType != null && contentType.getCharSet() != null) {
             Charset charset = contentType.getCharSet();
             for (JsonEncoding encoding : JsonEncoding.values()) {
-                if (charset.name().equals(encoding.getJavaName())) {
+                if (charset.name()
+                        .equals(encoding.getJavaName())) {
                     return encoding;
                 }
             }

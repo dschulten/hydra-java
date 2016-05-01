@@ -12,7 +12,6 @@ import java.util.List;
 
 /**
  * Created by Dietrich on 17.02.2015.
- *
  */
 @JsonPropertyOrder({"itemOffered", "price", "priceCurrency", "addOns"})
 @Relation("offer")

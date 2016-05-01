@@ -9,8 +9,7 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
 
 /**
- * Sample Event Resource, represents an Event with links.
- * Created by dschulten on 11.09.2014.
+ * Sample Event Resource, represents an Event with links. Created by dschulten on 11.09.2014.
  */
 public class Event extends ResourceSupport {
     public final int id;

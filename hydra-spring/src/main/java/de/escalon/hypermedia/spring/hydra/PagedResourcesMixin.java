@@ -17,7 +17,7 @@ import java.util.List;
  * Mixin for json-ld serialization of PagedResources.
  */
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
-@Term(define="hydra", as="http://www.w3.org/ns/hydra/core#")
+@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")
 @Expose("hydra:Collection")
 public abstract class PagedResourcesMixin<T> extends PagedResources<T> {
     @Override

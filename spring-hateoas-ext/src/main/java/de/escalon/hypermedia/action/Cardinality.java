@@ -1,8 +1,7 @@
 package de.escalon.hypermedia.action;
 
 /**
- * Specifies cardinality.
- * Created by Dietrich on 02.05.2015.
+ * Specifies cardinality. Created by Dietrich on 02.05.2015.
  *
  * @see ResourceHandler
  */

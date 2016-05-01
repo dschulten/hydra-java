@@ -15,11 +15,10 @@ package de.escalon.hypermedia.spring.xhtml;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.PropertyUtils;
+import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
 import de.escalon.hypermedia.spring.DocumentationProvider;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.Resources;
@@ -27,7 +26,6 @@ import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
-import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -47,17 +45,15 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * Message converter which represents a restful API as xhtml which can be used by the browser or a rest client.
- * Converts java beans and spring-hateoas Resources to xhtml and maps the body of x-www-form-urlencoded
- * requests to RequestBody method parameters.
- * The media-type xhtml does not officially support methods other than GET or POST, therefore we must &quot;tunnel&quot;
- * other methods when this converter is used with the browser.
- * Spring's {@link org.springframework.web.filter.HiddenHttpMethodFilter} allows to do that with relative ease.
+ * Message converter which represents a restful API as xhtml which can be used by the browser or a rest client. Converts
+ * java beans and spring-hateoas Resources to xhtml and maps the body of x-www-form-urlencoded requests to RequestBody
+ * method parameters. The media-type xhtml does not officially support methods other than GET or POST, therefore we must
+ * &quot;tunnel&quot; other methods when this converter is used with the browser. Spring's {@link
+ * org.springframework.web.filter.HiddenHttpMethodFilter} allows to do that with relative ease.
  *
  * @author Dietrich Schulten
  */
-public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object> implements
-        GenericHttpMessageConverter<Object> {
+public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<Object> {
 
     private Charset charset = Charset.forName("UTF-8");
     private String methodParam = "_method";
@@ -93,7 +89,6 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             throw new IllegalArgumentException("unexpected type " + type);
         }
         return readInternal(clazz, inputMessage);
-
     }
 
 
@@ -119,19 +114,15 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             is = inputMessage.getBody();
         }
         return readRequestBody(clazz, is, charset);
-
     }
 
     /**
-     * From {@link ServletServerHttpRequest}:
-     * Use {@link javax.servlet.ServletRequest#getParameterMap()} to reconstruct the
-     * body of a form 'POST' providing a predictable outcome as opposed to reading
-     * from the body, which can fail if any other code has used ServletRequest
-     * to access a parameter thus causing the input stream to be "consumed".
+     * From {@link ServletServerHttpRequest}: Use {@link javax.servlet.ServletRequest#getParameterMap()} to reconstruct
+     * the body of a form 'POST' providing a predictable outcome as opposed to reading from the body, which can fail if
+     * any other code has used ServletRequest to access a parameter thus causing the input stream to be "consumed".
      */
     private InputStream getBodyFromServletRequestParameters(HttpServletRequest request, String charset) throws
             IOException {
-
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
         Writer writer = new OutputStreamWriter(bos, charset);
@@ -181,12 +172,10 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             }
         }
 
-        return recursivelyCreateObject(clazz, formValues);
-
-
+        return recursivelyCreateObject(clazz, formValues, "");
     }
 
-    private Object recursivelyCreateObject(Class<?> clazz, MultiValueMap<String, String> formValues) {
+    Object recursivelyCreateObject(Class<?> clazz, MultiValueMap<String, String> formValues, String parentParamName) {
 
         if (Map.class.isAssignableFrom(clazz)) {
             throw new IllegalArgumentException("Map not supported");
@@ -195,9 +184,9 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         } else {
             try {
                 Constructor[] constructors = clazz.getConstructors();
-                Constructor constructor = findDefaultCtor(constructors);
+                Constructor constructor = PropertyUtils.findDefaultCtor(constructors);
                 if (constructor == null) {
-                    constructor = findJsonCreator(constructors);
+                    constructor = PropertyUtils.findJsonCreator(constructors, JsonCreator.class);
                 }
                 Assert.notNull(constructor, "no default constructor or JsonCreator found");
                 int parameterCount = constructor.getParameterTypes().length;
@@ -211,7 +200,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                             if (JsonProperty.class == annotation.annotationType()) {
                                 JsonProperty jsonProperty = (JsonProperty) annotation;
                                 String paramName = jsonProperty.value();
-                                List<String> formValue = formValues.get(paramName);
+                                List<String> formValue = formValues.get(parentParamName + paramName);
                                 Class<?> parameterType = parameters[paramIndex];
                                 if (DataType.isSingleValueType(parameterType)) {
                                     if (formValue != null) {
@@ -230,7 +219,8 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                                         args[paramIndex++] = null;
                                     }
                                 } else {
-                                    args[paramIndex++] = recursivelyCreateObject(parameterType, formValues);
+                                    args[paramIndex++] = recursivelyCreateObject(parameterType, formValues,
+                                            parentParamName + paramName + ".");
                                 }
                             }
                         }
@@ -257,29 +247,6 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         }
     }
 
-    private Constructor findDefaultCtor(Constructor[] constructors) {
-        // TODO duplicate on XhtmlWriter
-        Constructor constructor = null;
-        for (Constructor ctor : constructors) {
-            if (ctor.getParameterTypes().length == 0) {
-                constructor = ctor;
-            }
-        }
-        return constructor;
-    }
-
-    private Constructor findJsonCreator(Constructor[] constructors) {
-        // TODO duplicate on XhtmlWriter
-        Constructor constructor = null;
-        for (Constructor ctor : constructors) {
-            if (AnnotationUtils.getAnnotation(ctor, JsonCreator.class) != null) {
-                constructor = ctor;
-                break;
-            }
-        }
-        return constructor;
-    }
-
     @Override
     protected void writeInternal(Object t, HttpOutputMessage outputMessage) throws IOException,
             HttpMessageNotWritableException {
@@ -289,12 +256,10 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         xhtmlWriter.setStylesheets(stylesheets);
         xhtmlWriter.setDocumentationProvider(documentationProvider);
 
-
         xhtmlWriter.beginHtml("Form");
         writeNewResource(xhtmlWriter, t);
         xhtmlWriter.endHtml();
         xhtmlWriter.flush();
-
     }
 
     static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
@@ -305,11 +270,14 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         writeResource(writer, object);
         writer.endUnorderedList();
     }
+
     /**
      * Recursively converts object to xhtml data.
      *
-     * @param object to convert
-     * @param writer to write to
+     * @param object
+     *         to convert
+     * @param writer
+     *         to write to
      */
     private void writeResource(XhtmlWriter writer, Object object) {
         if (object == null) {
@@ -357,7 +325,6 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         } catch (Exception ex) {
             throw new RuntimeException("failed to transform object " + object, ex);
         }
-
     }
 
     private void beginListGroupWithItem(XhtmlWriter writer) throws IOException {
@@ -447,7 +414,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
 
     private boolean contentIsEmpty(Object content) {
         final boolean ret;
-        if(content != null) {
+        if (content != null) {
             if (content instanceof Collection) {
                 ret = ((Collection) content).isEmpty();
             } else if (content instanceof Map) {
@@ -484,16 +451,11 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         writer.endDd();
     }
 
-
-    @Override
-    public boolean canRead(java.lang.reflect.Type type, Class<?> contextClass, MediaType mediaType) {
-        return MediaType.APPLICATION_FORM_URLENCODED == mediaType;
-    }
-
     /**
      * Sets method param name for HTML PUT/DELETE/PATCH workaround.
      *
-     * @param methodParam to use
+     * @param methodParam
+     *         to use
      * @see org.springframework.web.filter.HiddenHttpMethodFilter
      */
     public void setMethodParam(String methodParam) {
@@ -503,8 +465,9 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
     /**
      * Sets css stylesheets to apply to the form.
      *
-     * @param stylesheets urls of css stylesheets to include,
-     *                    e.g. &quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css&quot;
+     * @param stylesheets
+     *         urls of css stylesheets to include, e.g. &quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3
+     *         .4/css/bootstrap.min.css&quot;
      */
     public void setStylesheets(List<String> stylesheets) {
         Assert.notNull(stylesheets);
@@ -532,6 +495,4 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
         }
         return value;
     }
-
-
 }

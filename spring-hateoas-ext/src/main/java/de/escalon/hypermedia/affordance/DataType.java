@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.affordance;
@@ -20,8 +23,7 @@ import java.util.Date;
 
 
 /**
- * Distinguishes and creates data types, e.g. for serialization/deserialization.
- * Created by dschulten on 22.10.2014.
+ * Distinguishes and creates data types, e.g. for serialization/deserialization. Created by dschulten on 22.10.2014.
  */
 public class DataType {
 
@@ -29,7 +31,8 @@ public class DataType {
      * Determines if the given class holds only one data item. Can be useful to determine if a value should be rendered
      * as scalar.
      *
-     * @param clazz to check
+     * @param clazz
+     *         to check
      * @return true if class is scalar
      */
     public static boolean isSingleValueType(Class<?> clazz) {
@@ -47,7 +50,6 @@ public class DataType {
             ret = false;
         }
         return ret;
-
     }
 
     public static boolean isArrayOrCollection(Class<?> parameterType) {
@@ -179,7 +181,8 @@ public class DataType {
     /**
      * Determines if the given string contains only 0-9 [ISO-LATIN-1] or an optional leading +/- sign.
      *
-     * @param str to check
+     * @param str
+     *         to check
      * @return true if condition holds, false otherwise
      * @see <a href="http://stackoverflow.com/a/29331473/743507">Comparison of regex and char array performance</a>
      * @see Character#isDigit Examples for non-ISO-Latin-1-Digits
@@ -199,5 +202,4 @@ public class DataType {
         }
         return true;
     }
-
 }

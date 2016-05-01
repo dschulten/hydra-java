@@ -5,15 +5,12 @@ import de.escalon.hypermedia.sample.model.store.ProductModel;
 import org.springframework.hateoas.Resources;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
 
 /**
  * Created by Dietrich on 17.02.2015.
@@ -36,7 +33,9 @@ public class ProductController {
 
 
     @RequestMapping
-    public @ResponseBody Resources<Product> getProducts() {
+    public
+    @ResponseBody
+    Resources<Product> getProducts() {
         List<Product> resources = new ArrayList<Product>();
         for (ProductModel productModel : productModels) {
             Product product = assembler.toResource(productModel);
@@ -47,7 +46,9 @@ public class ProductController {
 
 
     @RequestMapping("/{productID}")
-    public @ResponseBody Product getProduct(@PathVariable String productID) {
+    public
+    @ResponseBody
+    Product getProduct(@PathVariable String productID) {
         for (ProductModel productModel : productModels) {
             if (productID.equals(productModel.productId)) {
                 return assembler.toResource(productModel);

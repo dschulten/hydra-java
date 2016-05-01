@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.hydra.serialize;
@@ -89,10 +92,10 @@ public class JacksonHydraSerializerTest {
         mapper.writeValue(w, new Person());
         System.out.println(w);
         assertEquals("{\"@context\":{" +
-                "\"@vocab\":\"http://schema.org/\"" +
-                "}" +
-                ",\"@type\":\"Person\"," +
-                "\"name\":\"Dietrich Schulten\"}"
+                        "\"@vocab\":\"http://schema.org/\"" +
+                        "}" +
+                        ",\"@type\":\"Person\"," +
+                        "\"name\":\"Dietrich Schulten\"}"
                 , w.toString());
     }
 
@@ -110,10 +113,10 @@ public class JacksonHydraSerializerTest {
 
         mapper.writeValue(w, new Person());
         assertEquals("{\"@context\":{" +
-                "\"@vocab\":\"http://xmlns.com/foaf/0.1/\"" +
-                "}" +
-                ",\"@type\":\"Person\"," +
-                "\"name\":\"Dietrich Schulten\"}"
+                        "\"@vocab\":\"http://xmlns.com/foaf/0.1/\"" +
+                        "}" +
+                        ",\"@type\":\"Person\"," +
+                        "\"name\":\"Dietrich Schulten\"}"
                 , w.toString());
     }
 
@@ -165,15 +168,15 @@ public class JacksonHydraSerializerTest {
 
         mapper.writeValue(w, new Document());
         assertEquals("{\"@context\":{" +
-                "\"@vocab\":\"http://purl.org/dc/elements/1.1/\"" +
-                "}" +
-                ",\"@type\":\"BibliographicResource\"" +
-                ",\"title\":\"Moby Dick\"" +
-                ",\"creator\":{" +
-                "\"@context\":{" +
-                "\"@vocab\":\"http://xmlns.com/foaf/0.1/\"}" +
-                ",\"@type\":\"Person\"" +
-                ",\"name\":\"Dietrich Schulten\"}}"
+                        "\"@vocab\":\"http://purl.org/dc/elements/1.1/\"" +
+                        "}" +
+                        ",\"@type\":\"BibliographicResource\"" +
+                        ",\"title\":\"Moby Dick\"" +
+                        ",\"creator\":{" +
+                        "\"@context\":{" +
+                        "\"@vocab\":\"http://xmlns.com/foaf/0.1/\"}" +
+                        ",\"@type\":\"Person\"" +
+                        ",\"name\":\"Dietrich Schulten\"}}"
                 , w.toString());
     }
 
@@ -204,14 +207,14 @@ public class JacksonHydraSerializerTest {
 
         mapper.writeValue(w, new Person("1964-08-08", "Dietrich", "Schulten"));
         assertEquals("{\"@context\":{" +
-                "\"@vocab\":\"http://schema.org/\"," +
-                "\"lastName\":\"familyName\"," +
-                "\"firstName\":\"givenName\"" +
-                "}," +
-                "\"@type\":\"Person\"," +
-                "\"birthDate\":\"1964-08-08\"," +
-                "\"firstName\":\"Dietrich\"," +
-                "\"lastName\":\"Schulten\"}"
+                        "\"@vocab\":\"http://schema.org/\"," +
+                        "\"lastName\":\"familyName\"," +
+                        "\"firstName\":\"givenName\"" +
+                        "}," +
+                        "\"@type\":\"Person\"," +
+                        "\"birthDate\":\"1964-08-08\"," +
+                        "\"firstName\":\"Dietrich\"," +
+                        "\"lastName\":\"Schulten\"}"
                 , w.toString());
 
     }
@@ -253,7 +256,7 @@ public class JacksonHydraSerializerTest {
         BUY
     }
 
-    @Term(define = "gr", as="http://purl.org/goodrelations/v1#")
+    @Term(define = "gr", as = "http://purl.org/goodrelations/v1#")
     class UnitPriceSpecification {
         public BigDecimal price = BigDecimal.valueOf(3.99);
         public String priceCurrency = "USD";
@@ -279,8 +282,6 @@ public class JacksonHydraSerializerTest {
         System.out.println(s);
 
     }
-
-
 
 
     @Test
@@ -337,20 +338,20 @@ public class JacksonHydraSerializerTest {
     public void testDoesNotRepeatContextIfUnnecessary() throws IOException {
         mapper.writeValue(w, new Offer());
         assertEquals("{\"@context\":" +
-                "{\"@vocab\":\"http://schema.org/\"," +
-                "\"gr\":\"http://purl.org/goodrelations/v1#\"," +
-                "\"businessFunction\":{\"@type\":\"@vocab\"}," +
-                "\"RENT\":\"gr:LeaseOut\"," +
-                "\"availableDeliveryMethod\":{\"@type\":\"@vocab\"}," +
-                "\"DOWNLOAD\":\"gr:DeliveryModeDirectDownload\"}," +
-                "\"@type\":\"Offer\"," +
-                "\"businessFunction\":\"RENT\"," +
-                "\"priceSpecification\":{\"@type\":\"UnitPriceSpecification\"," +
-                "\"price\":3.99," +
-                "\"priceCurrency\":\"USD\"," +
-                "\"datetime\":\"2012-12-31T23:59:59Z\"}," +
-                "\"availableDeliveryMethod\":\"DOWNLOAD\"," +
-                "\"eligibleDuration\":{\"@type\":\"QuantitativeValue\",\"value\":\"30\",\"unitCode\":\"DAY\"}}",
+                        "{\"@vocab\":\"http://schema.org/\"," +
+                        "\"gr\":\"http://purl.org/goodrelations/v1#\"," +
+                        "\"businessFunction\":{\"@type\":\"@vocab\"}," +
+                        "\"RENT\":\"gr:LeaseOut\"," +
+                        "\"availableDeliveryMethod\":{\"@type\":\"@vocab\"}," +
+                        "\"DOWNLOAD\":\"gr:DeliveryModeDirectDownload\"}," +
+                        "\"@type\":\"Offer\"," +
+                        "\"businessFunction\":\"RENT\"," +
+                        "\"priceSpecification\":{\"@type\":\"UnitPriceSpecification\"," +
+                        "\"price\":3.99," +
+                        "\"priceCurrency\":\"USD\"," +
+                        "\"datetime\":\"2012-12-31T23:59:59Z\"}," +
+                        "\"availableDeliveryMethod\":\"DOWNLOAD\"," +
+                        "\"eligibleDuration\":{\"@type\":\"QuantitativeValue\",\"value\":\"30\",\"unitCode\":\"DAY\"}}",
                 w.toString());
     }
 

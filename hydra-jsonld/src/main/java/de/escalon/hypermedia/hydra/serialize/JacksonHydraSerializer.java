@@ -13,15 +13,20 @@
 package de.escalon.hypermedia.hydra.serialize;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.BeanProperty;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
 import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.fasterxml.jackson.databind.util.NameTransformer;
-import de.escalon.hypermedia.hydra.mapping.*;
+import de.escalon.hypermedia.hydra.mapping.Expose;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Map;
 
 import static de.escalon.hypermedia.AnnotationUtils.findAnnotation;
 

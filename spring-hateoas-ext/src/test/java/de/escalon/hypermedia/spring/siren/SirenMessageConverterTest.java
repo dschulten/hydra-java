@@ -3,7 +3,6 @@ package de.escalon.hypermedia.spring.siren;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.Before;
@@ -18,7 +17,6 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.core.DefaultRelProvider;
 import org.springframework.hateoas.core.Relation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -58,6 +56,7 @@ public class SirenMessageConverterTest {
 
     @Relation("customer")
     class Customer {
+
         private final String customerId = "pj123";
         private final String name = "Peter Joseph";
 
@@ -80,8 +79,8 @@ public class SirenMessageConverterTest {
     }
 
 
-
     public static class OrderItem {
+
         private int orderNumber;
         private String productCode;
         private Integer quantity;
@@ -109,6 +108,7 @@ public class SirenMessageConverterTest {
     }
 
     class Order extends ResourceSupport {
+
         private final int orderNumber = 42;
         private final int itemCount = 3;
         private final String status = "pending";
@@ -138,7 +138,6 @@ public class SirenMessageConverterTest {
         public Resource<Customer> getCustomer() {
             return customer;
         }
-
     }
 
 
@@ -164,8 +163,6 @@ public class SirenMessageConverterTest {
         public ResponseEntity<Resources<Order>> getOrders(@RequestParam List<String> attr) {
             return null;
         }
-
-
     }
 
     @Configuration
@@ -196,7 +193,6 @@ public class SirenMessageConverterTest {
                     .getName());
             exceptionResolvers.add(resolver);
         }
-
     }
 
     @Autowired
@@ -232,10 +228,10 @@ public class SirenMessageConverterTest {
         order.add(new Link("http://example.com/{foo}", "foo"));
         order.add(new Link("http://example.com{?bar}", "bar"));
 
-
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, order);
-        String json = objectMapper.valueToTree(entity).toString();
+        String json = objectMapper.valueToTree(entity)
+                .toString();
 
         with(json).assertThat("$.actions", hasSize(3));
         with(json).assertThat("$.actions[0].fields", hasSize(3));
@@ -250,7 +246,5 @@ public class SirenMessageConverterTest {
 
         with(json).assertThat("$.actions[2].fields[0].name", equalTo("bar"));
         with(json).assertThat("$.actions[2].fields[0].type", equalTo("text"));
-
     }
-
 }

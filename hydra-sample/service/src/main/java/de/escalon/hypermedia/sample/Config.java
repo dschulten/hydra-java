@@ -2,7 +2,6 @@ package de.escalon.hypermedia.sample;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.escalon.hypermedia.spring.UrlPrefixDocumentationProvider;
 import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
 import de.escalon.hypermedia.spring.hydra.JsonLdDocumentationProvider;
 import de.escalon.hypermedia.spring.siren.SirenMessageConverter;
@@ -38,8 +37,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Sample configuration.
- * Created by dschulten on 28.12.2014.
+ * Sample configuration. Created by dschulten on 28.12.2014.
  */
 @Configuration
 @EnableWebMvc
@@ -96,10 +94,10 @@ public class Config extends WebMvcConfigurerAdapter {
         SirenMessageConverter sirenMessageConverter = new SirenMessageConverter();
         sirenMessageConverter.setRelProvider(new DelegatingRelProvider(relProviderRegistry));
         sirenMessageConverter.setDocumentationProvider(new JsonLdDocumentationProvider());
-        sirenMessageConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.parseMediaType("application/vnd.siren+json")));
+        sirenMessageConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.parseMediaType
+                ("application/vnd.siren+json")));
         return sirenMessageConverter;
     }
-
 
 
     @Bean

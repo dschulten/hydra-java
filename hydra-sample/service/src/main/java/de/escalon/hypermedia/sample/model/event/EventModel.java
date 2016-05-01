@@ -1,8 +1,7 @@
 package de.escalon.hypermedia.sample.model.event;
 
 /**
- * Sample Event model bean.
- * Created by dschulten on 11.09.2014.
+ * Sample Event model bean. Created by dschulten on 11.09.2014.
  */
 public class EventModel {
     public final int id;
@@ -11,7 +10,8 @@ public class EventModel {
     public EventStatusType eventStatus;
     public final CreativeWork workPerformed;
 
-    public EventModel(int id, String performer, CreativeWork workPerformed, String location, EventStatusType eventStatus) {
+    public EventModel(int id, String performer, CreativeWork workPerformed, String location, EventStatusType
+            eventStatus) {
         this.id = id;
         this.performer = performer;
         this.workPerformed = workPerformed;

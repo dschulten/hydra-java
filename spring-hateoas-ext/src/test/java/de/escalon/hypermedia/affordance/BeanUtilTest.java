@@ -4,10 +4,9 @@ import de.escalon.hypermedia.spring.sample.test.Person;
 import de.escalon.hypermedia.spring.sample.test.Review;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Dietrich on 06.12.2015.

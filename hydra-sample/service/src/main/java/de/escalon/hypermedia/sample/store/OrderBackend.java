@@ -10,8 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Mock order backend.
- * Created by Dietrich on 17.02.2015.
+ * Mock order backend. Created by Dietrich on 17.02.2015.
  */
 @Component
 public class OrderBackend {
@@ -61,6 +60,7 @@ public class OrderBackend {
 
     public void deleteOrderedItem(int orderId, int orderedItemId) {
         OrderModel order = getOrder(orderId);
-        order.getOrderedItems().remove(orderedItemId);
+        order.getOrderedItems()
+                .remove(orderedItemId);
     }
 }

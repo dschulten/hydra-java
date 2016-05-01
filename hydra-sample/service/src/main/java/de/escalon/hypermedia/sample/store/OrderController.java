@@ -4,7 +4,10 @@ import de.escalon.hypermedia.action.Cardinality;
 import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.ResourceHandler;
 import de.escalon.hypermedia.affordance.TypedResource;
-import de.escalon.hypermedia.sample.beans.store.*;
+import de.escalon.hypermedia.sample.beans.store.Offer;
+import de.escalon.hypermedia.sample.beans.store.Order;
+import de.escalon.hypermedia.sample.beans.store.Product;
+import de.escalon.hypermedia.sample.beans.store.Store;
 import de.escalon.hypermedia.sample.model.store.OrderModel;
 import de.escalon.hypermedia.sample.model.store.OrderStatus;
 import de.escalon.hypermedia.sample.model.store.ProductModel;
@@ -50,7 +53,7 @@ public class OrderController {
 
     @ResourceHandler(Cardinality.COLLECTION)
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<Void> makeOrder(@Input(readOnly={"productID"}) @RequestBody Product product) {
+    public ResponseEntity<Void> makeOrder(@Input(readOnly = {"productID"}) @RequestBody Product product) {
 
         OrderModel orderModel = orderBackend.createOrder();
         Product resolvedProduct = productController.getProduct(product.productID);

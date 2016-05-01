@@ -1,18 +1,20 @@
 /*
  * Copyright (c) 2015. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring.uber;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.escalon.hypermedia.affordance.ActionDescriptor;
-import de.escalon.hypermedia.affordance.ActionDescriptorImpl;
+import de.escalon.hypermedia.spring.SpringActionDescriptor;
 import org.junit.Test;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
@@ -36,7 +38,8 @@ public class UberUtilsTest {
 
     @Test
     public void linkGetToUberNode() throws Exception {
-        UberNode linkNode = UberUtils.toUberLink("/foo", new ActionDescriptorImpl("get", RequestMethod.GET.name()), Link.REL_SELF);
+        UberNode linkNode = UberUtils.toUberLink("/foo", new SpringActionDescriptor("get", RequestMethod.GET.name()),
+                Link.REL_SELF);
         assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
         assertNull(linkNode.getModel());
@@ -46,7 +49,8 @@ public class UberUtilsTest {
     @Test
     public void linkPostToUberNode() throws Exception {
         // TODO create a Link with variables separate from URITemplate for POST
-        UberNode linkNode = UberUtils.toUberLink("/foo{?foo,bar}", new ActionDescriptorImpl("post", RequestMethod.POST.name()), Link.REL_SELF);
+        UberNode linkNode = UberUtils.toUberLink("/foo{?foo,bar}", new SpringActionDescriptor("post", RequestMethod
+                .POST.name()), Link.REL_SELF);
         assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
         assertEquals("foo={foo}&bar={bar}", linkNode.getModel());
@@ -54,6 +58,7 @@ public class UberUtilsTest {
     }
 
     class NestedBean {
+
         String foo = FOO_VALUE;
         Bean bean = new Bean(NESTED_FOO_VALUE, NESTED_BAR_VALUE);
 
@@ -76,6 +81,7 @@ public class UberUtilsTest {
     }
 
     class Bean {
+
         String foo = FOO_VALUE;
         String bar = BAR_VALUE;
 
@@ -270,6 +276,5 @@ public class UberUtilsTest {
         assertEquals(FOO_VALUE, node.getFirstByName("baz")
                 .getFirstByName("foo")
                 .getValue());
-
     }
 }

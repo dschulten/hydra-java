@@ -1,21 +1,10 @@
 package de.escalon.hypermedia.sample.beans.store;
 
-import de.escalon.hypermedia.affordance.TypedResource;
 import de.escalon.hypermedia.hydra.mapping.Expose;
-import de.escalon.hypermedia.sample.store.OrderController;
-import de.escalon.hypermedia.sample.store.ProductController;
-import de.escalon.hypermedia.spring.AffordanceBuilder;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.ResourceSupport;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Currency;
 import java.util.List;
-
-import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
-import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
 
 /**
  * Created by Dietrich on 17.02.2015.

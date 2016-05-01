@@ -16,7 +16,6 @@ package de.escalon.hypermedia.spring.hydra;
 import de.escalon.hypermedia.spring.HypermediaTypes;
 import de.escalon.hypermedia.spring.sample.test.DummyEventControllerExposed;
 import de.escalon.hypermedia.spring.sample.test.ReviewController;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -115,13 +114,15 @@ public class HydraMessageConverterTest {
     @Test
     public void convertsQueryParamToObject() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get
-                ("/events/query?foo1=1&foo2=2&offset=5&size=20&bar.baz=4&strings=a&strings=b&bars[0].baz=42&bars[1].baz=8")
+                ("/events/query?foo1=1&foo2=2&offset=5&size=20&bar.baz=4&strings=a&strings=b&bars[0].baz=42&bars[1]" +
+                        ".baz=8")
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
 //                .andExpect(jsonPath("$['hydra:member'][0].pageable.offset").value(5))
 //                .andExpect(jsonPath("$['hydra:member'][0].pageable.size").value(20))
-//                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:collection'][0]['hydra:search']['hydra:template']").value
+//                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:collection'][0]['hydra:search']['hydra:template
+// ']").value
 //                        ("http://localhost/events/query{?offset,size,foo1,foo2}"))
                 .andReturn();
         LOG.debug(result.getResponse()

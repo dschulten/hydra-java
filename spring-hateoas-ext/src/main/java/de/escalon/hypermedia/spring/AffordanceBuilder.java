@@ -79,18 +79,57 @@ public class AffordanceBuilder implements LinkBuilder {
         return FACTORY.linkTo(controller, parameters);
     }
 
-    /*
+    /**
      * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Method, Object...)
      */
     public static AffordanceBuilder linkTo(Method method, Object... parameters) {
         return linkTo(method.getDeclaringClass(), method, parameters);
     }
 
-    /*
-     * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Class<?>, Method, Object...)
+    /**
+     * Creates a new {@link AffordanceBuilder} with a base of the mapping annotated to the given controller class. The
+     * additional parameters are used to fill up potentially available path variables in the class scop request
+     * mapping.
+     *
+     * @param controller
+     *         the class to discover the annotation on, must not be {@literal null}.
+     * @param parameters
+     *         additional parameters to bind to the URI template declared in the annotation, must not be {@literal
+     *         null}.
+     * @return
+     */
+    public static AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
+        return FACTORY.linkTo(controller, parameters);
+    }
+
+    /**
+     * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Class, Method, Object...)
      */
     public static AffordanceBuilder linkTo(Class<?> controller, Method method, Object... parameters) {
         return FACTORY.linkTo(controller, method, parameters);
+    }
+
+    /**
+     * Creates a {@link AffordanceBuilder} pointing to a controller method. Hand in a dummy method invocation result
+     * you
+     * can create via {@link #methodOn(Class, Object...)} or {@link DummyInvocationUtils#methodOn(Class, Object...)}.
+     * <pre>
+     * &#64;RequestMapping("/customers")
+     * class CustomerController {
+     *   &#64;RequestMapping("/{id}/addresses")
+     *   HttpEntity&lt;Addresses&gt; showAddresses(@PathVariable Long id) { � }
+     * }
+     * Link link = linkTo(methodOn(CustomerController.class).showAddresses(2L)).withRel("addresses");
+     * </pre>
+     * The resulting {@link Link} instance will point to {@code /customers/2/addresses} and have a rel of {@code
+     * addresses}. For more details on the method invocation constraints, see {@link
+     * DummyInvocationUtils#methodOn(Class, Object...)}.
+     *
+     * @param methodInvocation
+     * @return
+     */
+    public static AffordanceBuilder linkTo(Object methodInvocation) {
+        return FACTORY.linkTo(methodInvocation);
     }
 
 
@@ -101,7 +140,6 @@ public class AffordanceBuilder implements LinkBuilder {
         this(new PartialUriTemplate(getBuilder().build()
                         .toString()).expand(Collections.<String, Object>emptyMap()),
                 Collections.<ActionDescriptor>emptyList());
-
     }
 
     /**
@@ -125,31 +163,8 @@ public class AffordanceBuilder implements LinkBuilder {
         }
     }
 
-    public static AffordanceBuilder linkTo(Object methodInvocation) {
-        return FACTORY.linkTo(methodInvocation);
-    }
-
     public static <T> T methodOn(Class<T> clazz, Object... parameters) {
         return DummyInvocationUtils.methodOn(clazz, parameters);
-    }
-
-
-    /**
-     * Builds affordance with one or multiple rels.
-     *
-     * @param rels
-     *         list of rels, must not be empty
-     * @return affordance
-     * @deprecated use {@link #rel(String)} together with {@link #build()} instead
-     */
-    public Affordance build(String... rels) {
-        Assert.notEmpty(rels);
-        for (String rel : rels) {
-            if (!this.rels.contains(rel)) {
-                this.rels.add(rel);
-            }
-        }
-        return this.build();
     }
 
     /**
@@ -190,7 +205,8 @@ public class AffordanceBuilder implements LinkBuilder {
      * Allows to define one or more reverse link relations (a "rev" in terms of rfc-5988), where the resource that has
      * the affordance will be considered the object in a subject-predicate-object statement. <p>E.g. if you had a rel
      * <code>ex:parent</code> which connects a child to its father, you could also use ex:parent on the father to point
-     * to the child by reverting the direction of ex:parent. This is mainly useful when you have no other way to express
+     * to the child by reverting the direction of ex:parent. This is mainly useful when you have no other way to
+     * express
      * in your context that the direction of a relationship is inverted. </p>
      *
      * @param rev
@@ -241,9 +257,9 @@ public class AffordanceBuilder implements LinkBuilder {
 
 
     /**
-     * Allows to define one or more link relations for affordances that point to collections in cases where the resource
+     * Allows to define one or more link relations for affordances that point to collections in cases where the
+     * resource
      * that has the affordance is not the subject in a subject-predicate-object statement about each collection item.
-     *
      * E.g. a product might have a loose relationship to ordered items where it can be POSTed, but the ordered items do
      * not belong to the product, but to an order. You can express that by saying:
      * <pre>
@@ -364,7 +380,6 @@ public class AffordanceBuilder implements LinkBuilder {
                 new PartialUriTemplateComponents(path, queryHead, queryTail, fragmentIdentifier, variableNames);
 
         return new AffordanceBuilder(mergedUriComponents, actionDescriptors);
-
     }
 
     @Override
@@ -393,12 +408,12 @@ public class AffordanceBuilder implements LinkBuilder {
 
     @Override
     public Affordance withRel(String rel) {
-        return build(rel);
+        return rel(rel).build();
     }
 
     @Override
     public Affordance withSelfRel() {
-        return build(Link.REL_SELF);
+        return rel(Link.REL_SELF).build();
     }
 
     @Override
@@ -439,7 +454,6 @@ public class AffordanceBuilder implements LinkBuilder {
 
             builder.host(hostAndPort[0]);
             builder.port(Integer.parseInt(hostAndPort[1]));
-
         } else {
             builder.host(hostToUse);
             builder.port(-1); // reset port if it was forwarded from default port
@@ -482,6 +496,4 @@ public class AffordanceBuilder implements LinkBuilder {
         }
         return this;
     }
-
-
 }

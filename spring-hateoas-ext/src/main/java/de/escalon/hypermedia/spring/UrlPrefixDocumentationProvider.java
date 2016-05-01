@@ -8,16 +8,15 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * Provides documentation URLs by applying an URL prefix.
- *
- * Created by Dietrich on 27.04.2016.
+ * Provides documentation URLs by applying an URL prefix. Created by Dietrich on 27.04.2016.
  */
 public class UrlPrefixDocumentationProvider implements DocumentationProvider {
 
     private String defaultUrlPrefix;
 
     public UrlPrefixDocumentationProvider(String defaultUrlPrefix) {
-        Assert.isTrue(defaultUrlPrefix.endsWith("/") || defaultUrlPrefix.endsWith("#"), "URL prefix should end with separator / or #");
+        Assert.isTrue(defaultUrlPrefix.endsWith("/") || defaultUrlPrefix.endsWith("#"), "URL prefix should end with " +
+                "separator / or #");
         this.defaultUrlPrefix = defaultUrlPrefix;
     }
 

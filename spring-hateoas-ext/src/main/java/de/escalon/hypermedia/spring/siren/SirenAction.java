@@ -20,24 +20,25 @@ public class SirenAction extends AbstractSirenEntity {
 
     /**
      * @param sirenClasses
-     * @param name A string that identifies the action to be performed. Action names MUST be unique within the set of actions for an entity. The behaviour of clients when parsing a Siren document that violates this constraint is undefined. Requir
-     *
-     *
-     * ed.
-     * @param title Descriptive text about the action. Optional.
-     * @param method An enumerated attribute mapping to a protocol method. For HTTP, these values may be GET, PUT, POST, DELETE, or PATCH. As new methods are introduced, this list can be extended. If this attribute is omitted, GET
-     *
-     *
-     * should be assumed. Option
-*
-*
-* al.
-     * @param href The URI of the action. Required.
-     * @param type The encoding type for the request. When omitted and the fields attribute exists, the default value is applica
-*
-*
-* tion/x-www-form-urlencoded. Optional.
-     * @param fields A collection of fields, expressed as an array of objects in JSON Siren such as { "fields" : [{ ... }] }. See Fields. Optional.
+     * @param name
+     *         A string that identifies the action to be performed. Action names MUST be unique within the set of
+     *         actions for an entity. The behaviour of clients when parsing a Siren document that violates this
+     *         constraint is undefined. Requir ed.
+     * @param title
+     *         Descriptive text about the action. Optional.
+     * @param method
+     *         An enumerated attribute mapping to a protocol method. For HTTP, these values may be GET, PUT, POST,
+     *         DELETE, or PATCH. As new methods are introduced, this list can be extended. If this attribute is
+     *         omitted,
+     *         GET should be assumed. Option al.
+     * @param href
+     *         The URI of the action. Required.
+     * @param type
+     *         The encoding type for the request. When omitted and the fields attribute exists, the default value is
+     *         applica tion/x-www-form-urlencoded. Optional.
+     * @param fields
+     *         A collection of fields, expressed as an array of objects in JSON Siren such as { "fields" : [{ ... }] }.
+     *         See Fields. Optional.
      */
     public SirenAction(List<String> sirenClasses, String name, String title, String method,
                        String href, String type, List<SirenField> fields) {

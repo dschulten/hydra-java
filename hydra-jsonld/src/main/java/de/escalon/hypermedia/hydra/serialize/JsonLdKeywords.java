@@ -10,7 +10,10 @@ public class JsonLdKeywords {
     public static final String AT_ID = "@id";
     public static final String AT_REVERSE = "@reverse";
 
-    private JsonLdKeywords(){};
+    private JsonLdKeywords() {
+    }
+
+    ;
 
 
 }

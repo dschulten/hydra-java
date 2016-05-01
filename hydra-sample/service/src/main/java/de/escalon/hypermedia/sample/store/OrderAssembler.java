@@ -2,7 +2,6 @@ package de.escalon.hypermedia.sample.store;
 
 
 import de.escalon.hypermedia.sample.beans.store.Order;
-import de.escalon.hypermedia.sample.beans.store.OrderedItem;
 import de.escalon.hypermedia.sample.beans.store.Product;
 import de.escalon.hypermedia.sample.model.store.OrderModel;
 import de.escalon.hypermedia.sample.model.store.OrderedItemModel;

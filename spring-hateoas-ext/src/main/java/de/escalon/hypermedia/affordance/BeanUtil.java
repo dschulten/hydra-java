@@ -25,7 +25,7 @@ public class BeanUtil {
      * @return property paths
      */
     public static List<String> getPropertyPaths(Class<?> clazz) {
-        return addClassPropertyPaths(new ArrayList<String>(),"", clazz);
+        return addClassPropertyPaths(new ArrayList<String>(), "", clazz);
     }
 
     private static List<String> addClassPropertyPaths(List<String> ret, String currentPath, Class<?> clazz) {
@@ -36,14 +36,15 @@ public class BeanUtil {
         return ret;
     }
 
-    private static List<String> addPropertyPaths(List<String> ret, String currentPath, PropertyDescriptor propertyDescriptor) {
+    private static List<String> addPropertyPaths(List<String> ret, String currentPath, PropertyDescriptor
+            propertyDescriptor) {
         String propertyName = propertyDescriptor.getName();
         if ("class".equals(propertyName)) {
             return Collections.emptyList();
         }
         Class<?> propertyType = propertyDescriptor.getPropertyType();
         if (DataType.isSingleValueType(propertyType)) {
-            if(!currentPath.isEmpty()) {
+            if (!currentPath.isEmpty()) {
                 currentPath += ".";
             }
             ret.add(currentPath + propertyName);

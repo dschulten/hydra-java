@@ -14,7 +14,11 @@
 package de.escalon.hypermedia.spring.uber;
 
 import de.escalon.hypermedia.affordance.*;
-import org.springframework.hateoas.*;
+import de.escalon.hypermedia.spring.SpringActionDescriptor;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.Resources;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -121,7 +125,6 @@ public class UberUtils {
                     } else {
                         toUberData(propertyNode, content);
                     }
-
                 }
             }
         } catch (Exception ex) {
@@ -220,7 +223,7 @@ public class UberUtils {
         if (link instanceof Affordance) {
             actionDescriptors = ((Affordance) link).getActionDescriptors();
         } else {
-            actionDescriptors = Arrays.asList((ActionDescriptor)new ActionDescriptorImpl("get", RequestMethod.GET.name()));
+            actionDescriptors = Arrays.asList((ActionDescriptor) new SpringActionDescriptor("get", RequestMethod.GET.name()));
         }
         return actionDescriptors;
     }
@@ -252,7 +255,6 @@ public class UberUtils {
                 sb.append(separator);
             }
             sb.append(String.format(parameterTemplate, variable, variable));
-
         }
         if (sb.length() > 0) {
             sb.append(suffix);

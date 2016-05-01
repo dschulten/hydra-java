@@ -55,13 +55,15 @@ public class PagedResourcesSerializer extends StdSerializer<PagedResources> {
     }
 
     @Override
-    public void serialize(PagedResources pagedResources, JsonGenerator jgen, SerializerProvider serializerProvider) throws
+    public void serialize(PagedResources pagedResources, JsonGenerator jgen, SerializerProvider serializerProvider)
+            throws
             IOException {
 
         final SerializationConfig config = serializerProvider.getConfig();
         JavaType javaType = config.constructType(pagedResources.getClass());
 
-        JsonSerializer<Object> serializer = BeanSerializerFactory.instance.createSerializer(serializerProvider, javaType);
+        JsonSerializer<Object> serializer = BeanSerializerFactory.instance.createSerializer(serializerProvider,
+                javaType);
 
         // replicate pretty much everything from JacksonHydraSerializer
         // since we must reorganize the internals of pagedResources to get a hydra collection
@@ -93,7 +95,6 @@ public class PagedResourcesSerializer extends StdSerializer<PagedResources> {
         serializeContext(toRender, jgen, serializerProvider, contextStack);
 
         jgen.writeStringField(JsonLdKeywords.AT_TYPE, "hydra:Collection");
-
 
 
         // serialize with PagedResourcesMixin

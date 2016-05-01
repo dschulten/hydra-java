@@ -13,17 +13,20 @@
 
 package de.escalon.hypermedia.affordance;
 
-import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.escalon.hypermedia.action.Cardinality;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
+import org.springframework.hateoas.UriTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents an http affordance for purposes of a ReST service as described by <a
@@ -33,9 +36,8 @@ import java.util.*;
  * class can be created manually or via one of the {@link de.escalon.hypermedia.spring.AffordanceBuilder#linkTo}
  * methods. In the latter case the affordance should be created with pre-expanded variables (using {@link
  * PartialUriTemplate#expand} on the given uri template). In the former case one may use {@link #expandPartially} to
- * expand the Affordance variables as far as possible, while keeping unsatisified variables.</p>
- *
- * <p>Created by dschulten on 07.09.2014.</p>
+ * expand the Affordance variables as far as possible, while keeping unsatisified variables.</p> <p>Created by dschulten
+ * on 07.09.2014.</p>
  */
 public class Affordance extends Link {
 
@@ -89,7 +91,6 @@ public class Affordance extends Link {
         // has been created with ControllerLinkBuilder. Only serializers that make use of Affordance will see the
         // optional variables, too.
         // They can access the base uri, query etc. via getUriTemplateComponents.
-        // TODO allow manual creation of affordance which does not strip optional vars?
         super(uriTemplate.stripOptionalVariables(actionDescriptors)
                 .toString());
         this.partialUriTemplate = uriTemplate;
@@ -134,7 +135,8 @@ public class Affordance extends Link {
     /**
      * The "type" parameter, when present, is a hint indicating what the media type of the result of dereferencing the
      * link should be.  Note that this is only a hint; for example, it does not override the Content-Type header of a
-     * HTTP response obtained by actually following the link.  There MUST NOT be more than one type parameter in a link-
+     * HTTP response obtained by actually following the link.  There MUST NOT be more than one type parameter in a
+     * link-
      * value.
      *
      * @param mediaType
@@ -148,7 +150,8 @@ public class Affordance extends Link {
     }
 
     /**
-     * The "hreflang" parameter, when present, is a hint indicating what the language of the result of dereferencing the
+     * The "hreflang" parameter, when present, is a hint indicating what the language of the result of dereferencing
+     * the
      * link should be.  Note that this is only a hint; for example, it does not override the Content-Language header of
      * a HTTP response obtained by actually following the link.  Multiple "hreflang" parameters on a single link- value
      * indicate that multiple languages are available from the indicated resource.
@@ -322,9 +325,7 @@ public class Affordance extends Link {
                             .append("\"");
                 }
                 result.append(linkParams);
-
             }
-
         }
 
         String linkHeader = "<" + partialUriTemplate.asComponents()
@@ -367,7 +368,8 @@ public class Affordance extends Link {
     }
 
     /**
-     * Expands template variables, arguments must satisfy all required template variables.
+     * Expands template variables, arguments must satisfy all required template variables, optional variables will be
+     * removed.
      *
      * @param arguments
      *         to expansion in the order they appear in the template
@@ -375,20 +377,11 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Object... arguments) {
-        // TODO expanding Affordance with rev, super mandates rel
-//        if(StringUtils.hasText(super.getRel())) {
-//            return new Affordance(super.expand(arguments)
-//                    .getHref(), linkParams, actionDescriptors);
-//        } else {
-        UriTemplate uriTemplate = UriTemplate.fromTemplate(getHref());
-        String[] variables = uriTemplate.getVariables();
-        Map<String, Object> values = new HashMap<String, Object>();
-        for (int i = 0; i < arguments.length; i++) {
-            values.put(variables[i], arguments[i]);
-        }
-        String expanded = UriTemplate.expand(getHref(), values);
+        UriTemplate template = new UriTemplate(partialUriTemplate.asComponents()
+                .toString());
+        String expanded = template.expand(arguments)
+                .toASCIIString();
         return new Affordance(expanded, linkParams, actionDescriptors);
-//        }
     }
 
     /**
@@ -402,7 +395,8 @@ public class Affordance extends Link {
     }
 
     /**
-     * Expands template variables, arguments must satisfy all required template variables.
+     * Expands template variables, arguments must satisfy all required template variables, unsatisfied optional
+     * arguments will be removed.
      *
      * @param arguments
      *         to expansion
@@ -410,8 +404,10 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Map<String, ? extends Object> arguments) {
-        @SuppressWarnings("unchecked")
-        String expanded = UriTemplate.expand(getHref(), (Map<String, Object>)arguments);
+        UriTemplate template = new UriTemplate(partialUriTemplate.asComponents()
+                .toString());
+        String expanded = template.expand(arguments)
+                .toASCIIString();
         return new Affordance(expanded, linkParams, actionDescriptors);
     }
 
@@ -430,7 +426,8 @@ public class Affordance extends Link {
     }
 
     /**
-     * Expands template variables as far as possible, unsatisfied variables will remain variables. This is primarily for
+     * Expands template variables as far as possible, unsatisfied variables will remain variables. This is primarily
+     * for
      * manually created affordances. If the Affordance has been created with linkTo-methodOn, it should not be necessary
      * to expand the affordance again.
      *
@@ -533,8 +530,10 @@ public class Affordance extends Link {
 
 
     /**
-     * Determines if the affordance has unsatisfied required variables. This allows to decide if the affordance can also
-     * be treated as a plain Link without template variables if the caller omits all optional variables. Serializers can
+     * Determines if the affordance has unsatisfied required variables. This allows to decide if the affordance can
+     * also
+     * be treated as a plain Link without template variables if the caller omits all optional variables. Serializers
+     * can
      * use this to render it as a resource with optional search features.
      *
      * @return true if the affordance has unsatisfied required variables

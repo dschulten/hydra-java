@@ -14,7 +14,9 @@ public class TypedResource {
      * Creates a resource whose semantic type is known, but which cannot be identified as an individual.
      *
      * @param semanticType
-     *         semantic type of the resource as string, either as Uri or Curie or as type name within the default vocabulary. Example: <code>Order</code> in a context where the default vocabulary is <code>http://schema.org/</code>
+     *         semantic type of the resource as string, either as Uri or Curie or as type name within the default
+     *         vocabulary. Example: <code>Order</code> in a context where the default vocabulary is
+     *         <code>http://schema.org/</code>
      * @see <a href="http://www.w3.org/TR/curie/">Curie</a>
      */
     public TypedResource(String semanticType) {

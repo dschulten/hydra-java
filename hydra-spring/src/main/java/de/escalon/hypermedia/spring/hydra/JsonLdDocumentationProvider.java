@@ -1,7 +1,7 @@
 package de.escalon.hypermedia.spring.hydra;
 
-import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.AnnotationUtils;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
 import de.escalon.hypermedia.hydra.serialize.MixinSource;

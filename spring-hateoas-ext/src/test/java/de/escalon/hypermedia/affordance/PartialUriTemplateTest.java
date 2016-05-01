@@ -13,8 +13,6 @@
 
 package de.escalon.hypermedia.affordance;
 
-import de.escalon.hypermedia.affordance.PartialUriTemplate;
-import de.escalon.hypermedia.affordance.PartialUriTemplateComponents;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class PartialUriTemplateTest {

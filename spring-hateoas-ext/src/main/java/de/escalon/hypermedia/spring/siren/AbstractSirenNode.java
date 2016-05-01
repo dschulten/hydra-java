@@ -22,5 +22,4 @@ public class AbstractSirenNode {
     public String getTitle() {
         return title;
     }
-
 }

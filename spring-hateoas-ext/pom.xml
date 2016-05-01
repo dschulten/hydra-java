@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>hydra-java</artifactId>
         <groupId>de.escalon.hypermedia</groupId>
@@ -69,11 +70,15 @@
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path-assert</artifactId>
         </dependency>
+        <dependency>
+            <groupId>xmlunit</groupId>
+            <artifactId>xmlunit</artifactId>
+        </dependency>
         <!--<dependency>-->
-            <!--<groupId>com.jayway.jsonpath</groupId>-->
-            <!--<artifactId>json-path</artifactId>-->
-            <!--<version>2.2.0</version>-->
-            <!--<scope>test</scope>-->
+        <!--<groupId>com.jayway.jsonpath</groupId>-->
+        <!--<artifactId>json-path</artifactId>-->
+        <!--<version>2.2.0</version>-->
+        <!--<scope>test</scope>-->
         <!--</dependency>-->
         <dependency>
             <groupId>org.mockito</groupId>

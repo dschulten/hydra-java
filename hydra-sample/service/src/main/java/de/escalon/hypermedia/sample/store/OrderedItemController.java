@@ -1,11 +1,9 @@
 package de.escalon.hypermedia.sample.store;
 
-import de.escalon.hypermedia.sample.beans.store.OrderedItem;
 import de.escalon.hypermedia.sample.beans.store.Product;
 import de.escalon.hypermedia.sample.model.store.OrderModel;
 import de.escalon.hypermedia.sample.model.store.OrderedItemModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;

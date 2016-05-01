@@ -41,7 +41,8 @@ public class ReviewController {
     @RequestMapping(value = "/events/{eventId}", method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<Resources<Review>> getReviews(@PathVariable int eventId) {
-        List<Review> reviews = eventBackend.getReviews().get(eventId);
+        List<Review> reviews = eventBackend.getReviews()
+                .get(eventId);
 
         ResponseEntity<Resources<Review>> ret;
         if (reviews != null) {
@@ -50,8 +51,10 @@ public class ReviewController {
             reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(EventController.class)
                     .getEvent(eventId)) // passing null requires that method takes Integer, not int
                     .withRel("hydra:search"));
-            reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass()).addReview
-                    (eventId, null)).withSelfRel());
+            reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(this.getClass())
+                    .addReview
+                            (eventId, null))
+                    .withSelfRel());
             ret = new ResponseEntity<Resources<Review>>(reviewResources, HttpStatus.OK);
         } else {
             ret = new ResponseEntity<Resources<Review>>(HttpStatus.NOT_FOUND);
@@ -66,7 +69,8 @@ public class ReviewController {
     ResponseEntity<Void> addReview(@PathVariable int eventId, @RequestBody Review review) {
         Assert.notNull(review);
         Assert.notNull(review.getReviewRating());
-        Assert.notNull(review.getReviewRating().getRatingValue());
+        Assert.notNull(review.getReviewRating()
+                .getRatingValue());
         ResponseEntity<Void> responseEntity;
         try {
             eventBackend.addReview(eventId, review.getReviewBody(), review.getReviewRating());

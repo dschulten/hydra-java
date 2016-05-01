@@ -5,12 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Type;
-import de.escalon.hypermedia.affordance.*;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.ActionInputParameter;
+import de.escalon.hypermedia.affordance.Affordance;
+import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
-import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import de.escalon.hypermedia.spring.DocumentationProvider;
-import org.jetbrains.annotations.NotNull;
+import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.core.DefaultRelProvider;
@@ -29,13 +30,12 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- * Maps spring-hateoas response data to siren data.
- *
- * Created by Dietrich on 17.04.2016.
+ * Maps spring-hateoas response data to siren data. Created by Dietrich on 17.04.2016.
  */
 public class SirenUtils {
 
-    private static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links", "id"));
+    private static final Set<String> FILTER_RESOURCE_SUPPORT = new HashSet<String>(Arrays.asList("class", "links",
+            "id"));
     private String requestMediaType;
 
     private Set<String> navigationalRels = new HashSet<String>(Arrays.asList("self", "next", "previous", "prev"));
@@ -175,7 +175,6 @@ public class SirenUtils {
                 continue;
             }
 
-
             Method readMethod = propertyDescriptor.getReadMethod();
             if (readMethod != null) {
                 Object content = readMethod
@@ -183,7 +182,6 @@ public class SirenUtils {
                 String docUrl = documentationProvider.getDocumentationUrl(readMethod, content);
                 traverseAttribute(objectNode, propertiesNode, name, docUrl, content);
             }
-
         }
 
         Field[] fields = object.getClass()
@@ -355,18 +353,23 @@ public class SirenUtils {
     /**
      * Renders input fields for bean properties of bean to add or update or patch.
      *
-     * @param sirenFields         to add to
-     * @param beanType            to render
-     * @param annotatedParameters which describes the method
-     * @param annotatedParameter  which requires the bean
-     * @param currentCallValue    sample call value
+     * @param sirenFields
+     *         to add to
+     * @param beanType
+     *         to render
+     * @param annotatedParameters
+     *         which describes the method
+     * @param annotatedParameter
+     *         which requires the bean
+     * @param currentCallValue
+     *         sample call value
      */
     private void recurseBeanCreationParams(List<SirenField> sirenFields, Class<?> beanType,
                                            ActionDescriptor annotatedParameters,
                                            ActionInputParameter annotatedParameter, Object currentCallValue,
                                            String parentParamName, Set<String> knownFields) {
         // TODO collection, map and object node creation are only describable by an annotation, not via type reflection
-        if(ObjectNode.class.isAssignableFrom(beanType) || Map.class.isAssignableFrom(beanType)
+        if (ObjectNode.class.isAssignableFrom(beanType) || Map.class.isAssignableFrom(beanType)
                 || Collection.class.isAssignableFrom(beanType) || beanType.isArray()) {
             return; // use @Input(include) to list parameter names, at least? Or mix with hdiv's form builder?
         }
@@ -437,12 +440,10 @@ public class SirenUtils {
                 addSirenFieldsForMethodParameter(sirenFields, methodParameter, annotatedParameter,
                         annotatedParameters,
                         parentParamName, propertyName, propertyType, propertyValue, knownConstructorFields);
-
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to write input fields for constructor", e);
         }
-
     }
 
     private void addSirenFieldsForMethodParameter(List<SirenField> sirenFields, MethodParameter
@@ -479,7 +480,6 @@ public class SirenUtils {
         }
     }
 
-    @NotNull
     private SirenField createSirenField(String paramName, Object propertyValue,
                                         ActionInputParameter inputParameter, Object[] possibleValues) {
         SirenField sirenField;
@@ -589,6 +589,4 @@ public class SirenUtils {
     public void setAdditionalNavigationalRels(Collection<String> additionalNavigationalRels) {
         this.navigationalRels.addAll(additionalNavigationalRels);
     }
-
-
 }

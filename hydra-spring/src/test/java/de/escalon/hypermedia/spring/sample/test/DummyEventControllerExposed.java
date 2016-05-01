@@ -14,7 +14,6 @@
 package de.escalon.hypermedia.spring.sample.test;
 
 import de.escalon.hypermedia.action.Input;
-import de.escalon.hypermedia.affordance.Affordance;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.hateoas.Resource;
@@ -127,7 +126,7 @@ public class DummyEventControllerExposed extends DummyEventController {
     }
 
     @RequestMapping("/query")
-    public HttpEntity<Resources<FooResource>> findList(@Input(include={"offset", "size"}) Pageable pageable,
+    public HttpEntity<Resources<FooResource>> findList(@Input(include = {"offset", "size"}) Pageable pageable,
                                                        @RequestParam(required = false) Integer foo1,
                                                        @RequestParam(required = false) Integer foo2) {
 

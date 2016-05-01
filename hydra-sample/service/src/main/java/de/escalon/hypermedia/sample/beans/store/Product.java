@@ -2,7 +2,6 @@ package de.escalon.hypermedia.sample.beans.store;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.mapping.Term;
 import org.springframework.hateoas.ResourceSupport;
 import org.springframework.hateoas.core.Relation;
@@ -13,7 +12,7 @@ import java.util.List;
 /**
  * Created by Dietrich on 17.02.2015.
  */
-@Term(define="accessories", as="isAccessoryOrSparePartFor", reverse = true)
+@Term(define = "accessories", as = "isAccessoryOrSparePartFor", reverse = true)
 @Relation("product")
 public class Product extends ResourceSupport {
     public final String name;

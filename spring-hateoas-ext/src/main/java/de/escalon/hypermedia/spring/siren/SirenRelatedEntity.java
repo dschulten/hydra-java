@@ -14,7 +14,7 @@ public class SirenRelatedEntity extends AbstractSirenEntity {
     }
 
     public SirenRelatedEntity(List<String> rels, String title, List<String> sirenClasses) {
-        super(title,sirenClasses);
+        super(title, sirenClasses);
         this.rel = rels;
     }
 

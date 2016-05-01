@@ -13,15 +13,13 @@
 
 package de.escalon.hypermedia.affordance;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 /**
- * Represents components of a Uri Template with variables.
- *
- * Created by dschulten on 04.12.2014.
+ * Represents components of a Uri Template with variables. Created by dschulten on 04.12.2014.
  */
 public class PartialUriTemplateComponents {
 
@@ -39,13 +37,11 @@ public class PartialUriTemplateComponents {
      * @param baseUri
      *         may be relative or absolute, and may contain {xxx} or {/xxx} style variables
      * @param queryHead
-     *         start of query containing expanded key-value pairs (no variables), beginning with ?, may
-     *
-     *
-     *         be empty
+     *         start of query containing expanded key-value pairs (no variables), beginning with ?, may be empty
      * @param queryTail
      *         comma-separated list of unexpanded query keys, may be empty
-     * @param variableNames names of template variables
+     * @param variableNames
+     *         names of template variables
      */
     public PartialUriTemplateComponents(String baseUri, String queryHead, String queryTail, String
             fragmentIdentifier, List<String> variableNames) {
@@ -126,12 +122,10 @@ public class PartialUriTemplateComponents {
      * @return uri String
      */
     public String toString() {
-        return baseUri + StringUtils.defaultString(getQuery()) + StringUtils.defaultString(fragmentIdentifier);
+        return baseUri + getQuery() + fragmentIdentifier;
     }
 
     public boolean hasVariables() {
-        return baseUri.contains("{") || StringUtils.isNotEmpty(queryTail) || fragmentIdentifier.contains("{");
+        return baseUri.contains("{") || !StringUtils.isEmpty(queryTail) || fragmentIdentifier.contains("{");
     }
-
-
 }

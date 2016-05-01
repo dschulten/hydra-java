@@ -2,7 +2,6 @@ package de.escalon.hypermedia.sample.store;
 
 import de.escalon.hypermedia.affordance.TypedResource;
 import de.escalon.hypermedia.sample.beans.store.Offer;
-import de.escalon.hypermedia.sample.beans.store.Order;
 import de.escalon.hypermedia.sample.beans.store.Product;
 import de.escalon.hypermedia.sample.beans.store.Store;
 import de.escalon.hypermedia.spring.AffordanceBuilder;

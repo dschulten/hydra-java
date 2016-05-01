@@ -20,7 +20,8 @@ public class PaymentController {
     @RequestMapping("/{id}/payment")
     public ResponseEntity<Void> makePayment(@PathVariable int id) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setLocation(linkTo(AffordanceBuilder.methodOn(this.getClass()).getPayment()).toUri());
+        httpHeaders.setLocation(linkTo(AffordanceBuilder.methodOn(this.getClass())
+                .getPayment()).toUri());
         return new ResponseEntity<Void>(httpHeaders, HttpStatus.CREATED);
     }
 

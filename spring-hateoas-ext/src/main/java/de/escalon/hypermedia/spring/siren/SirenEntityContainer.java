@@ -7,6 +7,7 @@ import java.util.Map;
  * Created by Dietrich on 22.04.2016.
  */
 public interface SirenEntityContainer {
+
     List<SirenSubEntity> getEntities();
 
     void setLinks(List<SirenLink> links);

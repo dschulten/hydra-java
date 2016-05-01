@@ -1,12 +1,10 @@
 package de.escalon.hypermedia.spring.hydra;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import de.escalon.hypermedia.affordance.TypedResource;
 import de.escalon.hypermedia.hydra.serialize.JsonLdKeywords;
 
 /**
- * Renders typed resource as Json-LD typed resource.
- * Created by Dietrich on 01.11.2015.
+ * Renders typed resource as Json-LD typed resource. Created by Dietrich on 01.11.2015.
  */
 public class TypedResourceMixin {
 

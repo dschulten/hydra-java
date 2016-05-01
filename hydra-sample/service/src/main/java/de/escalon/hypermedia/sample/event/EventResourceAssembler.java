@@ -17,6 +17,7 @@ public class EventResourceAssembler extends ResourceAssemblerSupport<EventModel,
 
     @Override
     public Event toResource(EventModel eventModel) {
-        return new Event(eventModel.id, eventModel.performer, eventModel.workPerformed, eventModel.location, eventModel.eventStatus);
+        return new Event(eventModel.id, eventModel.performer, eventModel.workPerformed, eventModel.location,
+                eventModel.eventStatus);
     }
 }

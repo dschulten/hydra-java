@@ -4,18 +4,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.json.WriterBasedJsonGenerator;
-import com.github.jsonldjava.core.JsonLdError;
-import com.github.jsonldjava.core.JsonLdOptions;
-import com.github.jsonldjava.core.JsonLdProcessor;
-import com.github.jsonldjava.utils.JsonUtils;
 import org.junit.Test;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Dietrich on 07.02.2015.

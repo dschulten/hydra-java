@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.affordance;
@@ -23,9 +26,8 @@ import java.util.regex.Pattern;
 /**
  * URI template with the ability to be partially expanded, no matter if its variables are required or not. Unsatisfied
  * variables are kept as variables. Other implementations either remove all unsatisfied variables or fail when required
- * variables are unsatisfied.
- * This behavior is required due to the way an Affordance is created by {@link AffordanceBuilder},
- * see package info for an overview of affordance creation.
+ * variables are unsatisfied. This behavior is required due to the way an Affordance is created by {@link
+ * AffordanceBuilder}, see package info for an overview of affordance creation.
  *
  * @author Dietrich Schulten
  * @see de.escalon.hypermedia.spring
@@ -43,7 +45,8 @@ public class PartialUriTemplate {
     /**
      * Creates a new {@link PartialUriTemplate} using the given template string.
      *
-     * @param template must not be {@literal null} or empty.
+     * @param template
+     *         must not be {@literal null} or empty.
      */
     public PartialUriTemplate(String template) {
         Assert.hasText(template, "Template must not be null or empty!");
@@ -73,9 +76,7 @@ public class PartialUriTemplate {
                         }
                         variableIndices.add(Collections.<Integer>emptyList());
                     }
-
                 }
-
             }
             endOfPart = matcher.end(0);
 
@@ -103,7 +104,6 @@ public class PartialUriTemplate {
             urlComponents.add(template.substring(endOfPart));
             variableIndices.add(Collections.<Integer>emptyList());
         }
-
     }
 
     public List<String> getVariableNames() {
@@ -113,6 +113,7 @@ public class PartialUriTemplate {
 
     /**
      * Returns the template as uri components, without variable expansion.
+     *
      * @return components of the Uri
      */
     public PartialUriTemplateComponents asComponents() {
@@ -122,7 +123,9 @@ public class PartialUriTemplate {
 
     /**
      * Expands the template using given parameters
-     * @param parameters for expansion in the order of appearance in the template, must not be empty
+     *
+     * @param parameters
+     *         for expansion in the order of appearance in the template, must not be empty
      * @return expanded template
      */
     public PartialUriTemplateComponents expand(Object... parameters) {
@@ -143,7 +146,9 @@ public class PartialUriTemplate {
 
     /**
      * Expands the template using given parameters
-     * @param parameters for expansion, must not be empty
+     *
+     * @param parameters
+     *         for expansion, must not be empty
      * @return expanded template
      */
     public PartialUriTemplateComponents expand(Map<String, Object> parameters) {
@@ -153,11 +158,14 @@ public class PartialUriTemplate {
     /**
      * Applies parameters to template variables.
      *
-     * @param parameters   to apply to variables
-     * @param requiredArgs if not empty, retains given requiredArgs
+     * @param parameters
+     *         to apply to variables
+     * @param requiredArgs
+     *         if not empty, retains given requiredArgs
      * @return uri components
      */
-    private PartialUriTemplateComponents getUriTemplateComponents(Map<String, Object> parameters, List<String> requiredArgs) {
+    private PartialUriTemplateComponents getUriTemplateComponents(Map<String, Object> parameters, List<String>
+            requiredArgs) {
         Assert.notNull(parameters, "Parameters must not be null!");
 
         final StringBuilder baseUrl = new StringBuilder(urlComponents.get(0));
@@ -231,7 +239,6 @@ public class PartialUriTemplate {
             }
         }
 
-
         return new PartialUriTemplateComponents(baseUrl.toString(), queryHead.toString(), queryTail.toString(),
                 fragmentIdentifier.toString(), variableNames);
     }
@@ -248,7 +255,8 @@ public class PartialUriTemplate {
      * Strips all variables which are not required by any of the given action descriptors. If no action descriptors are
      * given, nothing will be stripped.
      *
-     * @param actionDescriptors to decide which variables are optional, may be empty
+     * @param actionDescriptors
+     *         to decide which variables are optional, may be empty
      * @return partial uri template components without optional variables, if actionDescriptors was not empty
      */
     public PartialUriTemplateComponents stripOptionalVariables(List<ActionDescriptor> actionDescriptors) {
@@ -263,6 +271,4 @@ public class PartialUriTemplate {
         }
         return ret;
     }
-
-
 }

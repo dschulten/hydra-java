@@ -4,8 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Holds Jsonld Context with context inheritance from parent contexts.
- * Created by Dietrich on 02.04.2015.
+ * Holds Jsonld Context with context inheritance from parent contexts. Created by Dietrich on 02.04.2015.
  */
 public class LdContext {
 
@@ -60,7 +59,7 @@ public class LdContext {
             ret = this.terms.get(term)
                     .equals(value);
         } else {
-            if(parentContext == null) {
+            if (parentContext == null) {
                 ret = false;
             } else {
                 ret = parentContext.hasEqualTerm(term, value);

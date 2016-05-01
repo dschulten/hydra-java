@@ -39,20 +39,22 @@ public interface Options {
      * <p>The <code>&#064;Select</code> annotation above says that the possible detail values come from a DetailOptions
      * class which determines those values based on the personId. Note how the <code>personId</code> is passed to
      * showDetails as argument to the same call, alongside the <code>details</code> argument. This allows us to resolve
-     * the <code>"personId"</code> arg defined for DetailOptions to an actual value.</p>
-     * <p>Within the call to {@link Options#get} the args array contains the values specified by the args annotation
-     * attribute in the given order. In the example above, DetailOptions receives the personId and can read possible
-     * options for that particular person.</p>
+     * the <code>"personId"</code> arg defined for DetailOptions to an actual value.</p> <p>Within the call to {@link
+     * Options#get} the args array contains the values specified by the args annotation attribute in the given order
+     * . In
+     * the example above, DetailOptions receives the personId and can read possible options for that particular
+     * person.</p>
      *
-     * @param value parameters to be used by the implementation. Could be literal values as used by {@link
-     *              StringOptions} or some argument to a custom implementation of Options, such as an SQL string.
-     * @param args  from the same method call, as defined by {@link Select#args()}. The possible values for a parameter
-     *              might depend on the context. In that case, you can use {@link Select#args()} to pass other argument
-     *              values received in the same method call to an implementation of {@link Options}. See above for an
-     *              example.
+     * @param value
+     *         parameters to be used by the implementation. Could be literal values as used by {@link StringOptions} or
+     *         some argument to a custom implementation of Options, such as an SQL string.
+     * @param args
+     *         from the same method call, as defined by {@link Select#args()}. The possible values for a parameter
+     *         might
+     *         depend on the context. In that case, you can use {@link Select#args()} to pass other argument values
+     *         received in the same method call to an implementation of {@link Options}. See above for an example.
      * @return possible values
      * @see StringOptions
      */
     public Object[] get(String[] value, Object... args);
-
 }

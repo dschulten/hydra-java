@@ -27,7 +27,6 @@ import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.hydra.serialize.JsonLdKeywords;
 import de.escalon.hypermedia.hydra.serialize.LdContext;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
-import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;

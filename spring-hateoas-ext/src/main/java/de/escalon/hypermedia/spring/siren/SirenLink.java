@@ -37,7 +37,4 @@ public class SirenLink extends SirenRelatedEntity {
     public String getType() {
         return type;
     }
-
-
-
 }

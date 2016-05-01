@@ -1,7 +1,5 @@
 package de.escalon.hypermedia.spring.siren;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +33,12 @@ public class SirenEntity extends AbstractSirenEntity implements SirenEntityConta
      *         embedded link. Clients may choose to optimistically load embedded links. If no href value exists, the
      *         sub-entity is an embedded entity representation that contains all the characteristics of a typical
      *         entity. One difference is that a sub-entity MUST contain a rel attribute to describe its relationship to
-     *         the parent entity.
-     *
-     *         In JSON Siren, this is represented as an array. Optional.
+     *         the parent entity. In JSON Siren, this is represented as an array. Optional.
      * @param links
      *         A collection of items that describe navigational links, distinct from entity relationships. Link items
      *         should contain a rel attribute to describe the relationship and an href attribute to point to the target
-     *         URI. Entities should include a link rel to self. In JSON Siren, this is represented as "links": [{ "rel":
+     *         URI. Entities should include a link rel to self. In JSON Siren, this is represented as "links": [{
+     *         "rel":
      *         ["self"], "href": "http://api.x.io/orders/1234" }] Optional.
      * @param actions
      *         A collection of action objects, represented in JSON Siren as an array such as { "actions": [{ ... }] }.

@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2014. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring.sample.test;
@@ -29,21 +32,19 @@ import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
 
 
 /**
- * Sample controller demonstrating the use of AffordanceBuilder and hydra-core annotations such as @Expose on
- * request parameters.
- * Created by dschulten on 11.09.2014.
+ * Sample controller demonstrating the use of AffordanceBuilder and hydra-core annotations such as @Expose on request
+ * parameters. Created by dschulten on 11.09.2014.
  */
 @Controller
 @RequestMapping("/events")
 public class DummyEventController {
 
-    @RequestMapping(method=RequestMethod.POST)
-    public
-    ResponseEntity<Void> addEvent(@RequestBody Event event) {
+    @RequestMapping(method = RequestMethod.POST)
+    public ResponseEntity<Void> addEvent(@RequestBody Event event) {
         return new ResponseEntity(HttpStatus.CREATED);
     }
 
-    @RequestMapping(method=RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET)
     public
     @ResponseBody
     Resources<Resource<Event>> getResourcesOfResourceOfEvent() {
@@ -54,7 +55,7 @@ public class DummyEventController {
             eventResource.add(linkTo(methodOn(this.getClass())
                     .getEvent(event.id))
                     .and(linkTo(methodOn(this.getClass())
-                    .updateEventWithRequestBody(event.id, event)))
+                            .updateEventWithRequestBody(event.id, event)))
                     .and(linkTo(methodOn(this.getClass())
                             .deleteEvent(event.id)))
                     .withSelfRel());
@@ -106,7 +107,7 @@ public class DummyEventController {
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
-    
+
     @RequestMapping(value = "/regex/{eventId:.+}", method = RequestMethod.GET)
     public
     @ResponseBody
@@ -164,5 +165,4 @@ public class DummyEventController {
         return Arrays.asList(new EventResource(1, "Walk off the Earth", "Gang of Rhythm Tour", "Wiesbaden"),
                 new EventResource(2, "Cornelia Bielefeldt", "Mein letzter Film", "Heilbronn"));
     }
-
 }

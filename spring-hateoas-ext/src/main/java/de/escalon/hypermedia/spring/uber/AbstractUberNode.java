@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2015. Escalon System-Entwicklung, Dietrich Schulten
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+ * the specific language governing permissions and limitations under the License.
  */
 
 package de.escalon.hypermedia.spring.uber;
@@ -42,12 +45,12 @@ public abstract class AbstractUberNode implements Iterable<UberNode> {
     public void addLink(Link link) {
         List<ActionDescriptor> actionDescriptors = UberUtils.getActionDescriptors(link);
         List<String> rels = UberUtils.getRels(link);
-        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(link.getHref()).expand(Collections.<String, Object>emptyMap());
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(link.getHref()).expand
+                (Collections.<String, Object>emptyMap());
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
             UberNode uberLink = UberUtils.toUberLink(link.getHref(), actionDescriptor, rels);
             data.add(uberLink);
         }
-
     }
 
     public void addLinks(Iterable<Link> links) {
@@ -59,7 +62,8 @@ public abstract class AbstractUberNode implements Iterable<UberNode> {
     /**
      * Gets first child of this uber node having the given name attribute.
      *
-     * @param name to look up
+     * @param name
+     *         to look up
      * @return found child or null
      */
     public UberNode getFirstByName(String name) {
@@ -77,7 +81,8 @@ public abstract class AbstractUberNode implements Iterable<UberNode> {
     /**
      * Gets first child of this uber node having the given rel attribute.
      *
-     * @param rel to look up
+     * @param rel
+     *         to look up
      * @return found child or null
      */
     public UberNode getFirstByRel(String rel) {
@@ -131,8 +136,6 @@ public abstract class AbstractUberNode implements Iterable<UberNode> {
                 }
                 return -1;
             }
-
         };
     }
-
 }

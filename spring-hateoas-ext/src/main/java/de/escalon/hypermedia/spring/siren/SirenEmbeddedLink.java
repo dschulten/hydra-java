@@ -1,9 +1,6 @@
 package de.escalon.hypermedia.spring.siren;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Dietrich on 17.04.2016.
@@ -40,5 +37,4 @@ public class SirenEmbeddedLink extends SirenSubEntity {
     public String getType() {
         return type;
     }
-
 }
