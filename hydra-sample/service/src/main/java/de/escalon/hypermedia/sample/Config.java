@@ -2,6 +2,7 @@ package de.escalon.hypermedia.sample;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.escalon.hypermedia.spring.HypermediaTypes;
 import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
 import de.escalon.hypermedia.spring.hydra.JsonLdDocumentationProvider;
 import de.escalon.hypermedia.spring.siren.SirenMessageConverter;
@@ -33,6 +34,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,7 +65,9 @@ public class Config extends WebMvcConfigurerAdapter {
 
     @Bean
     public HttpMessageConverter<?> uberConverter() {
-        return new UberJackson2HttpMessageConverter();
+        UberJackson2HttpMessageConverter converter = new UberJackson2HttpMessageConverter();
+        converter.setSupportedMediaTypes(Collections.singletonList(HypermediaTypes.UBER_JSON));
+        return converter;
     }
 
     private HttpMessageConverter<?> xhtmlMessageConverter() {
@@ -94,8 +98,7 @@ public class Config extends WebMvcConfigurerAdapter {
         SirenMessageConverter sirenMessageConverter = new SirenMessageConverter();
         sirenMessageConverter.setRelProvider(new DelegatingRelProvider(relProviderRegistry));
         sirenMessageConverter.setDocumentationProvider(new JsonLdDocumentationProvider());
-        sirenMessageConverter.setSupportedMediaTypes(Collections.singletonList(MediaType.parseMediaType
-                ("application/vnd.siren+json")));
+        sirenMessageConverter.setSupportedMediaTypes(Collections.singletonList(HypermediaTypes.SIREN_JSON));
         return sirenMessageConverter;
     }
 
