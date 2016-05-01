@@ -19,9 +19,24 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.springframework.hateoas</groupId>
+            <artifactId>spring-hateoas</artifactId>
+            <version>0.20.0.AFFORDANCES-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>de.escalon.hypermedia</groupId>
             <artifactId>hydra-spring</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.hateoas</groupId>
+                    <artifactId>spring-hateoas</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -32,12 +47,18 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
-            <version>3.2.9.RELEASE</version>
+            <version>4.1.7.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.plugin</groupId>
             <artifactId>spring-plugin-core</artifactId>
             <version>1.1.0.RELEASE</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>

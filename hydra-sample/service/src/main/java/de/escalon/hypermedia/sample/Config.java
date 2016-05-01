@@ -2,6 +2,7 @@ package de.escalon.hypermedia.sample;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
 import de.escalon.hypermedia.spring.HypermediaTypes;
 import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
 import de.escalon.hypermedia.spring.hydra.JsonLdDocumentationProvider;
@@ -76,7 +77,7 @@ public class Config extends WebMvcConfigurerAdapter {
                 Arrays.asList(
                         "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"
                 ));
-        xhtmlResourceMessageConverter.setDocumentationProvider(new JsonLdDocumentationProvider());
+        xhtmlResourceMessageConverter.setDocumentationProvider(new DefaultDocumentationProvider());
         return xhtmlResourceMessageConverter;
     }
 
@@ -97,7 +98,7 @@ public class Config extends WebMvcConfigurerAdapter {
     public SirenMessageConverter sirenMessageConverter() {
         SirenMessageConverter sirenMessageConverter = new SirenMessageConverter();
         sirenMessageConverter.setRelProvider(new DelegatingRelProvider(relProviderRegistry));
-        sirenMessageConverter.setDocumentationProvider(new JsonLdDocumentationProvider());
+        sirenMessageConverter.setDocumentationProvider(new DefaultDocumentationProvider());
         sirenMessageConverter.setSupportedMediaTypes(Collections.singletonList(HypermediaTypes.SIREN_JSON));
         return sirenMessageConverter;
     }
@@ -135,7 +136,8 @@ public class Config extends WebMvcConfigurerAdapter {
 
         halObjectMapper.registerModule(new Jackson2HalModule());
         halObjectMapper.setHandlerInstantiator(new
-                Jackson2HalModule.HalHandlerInstantiator(relProvider, curieProvider));
+                Jackson2HalModule.HalHandlerInstantiator(
+                relProvider, curieProvider, null)); // no messagesource, no rel-> title translation
 
         MappingJackson2HttpMessageConverter halConverter = new
                 MappingJackson2HttpMessageConverter();

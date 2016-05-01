@@ -89,12 +89,12 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-webmvc</artifactId>
-                <version>3.2.9.RELEASE</version>
+                <version>4.1.7.RELEASE</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.hateoas</groupId>
                 <artifactId>spring-hateoas</artifactId>
-                <version>0.16.0.RELEASE</version>
+                <version>0.20.0.AFFORDANCES-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>de.escalon.hypermedia</groupId>
@@ -168,7 +168,7 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-test</artifactId>
-                <version>3.2.9.RELEASE</version>
+                <version>4.1.7.RELEASE</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -189,8 +189,8 @@
             </dependency>
             <dependency>
                 <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-                <version>2.5</version>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>3.0.1</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>

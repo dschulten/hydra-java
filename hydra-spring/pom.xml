@@ -28,10 +28,10 @@
             <artifactId>hydra-jsonld</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>de.escalon.hypermedia</groupId>
-            <artifactId>spring-hateoas-ext</artifactId>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>de.escalon.hypermedia</groupId>-->
+            <!--<artifactId>spring-hateoas-ext</artifactId>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>de.escalon.hypermedia</groupId>
@@ -42,8 +42,15 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.hateoas</groupId>
+            <artifactId>spring-hateoas</artifactId>
+            <version>0.20.0.AFFORDANCES-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
+            <version>4.1.7.RELEASE</version>
         </dependency>
 
         <dependency>
@@ -80,11 +87,12 @@
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
+            <version>4.1.7.RELEASE</version>
         </dependency>
 
         <dependency>
