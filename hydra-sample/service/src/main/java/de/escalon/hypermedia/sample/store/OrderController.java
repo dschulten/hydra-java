@@ -96,7 +96,7 @@ public class OrderController {
 
     @RequestMapping(value = "/{orderId}/items/{orderedItemId}/accessories", method = RequestMethod.POST)
     public ResponseEntity<Void> orderAccessory(@PathVariable int orderId, @PathVariable int orderedItemId,
-                                               @RequestBody @Input(include = "productID") Product product) {
+                                               @RequestBody @Input(readOnly = "productID") Product product) {
         // TODO should write a productBackend to avoid this resolution nonsense:
         Product resolvedProduct = productController.getProduct(product.productID);
         orderBackend.orderAccessoryForOrderedItem(orderId, orderedItemId, new ProductModel(resolvedProduct.name,
@@ -113,7 +113,7 @@ public class OrderController {
 
     @RequestMapping(value = "/{orderId}/items", method = RequestMethod.POST)
     public ResponseEntity<Void> orderAdditionalItem(
-            @PathVariable int orderId, @RequestBody @Input(include = "productID") Product product) {
+            @PathVariable int orderId, @RequestBody @Input(readOnly = "productID") Product product) {
 
         Product resolvedProduct = productController.getProduct(product.productID);
         OrderModel orderModel = orderBackend.addOrderedItem(orderId,

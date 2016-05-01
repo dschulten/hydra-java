@@ -23,7 +23,7 @@ import de.escalon.hypermedia.hydra.mapping.*;
 import java.io.IOException;
 import java.util.*;
 
-import static de.escalon.hypermedia.AnnotationUtils.getAnnotation;
+import static de.escalon.hypermedia.AnnotationUtils.findAnnotation;
 
 public class JacksonHydraSerializer extends BeanSerializerBase {
 
@@ -125,11 +125,11 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             bean = proxyUnwrapper.unwrapProxy(bean);
         }
         // adds @type attribute, reflecting the simple name of the class or the exposed annotation on the class.
-        final Expose classExpose = getAnnotation(bean.getClass(), Expose.class);
+        final Expose classExpose = findAnnotation(bean.getClass(), Expose.class);
         // TODO allow to search up the hierarchy for ResourceSupport mixins and cache found result?
         final Class<?> mixin = provider.getConfig()
                 .findMixInClassFor(bean.getClass());
-        final Expose mixinExpose = getAnnotation(mixin, Expose.class);
+        final Expose mixinExpose = findAnnotation(mixin, Expose.class);
         final String val;
         if (mixinExpose != null) {
             val = mixinExpose.value(); // mixin wins over class

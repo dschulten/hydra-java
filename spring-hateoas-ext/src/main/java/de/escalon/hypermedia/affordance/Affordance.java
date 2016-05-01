@@ -546,7 +546,7 @@ public class Affordance extends Link {
             Map<String, ActionInputParameter> requiredParameters =
                     actionDescriptor.getRequiredParameters();
             for (ActionInputParameter annotatedParameter : requiredParameters.values()) {
-                if (!annotatedParameter.hasCallValue()) {
+                if (!annotatedParameter.hasValue()) {
                     return true;
                 }
             }

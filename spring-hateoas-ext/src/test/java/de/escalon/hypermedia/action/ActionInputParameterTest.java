@@ -1,8 +1,6 @@
 package de.escalon.hypermedia.action;
 
-import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.ActionDescriptorImpl;
-import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -65,8 +63,8 @@ public class ActionInputParameterTest {
         SpringActionInputParameter actionInputParameter =
                 new SpringActionInputParameter(reviewBody, "yada, yada");
 
-        assertTrue(actionInputParameter.hasCallValue());
-        assertEquals("yada, yada", actionInputParameter.getCallValue());
+        assertTrue(actionInputParameter.hasValue());
+        assertEquals("yada, yada", actionInputParameter.getValue());
 
         assertEquals(DummyController.class, actionInputParameter.getDeclaringClass());
 
@@ -100,9 +98,9 @@ public class ActionInputParameterTest {
         SpringActionInputParameter actionInputParameter =
                 new SpringActionInputParameter(rating, "excellent");
 
-        assertTrue(actionInputParameter.hasCallValue());
-        assertEquals("excellent", actionInputParameter.getCallValue());
-        assertEquals("excellent", actionInputParameter.getCallValueFormatted());
+        assertTrue(actionInputParameter.hasValue());
+        assertEquals("excellent", actionInputParameter.getValue());
+        assertEquals("excellent", actionInputParameter.getValueFormatted());
 
         assertEquals(DummyController.class, actionInputParameter.getDeclaringClass());
 
@@ -132,8 +130,8 @@ public class ActionInputParameterTest {
         SpringActionInputParameter actionInputParameter =
                 new SpringActionInputParameter(rating, callValues);
 
-        assertTrue(actionInputParameter.hasCallValue());
-        assertEquals(callValues, actionInputParameter.getCallValue());
+        assertTrue(actionInputParameter.hasValue());
+        assertEquals(callValues, actionInputParameter.getValue());
         assertThat(callValues, Matchers.contains("excellent", "mediocre"));
 
         assertEquals(DummyController.class, actionInputParameter.getDeclaringClass());
@@ -179,8 +177,8 @@ public class ActionInputParameterTest {
         SpringActionInputParameter actionInputParameter =
                 new SpringActionInputParameter(shade, ShadeOfBlue.DARK_BLUE);
 
-        assertTrue(actionInputParameter.hasCallValue());
-        assertEquals(ShadeOfBlue.DARK_BLUE, actionInputParameter.getCallValue());
+        assertTrue(actionInputParameter.hasValue());
+        assertEquals(ShadeOfBlue.DARK_BLUE, actionInputParameter.getValue());
 
         assertEquals(BlueController.class, actionInputParameter.getDeclaringClass());
 
@@ -220,8 +218,8 @@ public class ActionInputParameterTest {
         SpringActionInputParameter actionInputParameter =
                 new SpringActionInputParameter(shade, ShadeOfBlue.DARK_BLUE);
 
-        assertTrue(actionInputParameter.hasCallValue());
-        assertEquals(ShadeOfBlue.DARK_BLUE, actionInputParameter.getCallValue());
+        assertTrue(actionInputParameter.hasValue());
+        assertEquals(ShadeOfBlue.DARK_BLUE, actionInputParameter.getValue());
 
         assertEquals(BlueController.class, actionInputParameter.getDeclaringClass());
 
@@ -260,8 +258,8 @@ public class ActionInputParameterTest {
         SpringActionInputParameter actionInputParameter =
                 new SpringActionInputParameter(shade, ShadeOfBlue.DARK_BLUE);
 
-        assertTrue(actionInputParameter.hasCallValue());
-        assertEquals(ShadeOfBlue.DARK_BLUE, actionInputParameter.getCallValue());
+        assertTrue(actionInputParameter.hasValue());
+        assertEquals(ShadeOfBlue.DARK_BLUE, actionInputParameter.getValue());
 
         assertEquals(BlueController.class, actionInputParameter.getDeclaringClass());
 

@@ -224,7 +224,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 final String key = entry.getKey();
                 actionDescriptor.addRequestParam(key, value);
                 if (!value.isRequestBody()) {
-                    expansionValues.put(key, value.getCallValueFormatted());
+                    expansionValues.put(key, value.getValueFormatted());
                 }
             }
         }
@@ -237,7 +237,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 final String key = entry.getKey();
                 actionDescriptor.addPathVariable(key, actionInputParameter);
                 if (!actionInputParameter.isRequestBody()) {
-                    expansionValues.put(key, actionInputParameter.getCallValueFormatted());
+                    expansionValues.put(key, actionInputParameter.getValueFormatted());
                 }
             }
         }
@@ -251,7 +251,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 final String key = entry.getKey();
                 actionDescriptor.addRequestHeader(key, actionInputParameter);
                 if (!actionInputParameter.isRequestBody()) {
-                    expansionValues.put(key, actionInputParameter.getCallValueFormatted());
+                    expansionValues.put(key, actionInputParameter.getValueFormatted());
                 }
             }
         }
@@ -266,7 +266,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 if (!(requestParamMap.containsKey(paramName) || pathVariableMap.containsKey(paramName) ||
                         requestBodyMap.containsKey(paramName) || requestHeadersMap.containsKey(paramName))) {
                     actionDescriptor.addInputParam(paramName, actionInputParameter);
-                    Object callValue = actionInputParameter.getCallValue();
+                    Object callValue = actionInputParameter.getValue();
                     // TODO: @Input could allow to choose between explode and enumerate
                     // TODO: no partial expansion would be possible then
                     if (callValue != null) {

@@ -13,7 +13,6 @@
 
 package de.escalon.hypermedia.affordance;
 
-import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.action.Cardinality;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
@@ -21,7 +20,6 @@ import org.springframework.beans.*;
 import org.springframework.core.MethodParameter;
 import org.springframework.util.Assert;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 
@@ -190,7 +188,7 @@ public class ActionDescriptorImpl implements ActionDescriptor {
                 if (pd != null) {
                     if (pd.getWriteMethod() != null) {
 
-                        Object callValue = annotatedParameter.getCallValue();
+                        Object callValue = annotatedParameter.getValue();
                         Object propertyValue = null;
                         if (callValue != null) {
                             BeanWrapper beanWrapper = PropertyAccessorFactory

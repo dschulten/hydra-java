@@ -7,9 +7,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -63,7 +61,7 @@ public class PropertyUtils {
         // TODO duplicate on HtmlResourceMessageConverter
         Constructor constructor = null;
         for (Constructor ctor : constructors) {
-            if (AnnotationUtils.getAnnotation(ctor, creatorAnnotation) != null) {
+            if (AnnotationUtils.findAnnotation(ctor, creatorAnnotation) != null) {
                 constructor = ctor;
                 break;
             }

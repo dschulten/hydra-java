@@ -9,7 +9,6 @@ import de.escalon.hypermedia.affordance.*;
 import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
-import de.escalon.hypermedia.spring.UrlPrefixDocumentationProvider;
 import de.escalon.hypermedia.spring.DocumentationProvider;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.MethodParameter;
@@ -339,14 +338,14 @@ public class SirenUtils {
             recurseBeanCreationParams(ret, actionDescriptor.getRequestBody()
                     .getParameterType(), actionDescriptor, actionDescriptor.getRequestBody(), actionDescriptor
                     .getRequestBody()
-                    .getCallValue(), "", Collections.<String>emptySet());
+                    .getValue(), "", Collections.<String>emptySet());
         } else {
             Collection<String> paramNames = actionDescriptor.getRequestParamNames();
             for (String paramName : paramNames) {
                 ActionInputParameter inputParameter = actionDescriptor.getActionInputParameter(paramName);
                 Object[] possibleValues = inputParameter.getPossibleValues(actionDescriptor);
 
-                ret.add(createSirenField(paramName, inputParameter.getCallValueFormatted(), inputParameter,
+                ret.add(createSirenField(paramName, inputParameter.getValueFormatted(), inputParameter,
                         possibleValues));
             }
         }
@@ -503,7 +502,7 @@ public class SirenUtils {
                 type = "checkbox";
                 for (Object possibleValue : possibleValues) {
                     boolean selected = ObjectUtils.containsElement(
-                            inputParameter.getCallValues(),
+                            inputParameter.getValues(),
                             possibleValue);
                     // TODO have more useful value title
                     sirenPossibleValues.add(new SirenFieldValue(possibleValue.toString(), possibleValue, selected));

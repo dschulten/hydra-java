@@ -47,21 +47,21 @@ public class JsonLdDocumentationProvider implements DocumentationProvider {
 
     @Override
     public String getDocumentationUrl(Field field, Object content) {
-        final Expose expose = AnnotationUtils.getAnnotation(field, Expose.class);
+        final Expose expose = AnnotationUtils.findAnnotation(field, Expose.class);
         // TODO can we support Mixins from here?
 //        final Class<?> mixin = provider.getConfig()
 //                .findMixInClassFor(bean.getClass());
-//        final Expose mixinExpose = getAnnotation(mixin, Expose.class);
+//        final Expose mixinExpose = findAnnotation(mixin, Expose.class);
         return getExposedUrl(field.getName(), vocabFromBean(content), termsFromBean(content), expose);
     }
 
     @Override
     public String getDocumentationUrl(Method method, Object content) {
-        final Expose expose = AnnotationUtils.getAnnotation(method, Expose.class);
+        final Expose expose = AnnotationUtils.findAnnotation(method, Expose.class);
         // TODO can we support Mixins from here?
 //        final Class<?> mixin = provider.getConfig()
 //                .findMixInClassFor(bean.getClass());
-//        final Expose mixinExpose = getAnnotation(mixin, Expose.class);
+//        final Expose mixinExpose = findAnnotation(mixin, Expose.class);
         String methodName = method.getName();
         String propertyName;
         if (methodName.startsWith("get")) {
@@ -74,11 +74,11 @@ public class JsonLdDocumentationProvider implements DocumentationProvider {
 
     @Override
     public String getDocumentationUrl(Class clazz, Object content) {
-        final Expose expose = AnnotationUtils.getAnnotation(clazz, Expose.class);
+        final Expose expose = AnnotationUtils.findAnnotation(clazz, Expose.class);
         // TODO can we support Mixins from here?
 //        final Class<?> mixin = provider.getConfig()
 //                .findMixInClassFor(bean.getClass());
-//        final Expose mixinExpose = getAnnotation(mixin, Expose.class);
+//        final Expose mixinExpose = findAnnotation(mixin, Expose.class);
         return getExposedUrl(clazz.getSimpleName(), vocabFromBean(content), termsFromBean(content), expose);
     }
 

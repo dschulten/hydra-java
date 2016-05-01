@@ -12,7 +12,7 @@ public class AnnotationUtils {
     private AnnotationUtils() {
     }
 
-    public static <T extends Annotation> T getAnnotation(AnnotatedElement annotated, Class<T> annotationClass) {
+    public static <T extends Annotation> T findAnnotation(AnnotatedElement annotated, Class<T> annotationClass) {
         T ret;
         if (annotated == null) {
             ret = null;

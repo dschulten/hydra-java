@@ -13,11 +13,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static de.escalon.hypermedia.AnnotationUtils.getAnnotation;
+import static de.escalon.hypermedia.AnnotationUtils.findAnnotation;
 
 /**
  * Provides LdContext information. Created by Dietrich on 05.04.2015.
@@ -44,7 +43,7 @@ public class LdContextFactory {
         // determine vocab in context
         String classVocab = bean == null ? null : vocabFromClassOrPackage(bean.getClass());
 
-        final Vocab mixinVocab = getAnnotation(mixInClass, Vocab.class);
+        final Vocab mixinVocab = findAnnotation(mixInClass, Vocab.class);
 
         Object nestedContextProviderFromMixin = getNestedContextProviderFromMixin(mixinSource, bean, mixInClass);
         String contextProviderVocab = null;
@@ -137,8 +136,8 @@ public class LdContextFactory {
      * @return terms
      */
     private Map<String, Object> getAnnotatedTerms(AnnotatedElement annotatedElement, String name) {
-        final Terms annotatedTerms = getAnnotation(annotatedElement, Terms.class);
-        final Term annotatedTerm = getAnnotation(annotatedElement, Term.class);
+        final Terms annotatedTerms = findAnnotation(annotatedElement, Terms.class);
+        final Term annotatedTerm = findAnnotation(annotatedElement, Term.class);
 
         if (annotatedTerms != null && annotatedTerm != null) {
             throw new IllegalStateException("found both @Terms and @Term in " + name + ", use either one or the other");
@@ -241,7 +240,7 @@ public class LdContextFactory {
             }
             map.put(JsonLdKeywords.AT_TYPE, JsonLdKeywords.AT_VOCAB);
             termsMap.put(name, map);
-            final Expose enumValueExpose = getAnnotation(value.getClass()
+            final Expose enumValueExpose = findAnnotation(value.getClass()
                     .getField(value.name()), Expose.class);
 
             if (enumValueExpose != null) {
@@ -258,9 +257,9 @@ public class LdContextFactory {
 
     public String vocabFromClassOrPackage(Class<?> clazz) {
         // vocab and terms of defining class: class and package
-        final Vocab packageVocab = getAnnotation(clazz
+        final Vocab packageVocab = findAnnotation(clazz
                 .getPackage(), Vocab.class);
-        final Vocab classVocab = getAnnotation(clazz, Vocab.class);
+        final Vocab classVocab = findAnnotation(clazz, Vocab.class);
 
         String vocab;
         if (classVocab != null) {

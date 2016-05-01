@@ -303,7 +303,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeArrayFieldStart("hydra:supportedProperty"); // begin hydra:supportedProperty
                 // TODO check need for allRootParameters and requestBodyInputParameter here:
                 recurseSupportedProperties(jgen, currentVocab, clazz, actionDescriptor,
-                        requestBodyInputParameter, requestBodyInputParameter.getCallValue(), "");
+                        requestBodyInputParameter, requestBodyInputParameter.getValue(), "");
                 jgen.writeEndArray(); // end hydra:supportedProperty
 
                 jgen.writeEndObject(); // end hydra:expects
@@ -426,7 +426,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 }
                 // TODO collections?
                 //                        } else if (DataType.isArrayOrCollection(parameterType)) {
-                //                            Object[] callValues = rootParameter.getCallValues();
+                //                            Object[] callValues = rootParameter.getValues();
                 //                            int items = callValues.length;
                 //                            for (int i = 0; i < items; i++) {
                 //                                Object value;
@@ -509,7 +509,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
         jgen.writeStartObject();
 
-        if (actionInputParameter.hasCallValue() || actionInputParameter.hasInputConstraints()) {
+        if (actionInputParameter.hasValue() || actionInputParameter.hasInputConstraints()) {
             // jgen.writeArrayFieldStart("@type");
             // jgen.writeString("hydra:SupportedProperty");
 
@@ -572,9 +572,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         //  (/) stepValue
         final Map<String, Object> inputConstraints = actionInputParameter.getInputConstraints();
 
-        if (actionInputParameter.hasCallValue()) {
+        if (actionInputParameter.hasValue()) {
             if (actionInputParameter.isArrayOrCollection()) {
-                Object[] callValues = actionInputParameter.getCallValues();
+                Object[] callValues = actionInputParameter.getValues();
                 Class<?> componentType = callValues.getClass()
                         .getComponentType();
                 // only write defaultValue for array of scalars
@@ -591,7 +591,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeFieldName(getPropertyOrClassNameInVocab(currentVocab, "defaultValue",
                         LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
 
-                writeScalarValue(jgen, actionInputParameter.getCallValue(), actionInputParameter
+                writeScalarValue(jgen, actionInputParameter.getValue(), actionInputParameter
                         .getParameterType());
             }
         }
@@ -649,9 +649,9 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 //    private boolean isSelected(Object possibleValue, ActionInputParameter rootParameter) {
 //        boolean ret;
 //        if (rootParameter.isArrayOrCollection()) {
-//            ret = ArrayUtils.contains(rootParameter.getCallValues(), possibleValue);
+//            ret = ArrayUtils.contains(rootParameter.getValues(), possibleValue);
 //        } else {
-//            final Object callValue = rootParameter.getCallValue();
+//            final Object callValue = rootParameter.getValue();
 //            ret = (callValue == null ? false :
 //                    callValue.equals(possibleValue));
 //        }
@@ -696,7 +696,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 ActionInputParameter annotatedParameter = annotatedParameters.getActionInputParameter(variableName);
                 // TODO access @Input parameter, too
                 // only unsatisfied parameters become hydra variables
-                if (annotatedParameter != null && annotatedParameter.getCallValue() == null) {
+                if (annotatedParameter != null && annotatedParameter.getValue() == null) {
                     jgen.writeStartObject();
                     jgen.writeStringField("@type", "hydra:IriTemplateMapping");
                     jgen.writeStringField("hydra:variable", variableName);

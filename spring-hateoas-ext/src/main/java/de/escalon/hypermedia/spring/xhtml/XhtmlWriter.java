@@ -9,6 +9,7 @@ import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.affordance.Affordance;
 import de.escalon.hypermedia.affordance.DataType;
+import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
 import de.escalon.hypermedia.spring.DocumentationProvider;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.springframework.core.MethodParameter;
@@ -64,7 +65,7 @@ public class XhtmlWriter extends Writer {
             "</html>";
 
     private String methodParam = "_method";
-    private DocumentationProvider documentationProvider;
+    private DocumentationProvider documentationProvider = new DefaultDocumentationProvider();
 
     private String formControlClass = "form-control";
     private String formGroupClass = "form-group";
@@ -323,7 +324,7 @@ public class XhtmlWriter extends Writer {
         if (actionDescriptor.hasRequestBody()) { // parameter bean
             ActionInputParameter requestBody = actionDescriptor.getRequestBody();
             Class<?> parameterType = requestBody.getParameterType();
-            recurseBeanProperties(parameterType, actionDescriptor, requestBody, requestBody.getCallValue());
+            recurseBeanProperties(parameterType, actionDescriptor, requestBody, requestBody.getValue());
         } else { // plain parameter list
             Collection<String> requestParams = actionDescriptor.getRequestParamNames();
             for (String requestParamName : requestParams) {
@@ -341,7 +342,7 @@ public class XhtmlWriter extends Writer {
                     if (actionInputParameter.isArrayOrCollection()) {
                         // have as many inputs as there are call values, list of 5 nulls gives you five input fields
                         // TODO support for free list input instead, code on demand?
-                        Object[] callValues = actionInputParameter.getCallValues();
+                        Object[] callValues = actionInputParameter.getValues();
                         int items = callValues.length;
                         for (int i = 0; i < items; i++) {
                             Object value;
@@ -353,7 +354,7 @@ public class XhtmlWriter extends Writer {
                             appendInput(requestParamName, actionInputParameter, value, actionInputParameter.isReadOnly(requestParamName)); // not readonly
                         }
                     } else {
-                        String callValueFormatted = actionInputParameter.getCallValueFormatted();
+                        String callValueFormatted = actionInputParameter.getValueFormatted();
                         appendInput(requestParamName, actionInputParameter, callValueFormatted, actionInputParameter.isReadOnly(requestParamName)); // not readonly
                     }
                 }
@@ -591,7 +592,7 @@ public class XhtmlWriter extends Writer {
                                                 constructorParamInputParameter, possibleValues);
                                     }
                                 } else if (DataType.isArrayOrCollection(parameterType)) {
-                                    Object[] callValues = actionInputParameter.getCallValues();
+                                    Object[] callValues = actionInputParameter.getValues();
                                     int items = callValues.length;
                                     for (int i = 0; i < items; i++) {
                                         Object value;
@@ -650,7 +651,7 @@ public class XhtmlWriter extends Writer {
                             actionDescriptor);
                     appendInputOrSelect(actionInputParameter, propertyName, propertySetterInputParameter, possibleValues);
                 } else if (actionInputParameter.isArrayOrCollection()) {
-                    Object[] callValues = actionInputParameter.getCallValues();
+                    Object[] callValues = actionInputParameter.getValues();
                     int items = callValues.length;
                     for (int i = 0; i < items; i++) {
                         Object value;
@@ -694,7 +695,7 @@ public class XhtmlWriter extends Writer {
             }
         } else {
             appendInput(paramName, childInputParameter,
-                    childInputParameter.getCallValue(),
+                    childInputParameter.getValue(),
                     parentInputParameter.isReadOnly(paramName));
         }
     }
@@ -761,7 +762,7 @@ public class XhtmlWriter extends Writer {
             actionInputParameter)
             throws IOException {
         beginDiv(OptionalAttributes.attr("class", formGroupClass));
-        Object callValue = actionInputParameter.getCallValue();
+        Object callValue = actionInputParameter.getValue();
         String documentationUrl = documentationProvider.getDocumentationUrl(actionInputParameter, callValue);
         writeLabelWithDoc(requestParamName, requestParamName, documentationUrl);
         beginSelect(requestParamName, requestParamName, possibleValues.length,
@@ -782,7 +783,7 @@ public class XhtmlWriter extends Writer {
     private void appendSelectMulti(String requestParamName, Object[] possibleValues, ActionInputParameter
             actionInputParameter) throws IOException {
         beginDiv(OptionalAttributes.attr("class", formGroupClass));
-        Object[] actualValues = actionInputParameter.getCallValues();
+        Object[] actualValues = actionInputParameter.getValues();
         final Object aCallValue;
         if (actualValues.length > 0) {
             aCallValue = actualValues[0];
