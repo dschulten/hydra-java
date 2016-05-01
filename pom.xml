@@ -69,7 +69,7 @@
     <modules>
         <module>hydra-commons</module>
         <module>hydra-jsonld</module>
-        <module>spring-hateoas-ext</module>
+        <!--<module>spring-hateoas-ext</module>-->
         <module>hydra-spring</module>
         <module>hydra-sample</module>
     </modules>

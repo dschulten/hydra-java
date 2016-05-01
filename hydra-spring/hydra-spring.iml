@@ -13,10 +13,10 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="hydra-jsonld" />
     <orderEntry type="module" module-name="hydra-commons" />
-    <orderEntry type="module" module-name="spring-hateoas-ext" scope="TEST" production-on-test="" />
+    <orderEntry type="library" scope="TEST" name="Maven: de.escalon.hypermedia:spring-hateoas-ext:test-jar:tests:0.3.0-beta3-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.damnhandy:handy-uri-templates:2.1.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: joda-time:joda-time:2.9.2" level="project" />
-    <orderEntry type="library" name="Maven: org.springframework.hateoas:spring-hateoas:0.20.0.AFFORDANCES-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="spring-hateoas" />
     <orderEntry type="library" name="Maven: org.springframework:spring-aop:4.1.7.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: aopalliance:aopalliance:1.0" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-beans:4.1.7.RELEASE" level="project" />
