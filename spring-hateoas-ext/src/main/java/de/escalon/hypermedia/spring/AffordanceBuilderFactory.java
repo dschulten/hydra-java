@@ -117,12 +117,12 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     }
 
 // not in Spring 3.x
-	@Override
-	public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
-		String mapping = MAPPING_DISCOVERER.getMapping(controller);
-		PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
-		return new AffordanceBuilder().slash(partialUriTemplate.expand(parameters));
-	}
+//	@Override
+//	public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
+//		String mapping = MAPPING_DISCOVERER.getMapping(controller);
+//		PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
+//		return new AffordanceBuilder().slash(partialUriTemplate.expand(parameters));
+//	}
 
     @Override
     public AffordanceBuilder linkTo(Object invocationValue) {
