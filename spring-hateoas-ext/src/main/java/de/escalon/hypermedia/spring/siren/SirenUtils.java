@@ -99,8 +99,7 @@ public class SirenUtils {
                     traverseAttribute(objectNode, propertiesNode, key, docUrl, content);
                 }
             } else { // bean or ResourceSupport
-                String sirenClass = relProvider.getItemResourceRelFor(object.getClass());
-                objectNode.setSirenClasses(Collections.singletonList(sirenClass));
+                objectNode.setSirenClasses(getSirenClasses(object));
                 Map<String, Object> propertiesNode = new HashMap<String, Object>();
                 recurseEntities(objectNode, propertiesNode, object);
                 objectNode.setProperties(propertiesNode);
@@ -252,20 +251,31 @@ public class SirenUtils {
             links = Collections.emptyList();
         }
 
-        String sirenClass = relProvider.getItemResourceRelFor(bean.getClass());
-
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> rels = Collections.singletonList(docUrl != null ? docUrl : name);
+
         SirenEmbeddedRepresentation subEntity = new SirenEmbeddedRepresentation(
-                Collections.singletonList(sirenClass), properties, null, toSirenActions(getActions(links)),
+                getSirenClasses(bean), properties, null, toSirenActions(getActions(links)),
                 toSirenLinks(getNavigationalLinks(links)), rels, null);
-        //subEntity.setProperties(properties);
+
+
         objectNode.addSubEntity(subEntity);
         List<SirenEmbeddedLink> sirenEmbeddedLinks = toSirenEmbeddedLinks(getEmbeddedLinks(links));
         for (SirenEmbeddedLink sirenEmbeddedLink : sirenEmbeddedLinks) {
             subEntity.addSubEntity(sirenEmbeddedLink);
         }
         recurseEntities(subEntity, properties, bean);
+    }
+
+    private List<String> getSirenClasses(Object object) {
+        List<String> sirenClasses;
+        String sirenClass = relProvider.getItemResourceRelFor(object.getClass());
+        if(sirenClass != null) {
+            sirenClasses = Collections.singletonList(sirenClass);
+        } else {
+            sirenClasses = Collections.emptyList();
+        }
+        return sirenClasses;
     }
 
     private List<SirenAction> toSirenActions(List<Link> links) {
