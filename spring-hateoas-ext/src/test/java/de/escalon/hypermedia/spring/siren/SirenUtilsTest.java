@@ -1,5 +1,11 @@
 package de.escalon.hypermedia.spring.siren;
 
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.util.*;
+
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
@@ -10,11 +16,6 @@ import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.core.EmbeddedWrapper;
 import org.springframework.hateoas.core.Relation;
-
-import java.util.*;
-
-import static com.jayway.jsonassert.JsonAssert.with;
-import static org.hamcrest.Matchers.*;
 
 public class SirenUtilsTest {
 
@@ -85,10 +86,10 @@ public class SirenUtilsTest {
         String json = objectMapper.valueToTree(entity)
                 .toString();
 
-        with(json).assertThat("$.properties.customerId", equalTo("pj123"));
-        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
-        with(json).assertThat("$.properties.address", Matchers.instanceOf(Map.class));
-        with(json).assertThat("$.properties.address.street", equalTo("Grant Street"));
+        assertThat(json, hasJsonPath("$.properties.customerId", equalTo("pj123")));
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Peter Joseph")));
+        assertThat(json, hasJsonPath("$.properties.address", Matchers.instanceOf(Map.class)));
+        assertThat(json, hasJsonPath("$.properties.address.street", equalTo("Grant Street")));
     }
 
     @Relation(value = "email", collectionRelation = "emails")
@@ -175,9 +176,9 @@ public class SirenUtilsTest {
         String json = objectMapper.valueToTree(entity)
                 .toString();
 
-        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
-        with(json).assertThat("$.entities[0].properties.street", equalTo("Grant Street"));
-        with(json).assertThat("$.entities[0].rel", contains("address"));
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Peter Joseph")));
+        assertThat(json, hasJsonPath("$.entities[0].properties.street", equalTo("Grant Street")));
+        assertThat(json, hasJsonPath("$.entities[0].rel", contains("address")));
     }
 
     @Test
@@ -204,9 +205,9 @@ public class SirenUtilsTest {
 
         String json = objectMapper.valueToTree(entity)
                 .toString();
-        with(json).assertThat("$.entities[0].rel", contains("address"));
-        with(json).assertThat("$.entities[0].href",
-                equalTo("http://api.example.com/customers/123/address"));
+        assertThat(json, hasJsonPath("$.entities[0].rel", contains("address")));
+        assertThat(json, hasJsonPath("$.entities[0].href",
+                equalTo("http://api.example.com/customers/123/address")));
     }
 
 
@@ -221,9 +222,9 @@ public class SirenUtilsTest {
 
         String json = objectMapper.valueToTree(entity)
                 .toString();
-        with(json).assertThat("$.entities", hasSize(4));
-        with(json).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
-        with(json).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
+        assertThat(json, hasJsonPath("$.entities", hasSize(4)));
+        assertThat(json, hasJsonPath("$.entities[0].properties.city.postalCode", equalTo("74199")));
+        assertThat(json, hasJsonPath("$.entities[3].properties.city.name", equalTo("Donnbronn")));
     }
 
     @Test
@@ -240,10 +241,10 @@ public class SirenUtilsTest {
 
         String json = objectMapper.valueToTree(entity)
                 .toString();
-        with(json).assertThat("$.entities", hasSize(4));
-        with(json).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
-        with(json).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
-        with(json).assertThat("$.links", hasSize(1));
+        assertThat(json, hasJsonPath("$.entities", hasSize(4)));
+        assertThat(json, hasJsonPath("$.entities[0].properties.city.postalCode", equalTo("74199")));
+        assertThat(json, hasJsonPath("$.entities[3].properties.city.name", equalTo("Donnbronn")));
+        assertThat(json, hasJsonPath("$.links", hasSize(1)));
     }
 
     @Test
@@ -258,8 +259,8 @@ public class SirenUtilsTest {
         String json = objectMapper.valueToTree(entity)
                 .toString();
 
-        with(json).assertThat("$.properties.name", equalTo("Joe"));
-        with(json).assertThat("$.properties.address.city.name", equalTo("Donnbronn"));
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Joe")));
+        assertThat(json, hasJsonPath("$.properties.address.city.name", equalTo("Donnbronn")));
     }
 
     @Test
@@ -296,11 +297,136 @@ public class SirenUtilsTest {
         String json = objectMapper.valueToTree(entity)
                 .toString();
 
-        with(json).assertThat("$.entities", hasSize(4));
-        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
+        assertThat(json, hasJsonPath("$.entities", hasSize(4)));
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Peter Joseph")));
 
-        with(json).assertThat("$.entities[0].properties.city.postalCode",
-                equalTo("74199"));
+        assertThat(json, hasJsonPath("$.entities[0].properties.city.postalCode",
+                equalTo("74199")));
+    }
+
+    @Test
+    public void testAttributeWithResources() {
+        class Customer {
+
+            private final String customerId = "pj123";
+            private final String name = "Peter Joseph";
+            private Resources<Address> addresses;
+
+            Customer() {
+                List<Address> content = new ArrayList<Address>();
+                for (int i = 0; i < 4; i++) {
+                    content.add(new Address());
+                }
+                addresses = new Resources<Address>(content);
+            }
+
+            public String getCustomerId() {
+                return customerId;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public Resources<Address> getAddresses() {
+                return addresses;
+            }
+        }
+        Customer customer = new Customer();
+
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, customer);
+
+        String json = objectMapper.valueToTree(entity)
+                .toString();
+
+        assertThat(json, hasJsonPath("$.entities", hasSize(4)));
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Peter Joseph")));
+
+        assertThat(json, hasJsonPath("$.entities[0].properties.city.postalCode",
+                equalTo("74199")));
+    }
+
+    @Test
+    public void testAttributeWithMap() {
+        class Customer {
+
+            private final String customerId = "pj123";
+            private final String name = "Peter Joseph";
+            private final Map<String, Object> address = new HashMap<String, Object>();
+
+            Customer() {
+                address.put("street", "Grant Street");
+                Map<String, String> city = new HashMap<String, String>();
+                address.put("city", city);
+                city.put("name", "Donnbronn");
+                city.put("postalCode", "74199");
+            }
+
+            public String getCustomerId() {
+                return customerId;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public Map<String, Object> getAddress() {
+                return address;
+            }
+        }
+        Customer customer = new Customer();
+
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, customer);
+
+        String json = objectMapper.valueToTree(entity)
+                .toString();
+
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Peter Joseph")));
+
+        assertThat(json, hasJsonPath("$.properties.address.city.postalCode",
+                equalTo("74199")));
+    }
+
+    @Test
+    public void testAttributeWithMapContainingBean() {
+        class Customer {
+
+            private final String customerId = "pj123";
+            private final String name = "Peter Joseph";
+            private final Map<String, Object> address = new HashMap<String, Object>();
+
+            Customer() {
+                address.put("street", "Grant Street");
+                Map<String, String> city = new HashMap<String, String>();
+                address.put("city", new City());
+            }
+
+            public String getCustomerId() {
+                return customerId;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public Map<String, Object> getAddress() {
+                return address;
+            }
+        }
+        Customer customer = new Customer();
+
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, customer);
+
+        String json = objectMapper.valueToTree(entity)
+                .toString();
+
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Peter Joseph")));
+
+        assertThat(json, hasJsonPath("$.properties.address.city.postalCode",
+                equalTo("74199")));
     }
 
 
@@ -332,9 +458,9 @@ public class SirenUtilsTest {
         String json = objectMapper.valueToTree(entity)
                 .toString();
 
-        with(json).assertThat("$.properties.favoriteNumbers", hasSize(4));
-        with(json).assertThat("$.properties.favoriteNumbers", contains(1, 3, 5, 7));
-        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
+        assertThat(json, hasJsonPath("$.properties.favoriteNumbers", hasSize(4)));
+        assertThat(json, hasJsonPath("$.properties.favoriteNumbers", contains(1, 3, 5, 7)));
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Peter Joseph")));
     }
 
     enum Daytime {
@@ -370,10 +496,10 @@ public class SirenUtilsTest {
         String json = objectMapper.valueToTree(entity)
                 .toString();
 
-        with(json).assertThat("$.properties.favoriteNumbers", hasSize(2));
-        with(json).assertThat("$.properties.favoriteNumbers",
-                contains(Daytime.AFTERNOON.name(), Daytime.NIGHT.name()));
-        with(json).assertThat("$.properties.name", equalTo("Peter Joseph"));
+        assertThat(json, hasJsonPath("$.properties.favoriteNumbers", hasSize(2)));
+        assertThat(json, hasJsonPath("$.properties.favoriteNumbers",
+                contains(Daytime.AFTERNOON.name(), Daytime.NIGHT.name())));
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Peter Joseph")));
     }
 
     @Test
@@ -388,9 +514,9 @@ public class SirenUtilsTest {
 
         String json = objectMapper.valueToTree(entity)
                 .toString();
-        with(json).assertThat("$.entities", hasSize(4));
-        with(json).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
-        with(json).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
+        assertThat(json, hasJsonPath("$.entities", hasSize(4)));
+        assertThat(json, hasJsonPath("$.entities[0].properties.city.postalCode", equalTo("74199")));
+        assertThat(json, hasJsonPath("$.entities[3].properties.city.name", equalTo("Donnbronn")));
     }
 
 
@@ -408,9 +534,9 @@ public class SirenUtilsTest {
         String json = objectMapper.valueToTree(entity)
                 .toString();
 
-        with(json).assertThat("$.properties.name", equalTo("Joe"));
-        with(json).assertThat("$.entities[0].properties.street", equalTo("Grant Street"));
-        with(json).assertThat("$.entities[0].links", hasSize(1));
+        assertThat(json, hasJsonPath("$.properties.name", equalTo("Joe")));
+        assertThat(json, hasJsonPath("$.entities[0].properties.street", equalTo("Grant Street")));
+        assertThat(json, hasJsonPath("$.entities[0].links", hasSize(1)));
     }
 
     // TODO beans with setters, non-specific input parameter types

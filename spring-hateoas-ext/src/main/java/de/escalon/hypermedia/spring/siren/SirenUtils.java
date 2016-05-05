@@ -1,5 +1,16 @@
 package de.escalon.hypermedia.spring.siren;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -17,17 +28,6 @@ import org.springframework.hateoas.*;
 import org.springframework.hateoas.core.DefaultRelProvider;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
-
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.*;
 
 /**
  * Maps spring-hateoas response data to siren data. Created by Dietrich on 17.04.2016.
@@ -99,15 +99,25 @@ public class SirenUtils {
                     traverseAttribute(objectNode, propertiesNode, key, docUrl, content);
                 }
             } else { // bean or ResourceSupport
-                String sirenClass = relProvider.getItemResourceRelFor(object.getClass());
-                objectNode.setSirenClasses(Collections.singletonList(sirenClass));
+                objectNode.setSirenClasses(getSirenClasses(object));
                 Map<String, Object> propertiesNode = new HashMap<String, Object>();
-                recurseEntities(objectNode, propertiesNode, object);
+                createRecursiveSirenEntitiesFromPropertiesAndFields(objectNode, propertiesNode, object);
                 objectNode.setProperties(propertiesNode);
             }
         } catch (Exception ex) {
             throw new RuntimeException("failed to transform object " + object, ex);
         }
+    }
+
+    private List<String> getSirenClasses(Object object) {
+        List<String> sirenClasses;
+        String sirenClass = relProvider.getItemResourceRelFor(object.getClass());
+        if (sirenClass != null) {
+            sirenClasses = Collections.singletonList(sirenClass);
+        } else {
+            sirenClasses = Collections.emptyList();
+        }
+        return sirenClasses;
     }
 
     private List<Link> getEmbeddedLinks(List<Link> links) {
@@ -165,8 +175,9 @@ public class SirenUtils {
     }
 
 
-    private void recurseEntities(SirenEntityContainer objectNode, Map<String, Object> propertiesNode,
-                                 Object object) throws InvocationTargetException,
+    private void createRecursiveSirenEntitiesFromPropertiesAndFields(SirenEntityContainer objectNode, Map<String,
+            Object> propertiesNode,
+                                                                     Object object) throws InvocationTargetException,
             IllegalAccessException {
         Map<String, PropertyDescriptor> propertyDescriptors = PropertyUtils.getPropertyDescriptors(object);
         for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
@@ -206,8 +217,10 @@ public class SirenUtils {
                 // for each scalar property of a simple bean, add valuepair
                 propertiesNode.put(name, value);
             } else {
-                if (content instanceof ResourceSupport) {
-                    traverseSubEntity(objectNode, content, name, docUrl);
+                if (content instanceof Resources) {
+                    toSirenEntity(objectNode, content);
+                } else if (content instanceof ResourceSupport) {
+                    traverseSingleSubEntity(objectNode, content, name, docUrl);
                 } else if (content instanceof Collection) {
                     Collection<?> collection = (Collection<?>) content;
                     for (Object item : collection) {
@@ -221,29 +234,34 @@ public class SirenUtils {
                                 ((Collection) listObject).add(item);
                             }
                         } else if (item != null) {
-                            traverseSubEntity(objectNode, item, name, docUrl);
+                            traverseSingleSubEntity(objectNode, item, name, docUrl);
                         }
+                    }
+                } else if (content instanceof Map) {
+                    Set<Map.Entry<String, Object>> entries = ((Map<String, Object>) content).entrySet();
+                    Map<String, Object> subProperties = new HashMap<String, Object>();
+                    propertiesNode.put(name, subProperties);
+                    for (Map.Entry<String, Object> entry : entries) {
+                        traverseAttribute(objectNode, subProperties, entry.getKey(), docUrl, entry.getValue());
                     }
                 } else {
                     Map<String, Object> nestedProperties = new HashMap<String, Object>();
                     propertiesNode.put(name, nestedProperties);
-                    recurseEntities(objectNode, nestedProperties, content);
+                    createRecursiveSirenEntitiesFromPropertiesAndFields(objectNode, nestedProperties, content);
                 }
             }
         }
     }
 
-    private void traverseSubEntity(SirenEntityContainer objectNode, Object content,
-                                   String name, String docUrl)
+    private void traverseSingleSubEntity(SirenEntityContainer objectNode, Object content,
+                                         String name, String docUrl)
             throws InvocationTargetException, IllegalAccessException {
+
         Object bean;
         List<Link> links;
-        //
         if (content instanceof Resource) {
             bean = ((Resource) content).getContent();
             links = ((Resource) content).getLinks();
-        } else if (content instanceof Resources) {
-            throw new UnsupportedOperationException("Resources not supported yet");
         } else if (content instanceof ResourceSupport) {
             bean = content;
             links = ((ResourceSupport) content).getLinks();
@@ -252,12 +270,10 @@ public class SirenUtils {
             links = Collections.emptyList();
         }
 
-        String sirenClass = relProvider.getItemResourceRelFor(bean.getClass());
-
         Map<String, Object> properties = new HashMap<String, Object>();
         List<String> rels = Collections.singletonList(docUrl != null ? docUrl : name);
         SirenEmbeddedRepresentation subEntity = new SirenEmbeddedRepresentation(
-                Collections.singletonList(sirenClass), properties, null, toSirenActions(getActions(links)),
+                getSirenClasses(bean), properties, null, toSirenActions(getActions(links)),
                 toSirenLinks(getNavigationalLinks(links)), rels, null);
         //subEntity.setProperties(properties);
         objectNode.addSubEntity(subEntity);
@@ -265,7 +281,7 @@ public class SirenUtils {
         for (SirenEmbeddedLink sirenEmbeddedLink : sirenEmbeddedLinks) {
             subEntity.addSubEntity(sirenEmbeddedLink);
         }
-        recurseEntities(subEntity, properties, bean);
+        createRecursiveSirenEntitiesFromPropertiesAndFields(subEntity, properties, bean);
     }
 
     private List<SirenAction> toSirenActions(List<Link> links) {
@@ -353,16 +369,11 @@ public class SirenUtils {
     /**
      * Renders input fields for bean properties of bean to add or update or patch.
      *
-     * @param sirenFields
-     *         to add to
-     * @param beanType
-     *         to render
-     * @param annotatedParameters
-     *         which describes the method
-     * @param annotatedParameter
-     *         which requires the bean
-     * @param currentCallValue
-     *         sample call value
+     * @param sirenFields to add to
+     * @param beanType to render
+     * @param annotatedParameters which describes the method
+     * @param annotatedParameter which requires the bean
+     * @param currentCallValue sample call value
      */
     private void recurseBeanCreationParams(List<SirenField> sirenFields, Class<?> beanType,
                                            ActionDescriptor annotatedParameters,
