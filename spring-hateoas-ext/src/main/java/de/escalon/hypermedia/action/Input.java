@@ -62,7 +62,7 @@ public @interface Input {
     /**
      * Entire parameter is not editable, refers both to single values and to all properties of a bean parameter.
      *
-     * @return
+     * @return true if editable, false if not
      */
     boolean editable() default true;
 
@@ -86,7 +86,7 @@ public @interface Input {
 
     /**
      * Property names or dot-separated property paths of hidden properties on input bean, as opposed to setting
-     * @Input(Type.HIDDEN) on a single value input parameter. Allows to define expected input bean attributes with
+     * <code>@Input(Type.HIDDEN)</code> on a single value input parameter. Allows to define expected input bean attributes with
      * hidden values, so that a media type can render them as hidden attribute. This allows to use the same bean for
      * input and output in different contexts. E.g. all product attributes should be editable when a new product is
      * added, but not when an order is created which contains that product. Thus, if a POST expects an object Product
@@ -101,6 +101,8 @@ public @interface Input {
      * @see #include
      * @see #exclude
      * @see #value
+     * @see Input
+     * @see Type#HIDDEN
      */
     String[] hidden() default {};
 
