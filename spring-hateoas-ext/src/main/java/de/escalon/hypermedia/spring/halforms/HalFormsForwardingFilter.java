@@ -1,4 +1,4 @@
-package de.escalon.hypermedia.spring;
+package de.escalon.hypermedia.spring.halforms;
 
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponents;

@@ -1,6 +1,6 @@
 package de.escalon.hypermedia.sample;
 
-import de.escalon.hypermedia.spring.HalFormsForwardingFilter;
+import de.escalon.hypermedia.spring.halforms.HalFormsForwardingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
