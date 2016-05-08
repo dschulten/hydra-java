@@ -2,6 +2,8 @@ package de.escalon.hypermedia.spring.halforms;
 
 import de.escalon.hypermedia.ResourceSupportVisitor;
 import de.escalon.hypermedia.ResourceTraversal;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.Affordance;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
@@ -14,7 +16,6 @@ import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -23,7 +24,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriTemplate;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +83,26 @@ public class HalFormsMessageConverter extends AbstractHttpMessageConverter<Objec
                 resourceTraversal.traverseResource(visitor, o);
                 Link linkToRenderAsForm = visitor.getLink();
                 //HalFormUtils.toHalForm(link);
-                System.out.println(linkToRenderAsForm);
+                BufferedWriter body = new BufferedWriter(new OutputStreamWriter(outputMessage.getBody()));
+                body.write(linkToRenderAsForm.toString());
+                body.newLine();
+                if (linkToRenderAsForm instanceof Affordance) {
+                    Affordance affordance = (Affordance) linkToRenderAsForm;
+                    List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
+                    for (ActionDescriptor actionDescriptor : actionDescriptors) {
+                        body.write(actionDescriptor.getHttpMethod());
+                        body.newLine();
+                        if (actionDescriptor.hasRequestBody()) {
+                            body.write(actionDescriptor.getRequestBody()
+                                    .getParameterType()
+                                    .getName());
+                            body.newLine();
+                        }
+                    }
+                }
+                body.flush();
+
+
             }
         }
 
