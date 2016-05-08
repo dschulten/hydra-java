@@ -16,6 +16,7 @@ package de.escalon.hypermedia.spring.uber;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.spring.SpringActionDescriptor;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.hateoas.Link;
@@ -80,11 +81,15 @@ public class UberUtilsTest {
                 .POST.name());
         actionDescriptor.setRequestBody(
                 new SpringActionInputParameter(new MethodParameter(this.getClass()
-                .getMethod("requestBody", FooRequestBody.class), 0), null));
+                        .getMethod("requestBody", FooRequestBody.class), 0), null));
         UberNode linkNode = UberUtils.toUberLink("/foo", actionDescriptor, Link.REL_SELF);
         assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
         assertEquals("bar={bar}&foo={foo}", linkNode.getModel());
+        assertThat(linkNode.getModel(),
+                Matchers.containsString("foo={foo}"));
+        assertThat(linkNode.getModel(),
+                Matchers.containsString("bar={bar}"));
         assertEquals(UberAction.APPEND, linkNode.getAction());
     }
 
