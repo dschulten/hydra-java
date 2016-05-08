@@ -85,7 +85,6 @@ public class UberUtilsTest {
         UberNode linkNode = UberUtils.toUberLink("/foo", actionDescriptor, Link.REL_SELF);
         assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
-        assertEquals("bar={bar}&foo={foo}", linkNode.getModel());
         assertThat(linkNode.getModel(),
                 Matchers.containsString("foo={foo}"));
         assertThat(linkNode.getModel(),
