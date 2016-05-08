@@ -33,8 +33,12 @@ public class PropertyUtils {
     }
 
     public static Map<String, PropertyDescriptor> getPropertyDescriptors(Object bean) {
+        return PropertyUtils.getPropertyDescriptors(bean.getClass());
+    }
+
+    public static Map<String, PropertyDescriptor> getPropertyDescriptors(Class<?> clazz) {
         try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(bean.getClass())
+            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
                     .getPropertyDescriptors();
             Map<String, PropertyDescriptor> ret = new HashMap<String, PropertyDescriptor>();
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
@@ -42,7 +46,7 @@ public class PropertyUtils {
             }
             return ret;
         } catch (IntrospectionException e) {
-            throw new RuntimeException("failed to get property descriptors of bean " + bean, e);
+            throw new RuntimeException("failed to get property descriptors of class " + clazz.getSimpleName(), e);
         }
     }
 

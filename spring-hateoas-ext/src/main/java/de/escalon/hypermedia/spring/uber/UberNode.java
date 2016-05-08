@@ -53,6 +53,12 @@ public class UberNode extends AbstractUberNode {
     private Boolean transclude;
 
     /**
+     * If set to true the value of the url property SHOULD be treated as a URI Template per [RFC6570]. The default value
+     * is false.
+     */
+    private Boolean templated;
+
+    /**
      * RFC6570 URI template
      */
     private String model;
@@ -152,10 +158,28 @@ public class UberNode extends AbstractUberNode {
         this.value = value;
     }
 
+    public void setTemplated(Boolean templated) {
+        this.templated = templated;
+    }
+
+    public Boolean getTemplated() {
+        return templated;
+    }
+
     @Override
     public String toString() {
-        return "UberNode [name=" + name + ", value=" + value + ", data=" + data + ", id=" + id + ", rel=" + rel + ", url="
-                + url + ", action=" + action + ", transclude=" + transclude + ", model=" + model + ", sending=" + sending
-                + ", accepting=" + accepting + "]";
+        return "UberNode{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", rel=" + rel +
+                ", url='" + url + '\'' +
+                ", action=" + action +
+                ", transclude=" + transclude +
+                ", templated=" + templated +
+                ", model='" + model + '\'' +
+                ", sending=" + sending +
+                ", accepting=" + accepting +
+                ", value=" + value +
+                '}';
     }
 }

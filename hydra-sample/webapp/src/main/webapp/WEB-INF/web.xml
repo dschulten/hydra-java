@@ -18,10 +18,10 @@
     <!-- Configuration locations must consist of one or more comma- or space-delimited
         fully-qualified @Configuration classes. Fully-qualified packages may also be
         specified for component-scanning -->
-    <!--<context-param>-->
-    <!--<param-name>contextConfigLocation</param-name>-->
-    <!--<param-value>de.escalon.hypermedia.sample.Config</param-value>-->
-    <!--</context-param>-->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>de.escalon.hypermedia.sample.AppConfig</param-value>
+    </context-param>
 
     <!-- Bootstrap the root application context as usual using ContextLoaderListener -->
     <listener>
@@ -54,6 +54,15 @@
         <servlet-name>hypermedia-api</servlet-name>
         <url-pattern>/hypermedia-api/*</url-pattern>
     </servlet-mapping>
+
+    <filter>
+        <filter-name>halFormsForwardingFilter</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>halFormsForwardingFilter</filter-name>
+        <servlet-name>hypermedia-api</servlet-name>
+    </filter-mapping>
 
     <filter>
         <filter-name>HiddenHttpMethodFilter</filter-name>

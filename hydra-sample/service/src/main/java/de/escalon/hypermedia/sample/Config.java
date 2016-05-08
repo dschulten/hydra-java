@@ -3,6 +3,7 @@ package de.escalon.hypermedia.sample;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.spring.HypermediaTypes;
+import de.escalon.hypermedia.spring.halforms.HalFormsMessageConverter;
 import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
 import de.escalon.hypermedia.spring.hydra.JsonLdDocumentationProvider;
 import de.escalon.hypermedia.spring.siren.SirenMessageConverter;
@@ -34,7 +35,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,6 +57,7 @@ public class Config extends WebMvcConfigurerAdapter {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(hydraMessageConverter());
         converters.add(sirenMessageConverter());
+        converters.add(halFormsConverter());
         converters.add(halConverter());
         converters.add(uberConverter());
         converters.add(xhtmlMessageConverter());
@@ -67,6 +68,13 @@ public class Config extends WebMvcConfigurerAdapter {
     public HttpMessageConverter<?> uberConverter() {
         UberJackson2HttpMessageConverter converter = new UberJackson2HttpMessageConverter();
         converter.setSupportedMediaTypes(Collections.singletonList(HypermediaTypes.UBER_JSON));
+        return converter;
+    }
+
+    @Bean
+    public HttpMessageConverter<?> halFormsConverter() {
+        HalFormsMessageConverter converter = new HalFormsMessageConverter();
+        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.parseMediaType("application/prs.hal-forms+json")));
         return converter;
     }
 
@@ -121,7 +129,7 @@ public class Config extends WebMvcConfigurerAdapter {
 
     @Bean
     public CurieProvider curieProvider() {
-        return new DefaultCurieProvider("ex", new UriTemplate("http://example.org/{rels}"));
+        return new DefaultCurieProvider("ex", new UriTemplate("http://localhost:8080/webapp/hypermedia-api/rels/{rels}"));
     }
 
     @Bean

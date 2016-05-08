@@ -432,11 +432,10 @@ public class SirenUtils {
             }
 
             // TODO support Option provider by other method args?
-            final BeanInfo beanInfo = getBeanInfo(beanType);
-            final PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+            Map<String, PropertyDescriptor> propertyDescriptors = PropertyUtils.getPropertyDescriptors(beanType);
 
             // add input field for every setter
-            for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+            for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
                 final Method writeMethod = propertyDescriptor.getWriteMethod();
                 String propertyName = propertyDescriptor.getName();
 
@@ -532,13 +531,6 @@ public class SirenUtils {
         return sirenField;
     }
 
-    private BeanInfo getBeanInfo(Class<?> beanType) {
-        try {
-            return Introspector.getBeanInfo(beanType);
-        } catch (IntrospectionException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private List<SirenLink> toSirenLinks(List<Link> links) {
         List<SirenLink> ret = new ArrayList<SirenLink>();
