@@ -15,7 +15,9 @@ package de.escalon.hypermedia.spring.uber;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.spring.SpringActionDescriptor;
+import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.junit.Test;
+import org.springframework.core.MethodParameter;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.ResourceSupport;
@@ -46,14 +48,43 @@ public class UberUtilsTest {
         assertNull(linkNode.getAction());
     }
 
+    public static class FooRequestBody {
+        String bar;
+        int foo;
+
+        public void setBar(String bar) {
+            this.bar = bar;
+        }
+
+        public String getBar() {
+            return bar;
+        }
+
+        public int getFoo() {
+            return foo;
+        }
+
+        public void setFoo(int foo) {
+            this.foo = foo;
+        }
+    }
+
+    public void requestBody(FooRequestBody requestBody) {
+
+    }
+
     @Test
     public void linkPostToUberNode() throws Exception {
         // TODO create a Link with variables separate from URITemplate for POST
-        UberNode linkNode = UberUtils.toUberLink("/foo{?foo,bar}", new SpringActionDescriptor("post", RequestMethod
-                .POST.name()), Link.REL_SELF);
+        SpringActionDescriptor actionDescriptor = new SpringActionDescriptor("post", RequestMethod
+                .POST.name());
+        actionDescriptor.setRequestBody(
+                new SpringActionInputParameter(new MethodParameter(this.getClass()
+                .getMethod("requestBody", FooRequestBody.class), 0), null));
+        UberNode linkNode = UberUtils.toUberLink("/foo", actionDescriptor, Link.REL_SELF);
         assertEquals(Arrays.asList(Link.REL_SELF), linkNode.getRel());
         assertEquals("/foo", linkNode.getUrl());
-        assertEquals("foo={foo}&bar={bar}", linkNode.getModel());
+        assertEquals("bar={bar}&foo={foo}", linkNode.getModel());
         assertEquals(UberAction.APPEND, linkNode.getAction());
     }
 
