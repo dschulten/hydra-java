@@ -146,7 +146,8 @@ public class JacksonHydraSerializerTest {
         assertEquals("{\"@context\":{\"@vocab\":\"http://schema.org/\",\"common\":\"http://example.com/common#\"," +
                 "\"baz\":\"common:baz\",\"foo\":\"common:foo\"},\"@type\":\"Parent\",\"foo\":\"foo\"," +
                 "\"baz\":{\"@context\":{\"child\":\"http://example.com/child#\",\"bar\":\"child:bar\"}," +
-                "\"@type\":\"Child\",\"bar\":\"bar\"}}", w.toString());
+                "\"@type\":\"Child\",\"bar\":\"bar\"}}", 
+                w.toString());
     }
 
     @Test
