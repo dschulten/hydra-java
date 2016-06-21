@@ -244,14 +244,16 @@ public class SirenMessageConverterTest {
         with(json).assertThat("$.actions[0].method", equalTo("POST"));
 
         // TODO list query parameter: do something smarter
-        with(json).assertThat("$.actions[1].fields[0].name", equalTo("attr"));
+        with(json).assertThat("$.actions[1].fields[0].name", equalTo("attr"),
+                "missing action for orders uri template");
         with(json).assertThat("$.actions[1].fields[0].type", equalTo("text"));
 
         // non-query variables are not supported
-        with(json).assertNotDefined("$.entities[?(@.rel[0]=='foo')]");
-        with(json).assertNotDefined("$.entities[?(@.rel[0]=='foo-query')]");
+        with(json).assertNotDefined("$.entities[?(@.rel[0]=='foo')][0]");
+        with(json).assertNotDefined("$.entities[?(@.rel[0]=='foo-query')][0]");
 
-        with(json).assertThat("$.actions[2].fields[0].name", equalTo("bar"));
+        with(json).assertThat("$.actions[2].fields[0].name", equalTo("bar"),
+                "missing action for foo-query uri template");
         with(json).assertThat("$.actions[2].fields[0].type", equalTo("text"));
     }
 }
