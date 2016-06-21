@@ -6,6 +6,10 @@
         <fileset id="fileset" name="Spring Application Context" removed="false">
           <file>file://$MODULE_DIR$/src/main/java/de/escalon/hypermedia/sample/Config.java</file>
         </fileset>
+        <fileset id="fileset2" name="Spring Application Context (2)" removed="false">
+          <file>file://$MODULE_DIR$/src/main/java/de/escalon/hypermedia/sample/AppConfig.java</file>
+          <file>file://$MODULE_DIR$/src/main/java/de/escalon/hypermedia/sample/Config.java</file>
+        </fileset>
       </configuration>
     </facet>
   </component>

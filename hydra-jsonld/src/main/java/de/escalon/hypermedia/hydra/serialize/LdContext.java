@@ -28,7 +28,7 @@ public class LdContext {
         return ret;
     }
 
-    private boolean hasSameVocabAs(LdContext otherContext) {
+    public boolean hasSameVocabAs(LdContext otherContext) {
         boolean ret;
         if (this.vocab == null) {
             if (parentContext == null) {
@@ -42,7 +42,7 @@ public class LdContext {
         return ret;
     }
 
-    private boolean hasTermsOf(LdContext otherContext) {
+    public boolean hasTermsOf(LdContext otherContext) {
         boolean ret = true;
         for (String otherTerm : otherContext.terms.keySet()) {
             ret = hasEqualTerm(otherTerm, otherContext.terms.get(otherTerm));
@@ -53,7 +53,7 @@ public class LdContext {
         return ret;
     }
 
-    private boolean hasEqualTerm(String term, Object value) {
+    public boolean hasEqualTerm(String term, Object value) {
         final boolean ret;
         if (this.terms.containsKey(term)) {
             ret = this.terms.get(term)

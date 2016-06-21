@@ -224,8 +224,11 @@ public class SirenMessageConverterTest {
                 .withRel("previous"));
         order.add(linkTo(methodOn(DummyOrderController.class)
                 .getOrders(null)).withRel("orders"));
-        // no support for non-query links
+        // no support for non-query link templates
         order.add(new Link("http://example.com/{foo}", "foo"));
+        order.add(new Link("http://example.com/{foo}{?bar}", "foo-query"));
+
+        // support for query link templates
         order.add(new Link("http://example.com{?bar}", "bar"));
 
         SirenEntity entity = new SirenEntity();
@@ -243,6 +246,10 @@ public class SirenMessageConverterTest {
         // TODO list query parameter: do something smarter
         with(json).assertThat("$.actions[1].fields[0].name", equalTo("attr"));
         with(json).assertThat("$.actions[1].fields[0].type", equalTo("text"));
+
+        // non-query variables are not supported
+        with(json).assertNotDefined("$.entities[?(@.rel[0]=='foo')]");
+        with(json).assertNotDefined("$.entities[?(@.rel[0]=='foo-query')]");
 
         with(json).assertThat("$.actions[2].fields[0].name", equalTo("bar"));
         with(json).assertThat("$.actions[2].fields[0].type", equalTo("text"));

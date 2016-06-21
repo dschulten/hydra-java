@@ -26,6 +26,7 @@ import com.jayway.jsonassert.JsonAssert;
 import de.escalon.hypermedia.hydra.JsonLdTestUtils;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.mapping.Term;
+import de.escalon.hypermedia.hydra.mapping.Terms;
 import de.escalon.hypermedia.hydra.mapping.Vocab;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,6 +107,43 @@ public class JacksonHydraSerializerTest {
         public String getName() {
             return name;
         }
+    }
+
+    @Term(define = "common", as = "http://example.com/common#")
+    class Parent {
+        private String foo = "foo";
+
+        private Child baz = new Child();
+
+        @Expose("common:foo")
+        public String getFoo() {
+            return foo;
+        }
+
+        @Expose("common:baz")
+        public Child getBaz() {
+            return baz;
+        }
+    }
+
+    @Terms({
+            @Term(define = "child", as = "http://example.com/child#"),
+            @Term(define = "common", as = "http://example.com/common#")
+    })
+    class Child {
+
+        private String bar = "bar";
+
+        @Expose("child:bar")
+        public String getBar() {
+            return bar;
+        }
+    }
+
+    @Test
+    public void testDoesNotRepeatTerms() throws IOException {
+        mapper.writeValue(w, new Parent());
+        assertEquals("", w.toString());
     }
 
     @Test

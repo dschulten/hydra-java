@@ -198,6 +198,4 @@ public class HalFormsMessageConverter extends AbstractHttpMessageConverter<Objec
             return true;
         }
     }
-
-    ;
 }

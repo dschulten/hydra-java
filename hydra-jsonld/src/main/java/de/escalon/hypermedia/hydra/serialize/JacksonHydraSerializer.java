@@ -26,6 +26,7 @@ import de.escalon.hypermedia.hydra.mapping.Expose;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Map;
 
 import static de.escalon.hypermedia.AnnotationUtils.findAnnotation;
@@ -164,8 +165,22 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         final Class<?> mixInClass = mixinSource.findMixInClassFor(bean.getClass());
 
         final LdContext parentContext = contextStack.peek();
+        Map<String, Object> termsOfBean = ldContextFactory.getTerms(mixinSource, bean, mixInClass);
+        Map<String, Object> newTermsOfBean;
+        if (parentContext != null) {
+            newTermsOfBean = new HashMap<String, Object>();
+            for (Map.Entry<String, Object> termEntry : termsOfBean.entrySet()) {
+                String term = termEntry.getKey();
+                Object value = termEntry.getValue();
+                if (!parentContext.hasEqualTerm(term, value)) {
+                    newTermsOfBean.put(term, value);
+                }
+            }
+        } else {
+            newTermsOfBean = termsOfBean;
+        }
         LdContext currentContext = new LdContext(parentContext, ldContextFactory.getVocab(mixinSource, bean,
-                mixInClass), ldContextFactory.getTerms(mixinSource, bean, mixInClass));
+                mixInClass), newTermsOfBean);
         contextStack.push(currentContext);
         // check if we need to write a context for the current bean at all
         // If it is in the same vocab: no context

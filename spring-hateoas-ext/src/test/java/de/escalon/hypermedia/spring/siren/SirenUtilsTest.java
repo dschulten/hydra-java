@@ -6,6 +6,8 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.PagedResources.PageMetadata;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.core.EmbeddedWrapper;
@@ -234,6 +236,28 @@ public class SirenUtilsTest {
         }
 
         Resources<Address> addressResources = new Resources<Address>(addresses);
+        addressResources.add(new Link("http://example.com/addresses", "self"));
+        SirenEntity entity = new SirenEntity();
+        sirenUtils.toSirenEntity(entity, addressResources);
+
+        String json = objectMapper.valueToTree(entity)
+                .toString();
+        with(json).assertThat("$.entities", hasSize(4));
+        with(json).assertThat("$.entities[0].properties.city.postalCode", equalTo("74199"));
+        with(json).assertThat("$.entities[3].properties.city.name", equalTo("Donnbronn"));
+        with(json).assertThat("$.links", hasSize(1));
+    }
+
+    @Test
+    public void testPagedResources() {
+        List<Address> addresses = new ArrayList<Address>();
+        for (int i = 0; i < 4; i++) {
+            addresses.add(new Address());
+        }
+
+
+        PagedResources<Address> addressResources = new PagedResources<Address>(addresses,
+                new PageMetadata(2, 0, addresses.size()));
         addressResources.add(new Link("http://example.com/addresses", "self"));
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, addressResources);

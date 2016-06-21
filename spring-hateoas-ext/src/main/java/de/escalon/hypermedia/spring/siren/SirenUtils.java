@@ -133,7 +133,10 @@ public class SirenUtils {
                         }
                     }
                 } else {
-                    ret.add(link);
+                    // templated links are actions, not embedded links
+                    if(!link.isTemplated()) {
+                        ret.add(link);
+                    }
                 }
             }
         }
@@ -166,6 +169,7 @@ public class SirenUtils {
                     }
                 }
             } else {
+                // templated links are actions
                 if (!navigationalRels.contains(link.getRel()) && link.isTemplated()) {
                     ret.add(link);
                 }
