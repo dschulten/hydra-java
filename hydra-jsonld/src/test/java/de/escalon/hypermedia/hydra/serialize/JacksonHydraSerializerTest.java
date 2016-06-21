@@ -145,7 +145,7 @@ public class JacksonHydraSerializerTest {
         mapper.writeValue(w, new Parent());
         assertEquals("{\"@context\":{\"@vocab\":\"http://schema.org/\",\"common\":\"http://example.com/common#\"," +
                 "\"baz\":\"common:baz\",\"foo\":\"common:foo\"},\"@type\":\"Parent\",\"foo\":\"foo\"," +
-                "\"baz\":{\"@context\":{\"bar\":\"child:bar\",\"child\":\"http://example.com/child#\"}," +
+                "\"baz\":{\"@context\":{\"child\":\"http://example.com/child#\",\"bar\":\"child:bar\"}," +
                 "\"@type\":\"Child\",\"bar\":\"bar\"}}", w.toString());
     }
 
