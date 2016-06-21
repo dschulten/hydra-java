@@ -3,7 +3,6 @@ package de.escalon.hypermedia.sample;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.escalon.hypermedia.spring.HypermediaTypes;
-import de.escalon.hypermedia.spring.halforms.HalFormsMessageConverter;
 import de.escalon.hypermedia.spring.hydra.HydraMessageConverter;
 import de.escalon.hypermedia.spring.hydra.JsonLdDocumentationProvider;
 import de.escalon.hypermedia.spring.siren.SirenMessageConverter;
@@ -57,7 +56,6 @@ public class Config extends WebMvcConfigurerAdapter {
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(hydraMessageConverter());
         converters.add(sirenMessageConverter());
-        converters.add(halFormsConverter());
         converters.add(halConverter());
         converters.add(uberConverter());
         converters.add(xhtmlMessageConverter());
@@ -71,12 +69,6 @@ public class Config extends WebMvcConfigurerAdapter {
         return converter;
     }
 
-    @Bean
-    public HttpMessageConverter<?> halFormsConverter() {
-        HalFormsMessageConverter converter = new HalFormsMessageConverter();
-        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.parseMediaType("application/prs.hal-forms+json")));
-        return converter;
-    }
 
     private HttpMessageConverter<?> xhtmlMessageConverter() {
         XhtmlResourceMessageConverter xhtmlResourceMessageConverter = new XhtmlResourceMessageConverter();
