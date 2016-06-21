@@ -143,7 +143,10 @@ public class JacksonHydraSerializerTest {
     @Test
     public void testDoesNotRepeatTerms() throws IOException {
         mapper.writeValue(w, new Parent());
-        assertEquals("", w.toString());
+        assertEquals("{\"@context\":{\"@vocab\":\"http://schema.org/\",\"common\":\"http://example.com/common#\"," +
+                "\"baz\":\"common:baz\",\"foo\":\"common:foo\"},\"@type\":\"Parent\",\"foo\":\"foo\"," +
+                "\"baz\":{\"@context\":{\"bar\":\"child:bar\",\"child\":\"http://example.com/child#\"}," +
+                "\"@type\":\"Child\",\"bar\":\"bar\"}}", w.toString());
     }
 
     @Test
