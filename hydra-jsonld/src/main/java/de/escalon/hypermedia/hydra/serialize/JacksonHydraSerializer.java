@@ -26,7 +26,7 @@ import de.escalon.hypermedia.hydra.mapping.Expose;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static de.escalon.hypermedia.AnnotationUtils.findAnnotation;
@@ -168,7 +168,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         Map<String, Object> termsOfBean = ldContextFactory.getTerms(mixinSource, bean, mixInClass);
         Map<String, Object> newTermsOfBean;
         if (parentContext != null) {
-            newTermsOfBean = new HashMap<String, Object>();
+            newTermsOfBean = new LinkedHashMap<String, Object>();
             for (Map.Entry<String, Object> termEntry : termsOfBean.entrySet()) {
                 String term = termEntry.getKey();
                 Object value = termEntry.getValue();
