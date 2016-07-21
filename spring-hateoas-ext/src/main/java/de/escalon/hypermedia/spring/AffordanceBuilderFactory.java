@@ -13,11 +13,14 @@
 
 package de.escalon.hypermedia.spring;
 
+import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.action.Cardinality;
+import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.action.ResourceHandler;
 import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.ActionInputParameter;
+import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.affordance.PartialUriTemplate;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -54,8 +57,10 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
         String pathMapping = MAPPING_DISCOVERER.getMapping(controller, method);
 
-        final List<String> params = getRequestParamNames(method);
-        String query = join(params);
+        Set<String> requestParamNames = getRequestParamNames(method);
+        Set<String> inputBeanParamNames = getInputBeanParamNames(method);
+
+        String query = join(requestParamNames, inputBeanParamNames);
         String mapping = StringUtils.isEmpty(query) ? pathMapping : pathMapping + "{?" + query + "}";
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(AffordanceBuilder.getBuilder()
@@ -63,15 +68,25 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 .toString() + mapping);
 
         Map<String, Object> values = new HashMap<String, Object>();
-
-        Iterator<String> names = partialUriTemplate.getVariableNames()
+        Iterator<String> variableNames = partialUriTemplate.getVariableNames()
                 .iterator();
         // there may be more or less mapping variables than arguments
         for (Object parameter : parameters) {
-            if (!names.hasNext()) {
+            if (!variableNames.hasNext()) {
                 break;
             }
-            values.put(names.next(), parameter);
+            values.put(variableNames.next(), parameter);
+        }
+        // there may be more or less mapping variables than arguments
+        // do not use input bean param names here
+        for (Object argument : parameters) {
+            if (!variableNames.hasNext()) {
+                break;
+            }
+            String variableName = variableNames.next();
+            if (!inputBeanParamNames.contains(variableName)) {
+                values.put(variableName, argument);
+            }
         }
 
         ActionDescriptor actionDescriptor = createActionDescriptor(method, values, parameters);
@@ -79,13 +94,15 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
     }
 
-    private String join(List<String> params) {
+    private String join(Set<String>... params) {
         StringBuilder sb = new StringBuilder();
-        for (String param : params) {
-            if (sb.length() > 0) {
-                sb.append(',');
+        for (Set<String> paramSet : params) {
+            for (String param : paramSet) {
+                if (sb.length() > 0) {
+                    sb.append(',');
+                }
+                sb.append(param);
             }
-            sb.append(param);
         }
         return sb.toString();
     }
@@ -135,43 +152,114 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         Method invokedMethod = invocation.getMethod();
 
         String pathMapping = MAPPING_DISCOVERER.getMapping(invokedMethod);
+        Iterator<Object> classMappingParameters = invocations.getObjectParameters();
 
-        List<String> params = getRequestParamNames(invokedMethod);
-        String query = join(params);
+        Set<String> requestParamNames = getRequestParamNames(invokedMethod);
+        Set<String> inputBeanParamNames = getInputBeanParamNames(invokedMethod);
+
+        String query = join(requestParamNames, inputBeanParamNames);
         String mapping = StringUtils.isEmpty(query) ? pathMapping : pathMapping + "{?" + query + "}";
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(AffordanceBuilder.getBuilder()
                 .build()
                 .toString() + mapping);
 
-        Iterator<Object> classMappingParameters = invocations.getObjectParameters();
 
         Map<String, Object> values = new HashMap<String, Object>();
-        Iterator<String> names = partialUriTemplate.getVariableNames()
+        Iterator<String> variableNames = partialUriTemplate.getVariableNames()
                 .iterator();
         while (classMappingParameters.hasNext()) {
-            values.put(names.next(), classMappingParameters.next());
+            values.put(variableNames.next(), classMappingParameters.next());
         }
 
+        // there may be more or less mapping variables than arguments
+        // do not use input bean param names here
         for (Object argument : invocation.getArguments()) {
-            if (names.hasNext()) {
-                values.put(names.next(), argument);
+            if (!variableNames.hasNext()) {
+                break;
+            }
+            String variableName = variableNames.next();
+            if (!inputBeanParamNames.contains(variableName)) {
+                values.put(variableName, argument);
             }
         }
-
         ActionDescriptor actionDescriptor = createActionDescriptor(
                 invocation.getMethod(), values, invocation.getArguments());
 
         return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
     }
 
-    private List<String> getRequestParamNames(Method invokedMethod) {
+    private Set<String> getInputBeanParamNames(Method invokedMethod) {
+        MethodParameters parameters = new MethodParameters(invokedMethod);
+
+        final List<MethodParameter> inputParams = parameters.getParametersWith(Input.class);
+
+        Set<String> ret = new LinkedHashSet<String>(inputParams.size());
+        for (MethodParameter inputParam : inputParams) {
+            Class<?> parameterType = inputParam.getParameterType();
+            // only use @Input param which is a bean or map and has no other annotations
+            // can't use Spring RequestParam etc. to avoid Spring MVC dependency
+            if (inputParam.getParameterAnnotations().length == 1 &&
+                    !(DataType.isSingleValueType(parameterType) || DataType.isArrayOrCollection(parameterType))) {
+                Input inputAnnotation = inputParam.getParameterAnnotation(Input.class);
+
+                Set<String> explicitlyIncludedParams = new LinkedHashSet<String>(inputParams.size());
+
+                Collections.addAll(explicitlyIncludedParams, inputAnnotation.include());
+                Collections.addAll(explicitlyIncludedParams, inputAnnotation.hidden());
+                Collections.addAll(explicitlyIncludedParams, inputAnnotation.readOnly());
+
+                if (Map.class.isAssignableFrom(parameterType)) {
+                    ret.addAll(explicitlyIncludedParams);
+                } else {
+                    Set<String> inputBeanPropertyNames = PropertyUtils.getPropertyDescriptors(parameterType)
+                            .keySet();
+                    inputBeanPropertyNames.remove("class");
+
+                    if (explicitlyIncludedParams.isEmpty()) {
+                        ret.addAll(inputBeanPropertyNames);
+                    } else {
+                        for (String explicitlyIncludedParam : explicitlyIncludedParams) {
+                            assertInputAnnotationConsistency(inputParam, inputBeanPropertyNames,
+                                    explicitlyIncludedParam, "includes");
+                            ret.add(explicitlyIncludedParam);
+                        }
+                    }
+                    String[] excludedParams = inputAnnotation.exclude();
+                    for (String excludedParam : excludedParams) {
+                        assertInputAnnotationConsistency(inputParam, inputBeanPropertyNames,
+                                excludedParam, "excludes");
+                        ret.remove(excludedParam);
+                    }
+                }
+                break;
+            }
+        }
+        return ret;
+    }
+
+    private void assertInputAnnotationConsistency(MethodParameter inputParam, Set<String> propertiesToCheckAgainst,
+                                                  String propertyToCheck, String argumentKind) {
+        if (!propertiesToCheckAgainst.contains(propertyToCheck)) {
+            throw new IllegalStateException("@Include " +
+                    "annotation on parameter '" + inputParam
+                    .getParameterName() + "' of method '" + inputParam.getMethod()
+                    .toGenericString() +
+                    "' " + argumentKind + " property '" +
+                    propertyToCheck + "' but there is no such property on " + inputParam
+                    .getParameterType()
+                    .getName());
+        }
+    }
+
+    private Set<String> getRequestParamNames(Method invokedMethod) {
         MethodParameters parameters = new MethodParameters(invokedMethod);
         final List<MethodParameter> requestParams = parameters.getParametersWith(RequestParam.class);
-        List<String> params = new ArrayList<String>(requestParams.size());
+        Set<String> params = new LinkedHashSet<String>(requestParams.size());
         for (MethodParameter requestParam : requestParams) {
             params.add(requestParam.getParameterName());
         }
+
         return params;
     }
 

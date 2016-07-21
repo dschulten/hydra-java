@@ -13,14 +13,17 @@
 
 package de.escalon.hypermedia.spring;
 
+import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.affordance.Affordance;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +34,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -40,17 +45,85 @@ public class AffordanceBuilderFactoryTest {
 
     private MockHttpServletRequest request;
 
+
+    enum EventStatus {
+        CANCELLED, SCHEDULED
+    }
+
     /**
      * Sample controller. Created by dschulten on 11.09.2014.
      */
     @Controller
     @RequestMapping("/events")
-    class EventControllerSample {
+    static class EventControllerSample {
+
+        static class EventQbe {
+            List<String> description = Arrays.asList("concert");
+            List<EventStatus> status = Arrays.asList(EventStatus.SCHEDULED);
+
+            public void setDescription(List<String> description) {
+                this.description = description;
+            }
+
+            public List<EventStatus> getStatus() {
+                return status;
+            }
+
+            public List<String> getDescription() {
+                return description;
+            }
+        }
+
 
         @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
         public
         @ResponseBody
         Resource<Object> getEvent(@PathVariable String eventId) {
+            return null;
+        }
+
+        @RequestMapping(value = "/query", method = RequestMethod.GET)
+        public
+        @ResponseBody
+        Resources<Object> queryEvent(@Input EventQbe query) {
+            return null;
+        }
+
+        @RequestMapping(value = "/queryexcludes", method = RequestMethod.GET)
+        public
+        @ResponseBody
+        Resources<Object> queryEventWithExcludes(@Input(exclude = "status") EventQbe query) {
+            return null;
+        }
+
+        @RequestMapping(value = "/queryincludes", method = RequestMethod.GET)
+        public
+        @ResponseBody
+        Resources<Object> queryEventWithIncludes(@Input(include = "status") EventQbe query) {
+            return null;
+        }
+
+
+        @RequestMapping(value = "/querymap", method = RequestMethod.GET)
+        public
+        @ResponseBody
+        Resources<Object> queryEventByMap(@Input(include = "description", hidden = "status", readOnly = "donttouch")
+                                          MultiValueMap<String, String> query) {
+            return null;
+        }
+
+
+        @RequestMapping(value = "/wrongqueryinclude", method = RequestMethod.GET)
+        public
+        @ResponseBody
+        Resources<Object> queryEventWithWrongInclude(@Input(include = "foo") EventQbe query) {
+            return null;
+        }
+
+        @RequestMapping(value = "/wrongqueryexclude", method = RequestMethod.GET)
+        public
+        @ResponseBody
+        Resources<Object> queryEventWithWrongExclude(@Input(exclude = "foo") EventQbe query) {
             return null;
         }
     }
@@ -73,8 +146,17 @@ public class AffordanceBuilderFactoryTest {
     }
 
     @Test
+    public void testLinkToMethodWithInputBean() throws Exception {
+        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "queryEvent",
+                EventControllerSample.EventQbe.class);
+        final Affordance affordance = factory.linkTo(getEventMethod, new Object[0])
+                .rel("foo")
+                .build();
+        assertEquals("http://example.com/events/query{?description,status}", affordance.getHref());
+    }
+
+    @Test
     public void testLinkToMethodInvocation() throws Exception {
-        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
         final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
                 .getEvent((String) null))
                 .rel("foo")
@@ -102,13 +184,77 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToMethodInvocationNoArgsBuild() throws Exception {
-        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
+
         final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
                 .getEvent((String) null))
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events/{eventId}", affordance.getHref());
         assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToMethodInvocationBeanInput() throws Exception {
+
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .queryEvent(null))
+                .rel("foo")
+                .build();
+        assertEquals("http://example.com/events/query{?description,status}", affordance.getHref());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToMethodInvocationBeanInputWithExcludes() throws Exception {
+
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .queryEventWithExcludes(null))
+                .rel("foo")
+                .build();
+        assertEquals("http://example.com/events/queryexcludes{?description}", affordance.getHref());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToMethodInvocationBeanInputWithIncludes() throws Exception {
+
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .queryEventWithIncludes(null))
+                .rel("foo")
+                .build();
+        assertEquals("http://example.com/events/queryincludes{?status}", affordance.getHref());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToMethodInvocationMapInput() throws Exception {
+
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .queryEventByMap(null))
+                .rel("foo")
+                .build();
+        assertEquals("http://example.com/events/querymap{?description,status,donttouch}", affordance.getHref());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testLinkToMethodInvocationWrongBeanInclude() throws Exception {
+
+        factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .queryEventWithWrongInclude(null))
+                .rel("bar")
+                .build();
+
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testLinkToMethodInvocationWrongBeanExclude() throws Exception {
+
+        factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .queryEventWithWrongExclude(null))
+                .rel("bar")
+                .build();
+
     }
 
     @Test
@@ -122,7 +268,7 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToMethodInvocationReverseRel() throws Exception {
-        final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "findEventByName", String.class);
+
         final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
                 .getEvent((String) null))
                 .reverseRel("schema:parent", "ex:children")
