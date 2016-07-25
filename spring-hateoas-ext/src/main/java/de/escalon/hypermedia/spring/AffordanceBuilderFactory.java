@@ -22,6 +22,7 @@ import de.escalon.hypermedia.affordance.ActionDescriptor;
 import de.escalon.hypermedia.affordance.ActionInputParameter;
 import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.affordance.PartialUriTemplate;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.MethodLinkBuilderFactory;
@@ -35,6 +36,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -212,9 +214,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 if (Map.class.isAssignableFrom(parameterType)) {
                     ret.addAll(explicitlyIncludedParams);
                 } else {
-                    Set<String> inputBeanPropertyNames = PropertyUtils.getPropertyDescriptors(parameterType)
-                            .keySet();
-                    inputBeanPropertyNames.remove("class");
+                    Set<String> inputBeanPropertyNames = getWritablePropertyNames(parameterType);
 
                     if (explicitlyIncludedParams.isEmpty()) {
                         ret.addAll(inputBeanPropertyNames);
@@ -236,6 +236,19 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             }
         }
         return ret;
+    }
+
+    @NotNull
+    private Set<String> getWritablePropertyNames(Class<?> parameterType) {
+        Set<String> inputBeanPropertyNames = new LinkedHashSet<String>();
+        Map<String, PropertyDescriptor> propertyDescriptors = PropertyUtils.getPropertyDescriptors
+                (parameterType);
+        for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
+            if(propertyDescriptor.getWriteMethod() != null) {
+                inputBeanPropertyNames.add(propertyDescriptor.getName());
+            }
+        }
+        return inputBeanPropertyNames;
     }
 
     private void assertInputAnnotationConsistency(MethodParameter inputParam, Set<String> propertiesToCheckAgainst,

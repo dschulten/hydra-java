@@ -8,6 +8,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -40,7 +41,7 @@ public class PropertyUtils {
         try {
             PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
                     .getPropertyDescriptors();
-            Map<String, PropertyDescriptor> ret = new HashMap<String, PropertyDescriptor>();
+            Map<String, PropertyDescriptor> ret = new LinkedHashMap<String, PropertyDescriptor>();
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
                 ret.put(propertyDescriptor.getName(), propertyDescriptor);
             }

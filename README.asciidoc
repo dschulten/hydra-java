@@ -6,7 +6,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
-Latest release: 0.3.0-beta4
+Latest release: 0.3.0-beta6
 
 == Problem
 
@@ -627,7 +627,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.3.0-beta4</version>
+  <version>0.3.0-beta6</version>
 </dependency>
 ----
 
@@ -638,7 +638,7 @@ If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverte
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>spring-hateoas-ext</artifactId>
-  <version>0.3.0-beta4</version>
+  <version>0.3.0-beta6</version>
 </dependency>
 ----
 
@@ -653,6 +653,7 @@ If you are unsure which vocab to use, ask on the http://lists.w3.org/Archives/Pu
 
 - extraction of ActionDescriptor and ActionInputParameter interfaces, coordinating with http://www.hdiv.org/[HDIV] to get forms into spring-hateoas
 - optimization of json-ld output: do not repeat terms which are in the parent context already
+- simple feature to use query parameters mapped to parameter bean or parameter Map annotated with @Input rather than single RequestParam arguments. Right now, it can only be used to build a UriTemplate, no description for the template variables is available yet. Use `@Input(include=..., exclude=...)` to filter applicable bean properties or describe expected Map values. The UriTemplate for such an affordance is available via `Affordance.getUriTemplateComponents().toString()`, but not via `Affordance.toString()` to keep an Affordance created via AffordanceBuilder compatible with a Link created by ControllerLinkBuilder.
 
 
 	

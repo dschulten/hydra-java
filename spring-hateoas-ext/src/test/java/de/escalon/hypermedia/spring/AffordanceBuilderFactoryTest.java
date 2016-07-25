@@ -61,17 +61,22 @@ public class AffordanceBuilderFactoryTest {
             List<String> description = Arrays.asList("concert");
             List<EventStatus> status = Arrays.asList(EventStatus.SCHEDULED);
 
-            public void setDescription(List<String> description) {
-                this.description = description;
+            public void setStatus(List<EventStatus> status) {
+                this.status = status;
             }
 
             public List<EventStatus> getStatus() {
                 return status;
             }
 
+            public void setDescription(List<String> description) {
+                this.description = description;
+            }
+
             public List<String> getDescription() {
                 return description;
             }
+
         }
 
 
