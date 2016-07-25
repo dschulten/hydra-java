@@ -4,7 +4,7 @@
 
     <groupId>de.escalon.hypermedia</groupId>
     <artifactId>hydra-java</artifactId>
-    <version>0.3.0-beta6</version>
+    <version>0.3.0-beta7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}:${project.version}</name>
@@ -62,7 +62,7 @@
         <url>https://github.com/dschulten/hydra-java</url>
         <connection>scm:git:https://github.com/dschulten/hydra-java.git</connection>
         <developerConnection>scm:git:https://github.com/dschulten/hydra-java.git</developerConnection>
-        <tag>hydra-java-0.3.0-beta6</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <modules>
