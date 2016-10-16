@@ -55,7 +55,7 @@ public class Affordance extends Link {
         static LinkParam valueOfParamName(String paramName) {
             LinkParam.values();
             for (LinkParam linkParam : LinkParam.values()) {
-                if(linkParam.paramName.equals(paramName)) {
+                if (linkParam.paramName.equals(paramName)) {
                     return linkParam;
                 }
             }
@@ -210,9 +210,11 @@ public class Affordance extends Link {
     }
 
     /**
-     * Gets the 'title' link parameter
+     * Gets the 'title' link parameter, which gives a human-readable identifier in the language indicated by
+     * Content-Language header.
      *
      * @return title of link
+     * @see #setTitle(String)
      */
     public String getTitle() {
         return linkParams.getFirst(TITLE.paramName);
@@ -229,22 +231,28 @@ public class Affordance extends Link {
     }
 
     /**
-     * Gets the 'title' link parameter
+     * Gets the 'type' link parameter, which gives a hint which mime type can be expected when following the link.
      *
-     * @return title of link
+     * @return type of link
+     * @see #setType(String)
      */
     public String getType() {
         return linkParams.getFirst(TYPE.paramName);
     }
 
     /**
-     * The "title*" parameter can be used to encode this label in a different character set, and/or contain language
-     * information as per [RFC5987].  The "title*" parameter MUST NOT appear more than once in a given link-value;
-     * occurrences after the first MUST be ignored by parsers.  If the parameter does not contain language information,
-     * its language is indicated by the Content-Language header (when present).
+     * The "title*" parameter can be used to encode the title label in a different character set, and/or contain
+     * language information as per <a href="https://tools.ietf.org/html/rfc5987">RFC-5987</a>.  The "title*" parameter MUST NOT appear more than once in a given
+     * link-value; occurrences after the first MUST be ignored by parsers.  If the parameter does not contain language
+     * information, its language is indicated by the Content-Language header (when present).
      *
-     * If both the "title" and "title*" parameters appear in a link-value,
-     processors SHOULD use the "title*" parameter's value.
+     * If both the "title" and "title*" parameters appear in a link-value, processors SHOULD use the "title*"
+     * parameter's value. <p>The example below shows an instance of the Link header encoding a link title using <a href="https://tools.ietf.org/html/rfc2231">RFC-2231</a>
+     * encoding to encode both non-ASCII characters and language information.</p>
+     * <pre>
+     *     Link: &lt;/TheBook/chapter2&gt;
+     *     rel="next"; title*=UTF-8'de'n%c3%a4chstes%20Kapitel
+     * </pre>
      *
      * @param titleStar
      *         to set
@@ -339,8 +347,8 @@ public class Affordance extends Link {
     }
 
     /**
-     * Affordance represented as http link header value. Note that the href may be templated,
-     * for convenience you can use {@link #getHeaderName()} to ensure a Link or Link-Header is produced appropriately.
+     * Affordance represented as http link header value. Note that the href may be templated, for convenience you can
+     * use {@link #getHeaderName()} to ensure a Link or Link-Header is produced appropriately.
      *
      * @return Link or Link-template header value
      */

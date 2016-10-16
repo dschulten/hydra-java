@@ -75,8 +75,11 @@ public class AffordanceTest {
         final Affordance affordance = new Affordance("http://example.com");
         affordance.addLinkParam("name", "name-to-distinguish-links-with-same-rel");
         affordance.addLinkParam("deprecation", "http://example.com/why/this/is/deprecated");
+        affordance.addLinkParam("type", "application/json");
         Map<String, String> linkExtensions = affordance.getLinkExtensions();
-        assertEquals("{name=name-to-distinguish-links-with-same-rel, " +
+        assertEquals("application/json", affordance.getType());
+        assertEquals("must only contain link extension params",
+                "{name=name-to-distinguish-links-with-same-rel, " +
                 "deprecation=http://example.com/why/this/is/deprecated}", linkExtensions.toString());
     }
 
