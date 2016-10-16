@@ -204,6 +204,17 @@ Use the `AffordanceBuilder` to build `Affordance` instances which inherit from t
 * Facility to chain several method invocations on the same resource. If the same link is used to PUT and DELETE a resource, use `AffordanceBuilder.and()` to add both method handlers to the affordance.
 * Has action descriptors with information about http methods and expected request data. Based on reflection and a minimal set of annotations it is possible to render forms-like affordances with quite precise information about expected input.
 
+Use the enhanced builder API of `AffordanceBuilder` to add more link params than allowed by `Link`:
+
+[source, Java]
+----
+AffordanceBuilder.linkTo(methodOn(Foo.class).getBars()).rel("bars") // rel() instead of withRel()
+   .withType("text/html")
+   .withLinkParam("name", "red-bar") // adding HAL name attribute
+   .build();
+----
+
+
 In the following we use `AffordanceBuilder` to add a `self` rel that can be used with GET, PUT and DELETE to an event bean.
 First we wrap the event into a `Resource` so we can add affordances to it. Then we use the `linkTo-methodOn` technique three times to describe that the self rel can be used to get, update and delete the event.
 
