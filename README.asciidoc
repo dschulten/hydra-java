@@ -6,7 +6,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
-Latest release: 0.3.0-beta6
+Latest release: 0.3.0
 
 == Problem
 
@@ -189,7 +189,13 @@ The json-ld output written by hydra-java makes the GoodRelations url known under
 A hypermedia affordance is a rich hyperlink. That means, it not only contains a URI or a URITemplate, but also information about the usage of the URI, such as supported http methods and expected parameters. The term 'hypermedia affordance' is a neologism made popular by http://amundsen.com/blog/archives/1109[Mike Amundsen], following an earlier reference in http://roy.gbiv.com/talks/200804_REST_ApacheCon.pdf[A little REST and Relaxation] by Roy Fielding.
 A hydra-java `Affordance` can be used to render media-types which support this kind of information: first and foremost hydra, but it is quite easy to add message converters for other media types once the basic information is available.
 
-Version 0.2.0 provides an `AffordanceBuilder` class which is a drop-in replacement for the spring-hateoas `ControllerLinkBuilder`. The `AffordanceBuilder` does not depend on hydra or json-ld. It lives in the standalone jar spring-hateoas-ext and can also be used to render other media types than json-ld. One example is the `XhtmlResourceMessageConverter` which allows you to render your API responses as HTML forms.
+Version 0.2.0 provides an `AffordanceBuilder` class which is a drop-in replacement for the spring-hateoas `ControllerLinkBuilder`.
+
+The `AffordanceBuilder` does _not depend on hydra or json-ld_. It lives in the standalone jar spring-hateoas-ext and can also be used to render other media types than json-ld. It has support for all HAL link attributes when rendered as HAL, and can also be
+rendered as Siren or XHtml using message converters from spring-hateoas-ext.
+
+See <<Maven Support>> for the maven coordinates of spring-hateoas-ext.
+
 Use the `AffordanceBuilder` to build `Affordance` instances which inherit from the spring-hateoas `Link` but add the following traits to it:
 
 * Full support for all attributes of a http Link header as described by the https://tools.ietf.org/html/rfc5988[web linking rfc 5988]
@@ -627,7 +633,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.3.0-beta6</version>
+  <version>0.3.0</version>
 </dependency>
 ----
 
@@ -638,7 +644,7 @@ If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverte
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>spring-hateoas-ext</artifactId>
-  <version>0.3.0-beta6</version>
+  <version>0.3.0</version>
 </dependency>
 ----
 
@@ -654,6 +660,7 @@ If you are unsure which vocab to use, ask on the http://lists.w3.org/Archives/Pu
 - extraction of ActionDescriptor and ActionInputParameter interfaces, coordinating with http://www.hdiv.org/[HDIV] to get forms into spring-hateoas
 - optimization of json-ld output: do not repeat terms which are in the parent context already
 - simple feature to use query parameters mapped to parameter bean or parameter Map annotated with @Input rather than single RequestParam arguments. Right now, it can only be used to build a UriTemplate, no description for the template variables is available yet. Use `@Input(include=..., exclude=...)` to filter applicable bean properties or describe expected Map values. The UriTemplate for such an affordance is available via `Affordance.getUriTemplateComponents().toString()`, but not via `Affordance.toString()` to keep an Affordance created via AffordanceBuilder compatible with a Link created by ControllerLinkBuilder.
+- Affordance now has a `type` property and unwraps extension link params when rendered as JSON, which e.g. allows to use link attributes of HAL (type, name, deprecation etc.) which are not present in the basic `Link` class
 
 
 	
