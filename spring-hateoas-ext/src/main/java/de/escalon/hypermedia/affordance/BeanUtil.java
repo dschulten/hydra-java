@@ -1,5 +1,8 @@
 package de.escalon.hypermedia.affordance;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -12,6 +15,8 @@ import java.util.List;
  * Bean related utitility methods Created by Dietrich on 05.12.2015.
  */
 public class BeanUtil {
+
+    private static Logger LOG = LoggerFactory.getLogger(BeanUtil.class);
 
     private BeanUtil() {
         // prevent instantiation
@@ -31,7 +36,7 @@ public class BeanUtil {
     private static List<String> addClassPropertyPaths(List<String> ret, String currentPath, Class<?> clazz) {
         PropertyDescriptor[] propertyDescriptors = getPropertyDescriptors(clazz);
         for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-            List<String> propertyPaths = addPropertyPaths(ret, currentPath, propertyDescriptor);
+            addPropertyPaths(ret, currentPath, propertyDescriptor);
         }
         return ret;
     }
@@ -48,6 +53,10 @@ public class BeanUtil {
                 currentPath += ".";
             }
             ret.add(currentPath + propertyName);
+        } else if (DataType.isArrayOrCollection(propertyType)) {
+            LOG.warn((currentPath.isEmpty() ? currentPath : currentPath + ".")
+                    + propertyName + ": property paths for collections not supported yet");
+            // TODO support for collection properties
         } else {
             currentPath += propertyName;
             addClassPropertyPaths(ret, currentPath, propertyType);

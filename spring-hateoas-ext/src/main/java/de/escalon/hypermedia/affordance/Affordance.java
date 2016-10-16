@@ -313,8 +313,6 @@ public class Affordance extends Link {
      */
     public void addLinkParam(String paramName, String... values) {
         Assert.notEmpty(values);
-        Assert.isNull(LinkParam.valueOfParamName(paramName),
-                paramName + "is not a link extension param, use set or add method instead");
         for (String value : values) {
             Assert.hasLength(value);
             linkParams.add(paramName, value);
