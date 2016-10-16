@@ -14,6 +14,7 @@
 package de.escalon.hypermedia.affordance;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import de.escalon.hypermedia.action.Cardinality;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
@@ -23,10 +24,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static de.escalon.hypermedia.affordance.Affordance.LinkParam.*;
 
 /**
  * Represents an http affordance for purposes of a ReST service as described by <a
@@ -40,6 +40,30 @@ import java.util.Map;
  * on 07.09.2014.</p>
  */
 public class Affordance extends Link {
+
+
+    enum LinkParam {
+        REL("rel"), ANCHOR("anchor"), REV("rev"), HREFLANG("hreflang"), MEDIA("media"),
+        TITLE("title"), TITLE_STAR("title*"), TYPE("type");
+
+        String paramName;
+
+        LinkParam(String paramName) {
+            this.paramName = paramName;
+        }
+
+        static LinkParam valueOfParamName(String paramName) {
+            LinkParam.values();
+            for (LinkParam linkParam : LinkParam.values()) {
+                if(linkParam.paramName.equals(paramName)) {
+                    return linkParam;
+                }
+            }
+            return null;
+        }
+
+
+    }
 
     private boolean selfRel = false;
     private List<ActionDescriptor> actionDescriptors = new ArrayList<ActionDescriptor>();
@@ -129,14 +153,13 @@ public class Affordance extends Link {
      */
     public void addRel(String rel) {
         Assert.hasLength(rel);
-        linkParams.add("rel", rel);
+        linkParams.add(REL.paramName, rel);
     }
 
     /**
      * The "type" parameter, when present, is a hint indicating what the media type of the result of dereferencing the
      * link should be.  Note that this is only a hint; for example, it does not override the Content-Type header of a
-     * HTTP response obtained by actually following the link.  There MUST NOT be more than one type parameter in a
-     * link-
+     * HTTP response obtained by actually following the link.  There MUST NOT be more than one type parameter in a link-
      * value.
      *
      * @param mediaType
@@ -144,14 +167,13 @@ public class Affordance extends Link {
      */
     public void setType(String mediaType) {
         if (mediaType != null)
-            linkParams.set("type", mediaType);
+            linkParams.set(TYPE.paramName, mediaType);
         else
-            linkParams.remove("type");
+            linkParams.remove(TYPE.paramName);
     }
 
     /**
-     * The "hreflang" parameter, when present, is a hint indicating what the language of the result of dereferencing
-     * the
+     * The "hreflang" parameter, when present, is a hint indicating what the language of the result of dereferencing the
      * link should be.  Note that this is only a hint; for example, it does not override the Content-Language header of
      * a HTTP response obtained by actually following the link.  Multiple "hreflang" parameters on a single link- value
      * indicate that multiple languages are available from the indicated resource.
@@ -161,7 +183,7 @@ public class Affordance extends Link {
      */
     public void addHreflang(String hreflang) {
         Assert.hasLength(hreflang);
-        linkParams.add("hreflang", hreflang);
+        linkParams.add(HREFLANG.paramName, hreflang);
     }
 
     /**
@@ -175,9 +197,9 @@ public class Affordance extends Link {
      */
     public void setTitle(String title) {
         if (title != null)
-            linkParams.set("title", title);
+            linkParams.set(TITLE.paramName, title);
         else {
-            linkParams.remove("title");
+            linkParams.remove(TITLE.paramName);
         }
     }
 
@@ -193,7 +215,26 @@ public class Affordance extends Link {
      * @return title of link
      */
     public String getTitle() {
-        return linkParams.getFirst("title");
+        return linkParams.getFirst(TITLE.paramName);
+    }
+
+    @JsonUnwrapped
+    public Map<String, String> getLinkExtensions() {
+        LinkedHashMap<String, String> linkExtensions = new LinkedHashMap<String, String>();
+        linkExtensions.putAll(linkParams.toSingleValueMap());
+        for (LinkParam linkParam : LinkParam.values()) {
+            linkExtensions.remove(linkParam.paramName);
+        }
+        return Collections.unmodifiableMap(linkExtensions);
+    }
+
+    /**
+     * Gets the 'title' link parameter
+     *
+     * @return title of link
+     */
+    public String getType() {
+        return linkParams.getFirst(TYPE.paramName);
     }
 
     /**
@@ -202,14 +243,17 @@ public class Affordance extends Link {
      * occurrences after the first MUST be ignored by parsers.  If the parameter does not contain language information,
      * its language is indicated by the Content-Language header (when present).
      *
+     * If both the "title" and "title*" parameters appear in a link-value,
+     processors SHOULD use the "title*" parameter's value.
+     *
      * @param titleStar
      *         to set
      */
     public void setTitleStar(String titleStar) {
         if (titleStar != null)
-            linkParams.set("title*", titleStar);
+            linkParams.set(TITLE_STAR.paramName, titleStar);
         else
-            linkParams.remove("title*");
+            linkParams.remove(TITLE_STAR.paramName);
     }
 
     /**
@@ -223,9 +267,9 @@ public class Affordance extends Link {
      */
     public void setMedia(String mediaDesc) {
         if (mediaDesc != null)
-            linkParams.set("media", mediaDesc);
+            linkParams.set(MEDIA.paramName, mediaDesc);
         else
-            linkParams.remove("media");
+            linkParams.remove(MEDIA.paramName);
     }
 
     /**
@@ -239,11 +283,11 @@ public class Affordance extends Link {
      */
     public void addRev(String rev) {
         Assert.hasLength(rev);
-        linkParams.add("rev", rev);
+        linkParams.add(REV.paramName, rev);
     }
 
     /**
-     * By default, the context of a link conveyed in the Link header field is the IRI of the requested resource. When
+     * By default, the context of a link conveyed in the Link header field is the IRI of the requested resource. <p>When
      * present, the anchor parameter overrides this with another URI, such as a fragment of this resource, or a third
      * resource (i.e., when the anchor value is an absolute URI).  If the anchor parameter's value is a relative URI,
      * parsers MUST resolve it as per [RFC3986], Section 5.  Note that any base URI from the body's content is not
@@ -254,9 +298,9 @@ public class Affordance extends Link {
      */
     public void setAnchor(String anchor) {
         if (anchor != null)
-            linkParams.set("anchor", anchor);
+            linkParams.set(ANCHOR.paramName, anchor);
         else
-            linkParams.remove("anchor");
+            linkParams.remove(ANCHOR.paramName);
     }
 
     /**
@@ -269,6 +313,8 @@ public class Affordance extends Link {
      */
     public void addLinkParam(String paramName, String... values) {
         Assert.notEmpty(values);
+        Assert.isNull(LinkParam.valueOfParamName(paramName),
+                paramName + "is not a link extension param, use set or add method instead");
         for (String value : values) {
             Assert.hasLength(value);
             linkParams.add(paramName, value);
@@ -295,9 +341,10 @@ public class Affordance extends Link {
     }
 
     /**
-     * Affordance represented as http link header value.
+     * Affordance represented as http link header value. Note that the href may be templated,
+     * for convenience you can use {@link #getHeaderName()} to ensure a Link or Link-Header is produced appropriately.
      *
-     * @return link header value
+     * @return Link or Link-template header value
      */
     public String asHeader() {
         StringBuilder result = new StringBuilder();
@@ -306,7 +353,7 @@ public class Affordance extends Link {
                 result.append("; ");
             }
             String linkParamEntryKey = linkParamEntry.getKey();
-            if ("rel".equals(linkParamEntryKey) || "rev".equals(linkParamEntryKey)) {
+            if (REL.paramName.equals(linkParamEntryKey) || REV.paramName.equals(linkParamEntryKey)) {
                 result.append(linkParamEntryKey)
                         .append("=");
                 result.append("\"")
@@ -354,15 +401,15 @@ public class Affordance extends Link {
 
     @Override
     public Affordance withRel(String rel) {
-        linkParams.set("rel", rel);
+        linkParams.set(REL.paramName, rel);
         return new Affordance(this.getHref(), linkParams, actionDescriptors);
     }
 
     @Override
     public Affordance withSelfRel() {
-        if (!linkParams.get("rel")
+        if (!linkParams.get(REL.paramName)
                 .contains(Link.REL_SELF)) {
-            linkParams.add("rel", Link.REL_SELF);
+            linkParams.add(REL.paramName, Link.REL_SELF);
         }
         return new Affordance(this.getHref(), linkParams, actionDescriptors);
     }
@@ -426,8 +473,7 @@ public class Affordance extends Link {
     }
 
     /**
-     * Expands template variables as far as possible, unsatisfied variables will remain variables. This is primarily
-     * for
+     * Expands template variables as far as possible, unsatisfied variables will remain variables. This is primarily for
      * manually created affordances. If the Affordance has been created with linkTo-methodOn, it should not be necessary
      * to expand the affordance again.
      *
@@ -448,7 +494,7 @@ public class Affordance extends Link {
      */
     @JsonIgnore
     public List<String> getRels() {
-        final List<String> rels = linkParams.get("rel");
+        final List<String> rels = linkParams.get(REL.paramName);
         return rels == null ? Collections.<String>emptyList() : Collections.unmodifiableList(rels);
     }
 
@@ -459,7 +505,7 @@ public class Affordance extends Link {
      */
     @Override
     public String getRel() {
-        return linkParams.getFirst("rel");
+        return linkParams.getFirst(REL.paramName);
     }
 
     /**
@@ -469,7 +515,7 @@ public class Affordance extends Link {
      */
     @JsonIgnore
     public List<String> getRevs() {
-        final List<String> revs = linkParams.get("rev");
+        final List<String> revs = linkParams.get(REV.paramName);
         return revs == null ? Collections.<String>emptyList() : Collections.unmodifiableList(revs);
     }
 
@@ -480,7 +526,7 @@ public class Affordance extends Link {
      */
     @JsonIgnore
     public String getRev() {
-        return linkParams.getFirst("rev");
+        return linkParams.getFirst(REV.paramName);
     }
 
 
@@ -530,10 +576,8 @@ public class Affordance extends Link {
 
 
     /**
-     * Determines if the affordance has unsatisfied required variables. This allows to decide if the affordance can
-     * also
-     * be treated as a plain Link without template variables if the caller omits all optional variables. Serializers
-     * can
+     * Determines if the affordance has unsatisfied required variables. This allows to decide if the affordance can also
+     * be treated as a plain Link without template variables if the caller omits all optional variables. Serializers can
      * use this to render it as a resource with optional search features.
      *
      * @return true if the affordance has unsatisfied required variables

@@ -30,6 +30,8 @@ import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.hateoas.IanaRels;
@@ -51,7 +53,10 @@ import java.util.*;
  */
 public class LinkListSerializer extends StdSerializer<List<Link>> {
 
+    Logger LOG = LoggerFactory.getLogger(LinkListSerializer.class);
+
     private static final String IANA_REL_PREFIX = "urn:iana:link-relations:";
+
 
 
     public LinkListSerializer() {
@@ -351,8 +356,13 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         if (constructor == null) {
             constructor = PropertyUtils.findJsonCreator(constructors, JsonCreator.class);
         }
-        Assert.notNull(constructor, "no default constructor or JsonCreator found for type " + valueType
+        if(constructor == null) {
+            // TODO this can be a generic collection, find a way to describe it
+            LOG.warn("can't describe supported properties, no default constructor or JsonCreator found for type " + valueType
                 .getName());
+            return;
+        }
+
         int parameterCount = constructor.getParameterTypes().length;
         if (parameterCount > 0) {
             Annotation[][] annotationsOnParameters = constructor.getParameterAnnotations();

@@ -17,6 +17,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.action.Input;
 
+import java.util.Set;
+
 /**
  * Sample Review. Created by dschulten on 16.09.2014.
  */
@@ -24,6 +26,7 @@ public class Review {
 
     private String reviewBody;
     private Rating reviewRating;
+    private Set<Person> contributors;
 
     @JsonCreator
     public Review(@JsonProperty("reviewBody") String reviewBody, @JsonProperty("reviewRating") Rating reviewRating) {
@@ -46,5 +49,9 @@ public class Review {
 
     public void setReviewRating(Rating reviewRating) {
         this.reviewRating = reviewRating;
+    }
+
+    public void setContributors(Set<Person> contributors) {
+        this.contributors = contributors;
     }
 }
