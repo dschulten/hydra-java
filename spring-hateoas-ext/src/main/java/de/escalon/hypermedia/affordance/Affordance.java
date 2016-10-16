@@ -12,10 +12,12 @@
  */
 
 package de.escalon.hypermedia.affordance;
-
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import de.escalon.hypermedia.action.Cardinality;
+import org.springframework.aop.DynamicIntroductionAdvice;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.TemplateVariable;
 import org.springframework.hateoas.UriTemplate;
@@ -220,14 +222,50 @@ public class Affordance extends Link {
         return linkParams.getFirst(TITLE.paramName);
     }
 
+    /**
+     * Bean which allows to json-unwrap map-valued properties.
+     * @see <a href="https://github.com/FasterXML/jackson-databind/issues/171">JsonUnwrapped not supported for Map-valued properties</a>
+     * @see <a href="http://www.cowtowncoder.com/blog/archives/2011/07/entry_458.html">Jackson tips: using @JsonAnyGetter/@JsonAnySetter to create "dyna beans"</a>
+     */
+    public class DynaBean
+    {
+        protected Map<String,Object> dynaProperties = new HashMap<String,Object>();
+
+        public Object get(String name) {
+            return dynaProperties.get(name);
+        }
+
+        public void putAll(Map<String, String> map) {
+            dynaProperties.putAll(map);
+        }
+
+        // "any getter" needed for serialization
+        @JsonAnyGetter
+        public Map<String,Object> any() {
+            return dynaProperties;
+        }
+
+        @JsonAnySetter
+        public void set(String name, Object value) {
+            dynaProperties.put(name, value);
+        }
+
+        @Override
+        public String toString() {
+            return dynaProperties.toString();
+        }
+    }
+
     @JsonUnwrapped
-    public Map<String, String> getLinkExtensions() {
+    public DynaBean getLinkExtensions() {
+        DynaBean dynaBean = new DynaBean();
         LinkedHashMap<String, String> linkExtensions = new LinkedHashMap<String, String>();
         linkExtensions.putAll(linkParams.toSingleValueMap());
         for (LinkParam linkParam : LinkParam.values()) {
             linkExtensions.remove(linkParam.paramName);
         }
-        return Collections.unmodifiableMap(linkExtensions);
+        dynaBean.putAll(linkExtensions);
+        return dynaBean;
     }
 
     /**

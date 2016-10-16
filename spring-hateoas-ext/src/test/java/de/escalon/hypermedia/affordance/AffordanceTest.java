@@ -76,7 +76,7 @@ public class AffordanceTest {
         affordance.addLinkParam("name", "name-to-distinguish-links-with-same-rel");
         affordance.addLinkParam("deprecation", "http://example.com/why/this/is/deprecated");
         affordance.addLinkParam("type", "application/json");
-        Map<String, String> linkExtensions = affordance.getLinkExtensions();
+        Affordance.DynaBean linkExtensions = affordance.getLinkExtensions();
         assertEquals("application/json", affordance.getType());
         assertEquals("must only contain link extension params",
                 "{name=name-to-distinguish-links-with-same-rel, " +
