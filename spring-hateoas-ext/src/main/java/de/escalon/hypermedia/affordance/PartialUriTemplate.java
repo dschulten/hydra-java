@@ -129,7 +129,6 @@ public class PartialUriTemplate {
      * @return expanded template
      */
     public PartialUriTemplateComponents expand(Object... parameters) {
-        Assert.notEmpty(parameters);
         List<String> variableNames = getVariableNames();
         Map<String, Object> parameterMap = new LinkedHashMap<String, Object>();
 
@@ -202,7 +201,15 @@ public class PartialUriTemplate {
                             case FRAGMENT:
                                 fragmentIdentifier.append(variable.toString());
                                 break;
-                            default:
+                            case PATH_VARIABLE:
+                                if (queryHead.length() != 0) {
+                                    // level 1 variable in query
+                                    queryHead.append(variable.toString());
+                                } else {
+                                    baseUrl.append(variable.toString());
+                                }
+                                break;
+                            case SEGMENT:
                                 baseUrl.append(variable.toString());
                         }
                     } else {

@@ -100,4 +100,24 @@ public class AffordanceTest {
         assertEquals("http://localhost/things?id=101", affordance.expand(101)
                 .getHref());
     }
+
+    @Test
+    public void preservesSimpleStringVariables() {
+        final Affordance affordance = new Affordance("/protected/res/documents/index.html?focus={contractId}&caller=BLUE&referrer=/protected/res/my_contracts/index.html&fragment=/contractDetails/{ref}", "thing");
+
+        assertEquals("/protected/res/documents/index.html?focus={contractId}&caller=BLUE&referrer=/protected/res/my_contracts/index.html&fragment=/contractDetails/{ref}", affordance.getHref());
+
+    }
+
+    @Test
+    public void expandsSimpleStringVariablesPartially() {
+        final Affordance affordance = new Affordance("/protected/res/documents/index.html?focus={contractId}&caller=BLUE&referrer=/protected/res/my_contracts/index.html&fragment=/contractDetails/{ref}", "thing");
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("ref", 1234567890);
+
+        assertEquals("/protected/res/documents/index.html?focus={contractId}&caller=BLUE&referrer=/protected/res/my_contracts/index.html&fragment=/contractDetails/1234567890", affordance.expandPartially(args).getHref());
+
+    }
+
 }

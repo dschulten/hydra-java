@@ -13,17 +13,26 @@
 
 package de.escalon.hypermedia.affordance;
 
+import com.damnhandy.uri.template.UriTemplate;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.contains;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class PartialUriTemplateTest {
 
+    final static String LAWNMOWER_TEMPLATE_STRING =
+            "http://localhost/things/{id}/widgets?type={widgetType}&redirect=http://example" +
+            ".com/{widgetName}?preorder=true#/order/{widgetId}";
 
     @Test
     public void testToStringWithQueryVariablesContainingDot() throws Exception {
@@ -247,6 +256,78 @@ public class PartialUriTemplateTest {
         final PartialUriTemplateComponents expanded = template.expand(val);
         Assert.assertEquals("http://example" +
                 ".com/events{/city}/concerts?eventName=Revo+Tour&foo=bar&location=Schlachthof&baz=Gnarf", expanded
+                .toString());
+    }
+
+    @Test
+    public void testExpandSimpleStringVariablesWithUrl() {
+        final PartialUriTemplate template = new PartialUriTemplate
+                ("http://localhost/things/{id}/widgets?type={widgetType}&redirect={url}");
+
+        Map<String, Object> arguments = new HashMap<String, Object>();
+        arguments.put("id", 101);
+
+        assertEquals("http://localhost/things/22/widgets?type=ACME+lawn+mower&redirect=http%3A%2F%2Fexample" +
+                        ".com%2FLM%2B6000%3Fpreorder%3Dtrue%23%2Forder%2Facme-lm-6000",
+                template.expand("22", "ACME lawn mower",
+                        "http://example.com/LM+6000?preorder=true#/order/acme-lm-6000")
+                        .toString());
+    }
+
+    @Test
+    public void testExpandSimpleStringVariablesInUrl() throws URISyntaxException, UnsupportedEncodingException {
+
+        final PartialUriTemplate template = new PartialUriTemplate
+                (LAWNMOWER_TEMPLATE_STRING);
+
+        // The redirect url is not correctly encoded, but encoding of the redirect value is up to the
+        // template provider. We must ensure that we only encode variable values here and leave the rest alone.
+        String expandedUri = template.expand("22", "ACME lawn mower", "LM 6000",
+                "acme-lm-6000")
+                .toString();
+        assertEquals("http://localhost/things/22/widgets?type=ACME+lawn+mower&redirect=http://example" +
+                ".com/LM+6000?preorder=true#/order/acme-lm-6000", expandedUri);
+
+        // make sure our query is equivalent to the one created by damnhandy template engine
+        Map<String, Object> arguments = new HashMap<String, Object>();
+        arguments.put("id", 22);
+        arguments.put("widgetType", "ACME lawn mower");
+        arguments.put("widgetName", "LM 6000");
+        arguments.put("widgetId", "acme-lm-6000");
+
+        String damnHandyExpandedUri = UriTemplate.fromTemplate
+                (LAWNMOWER_TEMPLATE_STRING)
+                .set(arguments)
+                .expandPartial();
+
+        URI myUriTemplate = new URI(expandedUri);
+
+        URI dhUriTemplate = new URI(damnHandyExpandedUri);
+
+        assertEquals(URLDecoder.decode("utf-8", myUriTemplate.getQuery()),
+                URLDecoder.decode("utf-8", dhUriTemplate.getQuery()));
+
+    }
+
+    @Test
+    public void testPreservesUnexpandedSimpleStringVariables() {
+        final PartialUriTemplate template = new PartialUriTemplate
+                (LAWNMOWER_TEMPLATE_STRING);
+
+        assertEquals("http://localhost/things/22/widgets?type={widgetType}&redirect=http://example" +
+                ".com/{widgetName}?preorder=true#/order/{widgetId}", template.expand("22")
+                .toString());
+    }
+
+    @Test
+    public void testContextAbsolutePath() {
+        final PartialUriTemplate template = new PartialUriTemplate("/protected/res/documents/index" +
+                ".html?focus={contractId}&caller=BLUE&referrer=/protected/res/my_contracts/index" +
+                ".html&fragment=/contractDetails/{ref}");
+
+        assertEquals("/protected/res/documents/index" +
+                ".html?focus={contractId}&caller=BLUE&referrer=/protected/res/my_contracts/index" +
+                ".html&fragment=/contractDetails/{ref}", template.expand()
                 .toString());
     }
 }
