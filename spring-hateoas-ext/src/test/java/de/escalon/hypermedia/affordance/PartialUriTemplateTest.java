@@ -57,6 +57,20 @@ public class PartialUriTemplateTest {
     }
 
     @Test
+    public void testExpandAllComponentsWithStringStringMap() throws Exception {
+        final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events{/city}{?eventName," +
+                "location}{#section}");
+        Map<String, String> val = new HashMap<String, String>();
+        val.put("city", "Wiesbaden");
+        val.put("eventName", "Revo Tour");
+        val.put("location", "Schlachthof");
+        val.put("section", "description");
+        final PartialUriTemplateComponents expanded = template.expand(val);
+        Assert.assertEquals("http://example.com/events/Wiesbaden?eventName=Revo+Tour&location=Schlachthof#description",
+                expanded.toString());
+    }
+
+    @Test
     public void testExpandQueryWithTwoVariables() throws Exception {
         final PartialUriTemplate template = new PartialUriTemplate("http://example.com/events/Wiesbaden{?eventName," +
                 "location}");
