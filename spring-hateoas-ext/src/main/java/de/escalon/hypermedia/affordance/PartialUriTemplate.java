@@ -150,7 +150,7 @@ public class PartialUriTemplate {
      *         for expansion, must not be empty
      * @return expanded template
      */
-    public PartialUriTemplateComponents expand(Map<String, Object> parameters) {
+    public PartialUriTemplateComponents expand(Map<String, ?> parameters) {
         return getUriTemplateComponents(parameters, Collections.<String>emptyList());
     }
 
@@ -163,7 +163,7 @@ public class PartialUriTemplate {
      *         if not empty, retains given requiredArgs
      * @return uri components
      */
-    private PartialUriTemplateComponents getUriTemplateComponents(Map<String, Object> parameters, List<String>
+    private PartialUriTemplateComponents getUriTemplateComponents(Map<String, ?> parameters, List<String>
             requiredArgs) {
         Assert.notNull(parameters, "Parameters must not be null!");
 
