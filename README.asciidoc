@@ -478,7 +478,6 @@ Clients should be able to request a media-type they understand by means of conte
 
 ==== XhtmlResourceMessageConverter
 
-
 The `XhtmlResourceMessageConverter` is the second message converter in hydra-java which makes use of affordances built by `AffordanceBuilder`.
 
 If you add a `JsonLdDocumentationProvider` on the converter, it will render bean attributes as hyperlinks which point to their documentation on schema.org or other vocabularies, provided that your java beans are annotated with the necessary information.
