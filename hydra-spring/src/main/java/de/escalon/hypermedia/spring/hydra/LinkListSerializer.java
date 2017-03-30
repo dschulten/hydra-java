@@ -46,6 +46,8 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -56,7 +58,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     Logger LOG = LoggerFactory.getLogger(LinkListSerializer.class);
 
     private static final String IANA_REL_PREFIX = "urn:iana:link-relations:";
-
 
 
     public LinkListSerializer() {
@@ -320,20 +321,13 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     /**
      * Writes bean description recursively.
      *
-     * @param jgen
-     *         to write to
-     * @param currentVocab
-     *         in context
-     * @param valueType
-     *         class of value
-     * @param allRootParameters
-     *         of the method that receives the request body
-     * @param rootParameter
-     *         the request body
-     * @param currentCallValue
-     *         the value at the current recursion level
-     * @param propertyPath
-     *         of the current recursion level
+     * @param jgen              to write to
+     * @param currentVocab      in context
+     * @param valueType         class of value
+     * @param allRootParameters of the method that receives the request body
+     * @param rootParameter     the request body
+     * @param currentCallValue  the value at the current recursion level
+     * @param propertyPath      of the current recursion level
      * @throws IntrospectionException
      * @throws IOException
      */
@@ -356,10 +350,10 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         if (constructor == null) {
             constructor = PropertyUtils.findJsonCreator(constructors, JsonCreator.class);
         }
-        if(constructor == null) {
+        if (constructor == null) {
             // TODO this can be a generic collection, find a way to describe it
             LOG.warn("can't describe supported properties, no default constructor or JsonCreator found for type " + valueType
-                .getName());
+                    .getName());
             return;
         }
 
@@ -424,7 +418,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         for (ActionInputParameter annotatedParameter : properties.values()) {
             String nextPropertyPathLevel = propertyPath.isEmpty() ? annotatedParameter.getParameterName() :
                     propertyPath + '.' + annotatedParameter.getParameterName();
-            if (DataType.isSingleValueType(annotatedParameter.getParameterType())) {
+            Class<?> parameterType = annotatedParameter.getParameterType();
+            if (DataType.isSingleValueType(parameterType)) {
 
                 final Object[] possiblePropertyValues = rootParameter.getPossibleValues(allRootParameters);
 
@@ -452,25 +447,58 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeStartObject();
                 jgen.writeStringField("hydra:property", annotatedParameter.getParameterName());
                 // TODO: is the property required -> for bean props we need the Access annotation to express that
-                jgen.writeObjectFieldStart(getPropertyOrClassNameInVocab(currentVocab, "rangeIncludes",
-                        LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
-                Expose expose = AnnotationUtils.getAnnotation(annotatedParameter.getParameterType(), Expose.class);
-                String subClass;
+
+                Expose expose = AnnotationUtils.getAnnotation(parameterType, Expose.class);
+                String subClass = null;
                 if (expose != null) {
                     subClass = expose.value();
                 } else {
-                    subClass = annotatedParameter.getParameterType()
-                            .getSimpleName();
+                    if (List.class.isAssignableFrom(parameterType)) {
+                        Type genericParameterType = annotatedParameter.getGenericParameterType();
+                        if (genericParameterType instanceof ParameterizedType) {
+                            ParameterizedType parameterizedType = (ParameterizedType) genericParameterType;
+                            Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                            if (actualTypeArguments.length == 1) {
+                                Type actualTypeArgument = actualTypeArguments[0];
+                                if (actualTypeArgument instanceof Class) {
+                                    parameterType = (Class<?>) actualTypeArgument;
+                                    subClass = parameterType.getSimpleName();
+                                } else if (actualTypeArgument instanceof ParameterizedType) {
+                                    ParameterizedType genericItemType = (ParameterizedType) actualTypeArgument;
+                                    Type rawType = genericItemType.getRawType();
+                                    if (rawType instanceof Class) {
+                                        parameterType = (Class<?>) rawType;
+                                        subClass = parameterType.getSimpleName();
+                                    }
+                                }
+                            }
+                        }
+                        if (subClass != null) {
+                            String multipleValueProp = getPropertyOrClassNameInVocab(currentVocab,
+                                    "multipleValues",
+                                    LdContextFactory.HTTP_SCHEMA_ORG,
+                                    "schema:");
+                            jgen.writeBooleanField(multipleValueProp, true);
+                        }
+                    }
                 }
-                jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab, "subClassOf", "http://www.w3" +
-                        ".org/2000/01/rdf-schema#", "rdfs:"), subClass);
+                if (subClass == null) {
+                    subClass = parameterType.getSimpleName();
+                }
+                jgen.writeObjectFieldStart(getPropertyOrClassNameInVocab(currentVocab, "rangeIncludes",
+                        LdContextFactory.HTTP_SCHEMA_ORG, "schema:"));
+
+                jgen.writeStringField(getPropertyOrClassNameInVocab(currentVocab,
+                        "subClassOf",
+                        "http://www.w3.org/2000/01/rdf-schema#",
+                        "rdfs:"), subClass);
 
                 jgen.writeArrayFieldStart("hydra:supportedProperty");
-
+                // TODO let defaultValue be an filled list, if needed
                 Object propertyValue = PropertyUtils.getPropertyOrFieldValue(currentCallValue, annotatedParameter
                         .getParameterName());
 
-                recurseSupportedProperties(jgen, currentVocab, annotatedParameter.getParameterType(),
+                recurseSupportedProperties(jgen, currentVocab, parameterType,
                         allRootParameters,
                         rootParameter, propertyValue, nextPropertyPathLevel);
                 jgen.writeEndArray();
@@ -479,21 +507,18 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 jgen.writeEndObject();
             }
         }
+
     }
 
     /**
      * Gets property or class name in the current context, either without prefix if the current vocab is the given
      * vocabulary, or prefixed otherwise.
      *
-     * @param currentVocab
-     *         to determine the current vocab
-     * @param propertyOrClassName
-     *         name to contextualize
-     * @param vocabulary
-     *         to which the given property belongs
-     * @param vocabularyPrefixWithColon
-     *         to use if the current vocab does not match the given vocabulary to which the name belongs, should end
-     *         with colon
+     * @param currentVocab              to determine the current vocab
+     * @param propertyOrClassName       name to contextualize
+     * @param vocabulary                to which the given property belongs
+     * @param vocabularyPrefixWithColon to use if the current vocab does not match the given vocabulary to which the name belongs, should end
+     *                                  with colon
      * @return property name or class name in the currenct context
      */
 
@@ -618,7 +643,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 }
             }
 
-
             final List<String> keysToPrependValue = Arrays.asList(Input.MAX_LENGTH,
                     Input.MIN_LENGTH, Input.PATTERN);
             for (String keyToPrependValue : keysToPrependValue) {
@@ -635,11 +659,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                     }
                 }
             }
-
-
         }
-
-
     }
 
     private void writeScalarValue(JsonGenerator jgen, Object possibleValue,
@@ -723,8 +743,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     /**
      * Gets exposed property or parameter name.
      *
-     * @param inputParameter
-     *         for exposure
+     * @param inputParameter for exposure
      * @return property name
      */
     private String getExposedPropertyOrParamName(ActionInputParameter inputParameter) {
@@ -741,8 +760,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     /**
      * Gets exposed property or parameter name for properties with an appropriate setter (=write) method.
      *
-     * @param inputParameter
-     *         for exposure
+     * @param inputParameter for exposure
      * @return property name
      */
     private String getWritableExposedPropertyOrPropertyName(PropertyDescriptor inputParameter) {
