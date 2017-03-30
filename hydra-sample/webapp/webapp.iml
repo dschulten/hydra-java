@@ -21,6 +21,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: com.damnhandy:handy-uri-templates:2.1.4" level="project" />
+    <orderEntry type="library" name="Maven: joda-time:joda-time:2.9.2" level="project" />
+    <orderEntry type="library" name="Maven: com.github.jsonld-java:jsonld-java:0.5.1" level="project" />
     <orderEntry type="module" module-name="hydra-service" />
     <orderEntry type="module" module-name="hydra-spring" />
     <orderEntry type="module" module-name="hydra-jsonld" />
