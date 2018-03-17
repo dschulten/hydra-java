@@ -135,7 +135,7 @@ public class Config extends WebMvcConfigurerAdapter {
 
         halObjectMapper.registerModule(new Jackson2HalModule());
         halObjectMapper.setHandlerInstantiator(new
-                Jackson2HalModule.HalHandlerInstantiator(relProvider, curieProvider));
+                Jackson2HalModule.HalHandlerInstantiator(relProvider, curieProvider, null));
 
         MappingJackson2HttpMessageConverter halConverter = new
                 MappingJackson2HttpMessageConverter();

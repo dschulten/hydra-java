@@ -96,7 +96,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     }
 
     @Override
-    protected BeanSerializerBase withFilterId(Object filterId) {
+    public BeanSerializerBase withFilterId(Object filterId) {
         final JacksonHydraSerializer ret = new JacksonHydraSerializer(this);
         ret.withFilterId(filterId);
         return ret;

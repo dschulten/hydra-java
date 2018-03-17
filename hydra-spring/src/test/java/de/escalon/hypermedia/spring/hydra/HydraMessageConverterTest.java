@@ -102,7 +102,7 @@ public class HydraMessageConverterTest {
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
                 .andExpect(jsonPath("$.@type").value("Event"))
                 .andExpect(jsonPath("$.performer").value("Cornelia Bielefeldt"))
                 .andExpect(jsonPath("$.review.@id").value("http://localhost/reviews"))
@@ -135,7 +135,7 @@ public class HydraMessageConverterTest {
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
                 .andExpect(jsonPath("$.@type").value("Event"))
                 .andExpect(jsonPath("$.performer").value("Cornelia Bielefeldt"))
                 .andExpect(jsonPath("$.review.@id").value("http://localhost/reviews"))
@@ -165,7 +165,7 @@ public class HydraMessageConverterTest {
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
                 .andExpect(jsonPath("$.@type").value("hydra:Collection"))
                 .andExpect(jsonPath("$.['hydra:member'][0].@type").value("Event"))
                 .andExpect(jsonPath("$.['hydra:member'][0].@id").value("http://localhost/events/1"))
@@ -190,7 +190,7 @@ public class HydraMessageConverterTest {
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].@id")
                         .value("http://localhost/reviews/events/1"))
                 .andExpect(jsonPath("$.['hydra:member'][0].workPerformed.['hydra:collection'][0].['hydra:operation']" +
@@ -267,7 +267,7 @@ public class HydraMessageConverterTest {
         // other cases?
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/reviews/events/1")
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
-                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
                 .andExpect(jsonPath("$.['hydra:search'].@type").value("hydra:IriTemplate"))
                 .andExpect(jsonPath("$.['hydra:search'].['hydra:template']").value("http://localhost/events/{eventId}"))
                 .andExpect(jsonPath("$.['hydra:search'].['hydra:mapping'][0].['hydra:variable']").value("eventId"))
@@ -290,7 +290,7 @@ public class HydraMessageConverterTest {
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
                 .andExpect(jsonPath("$.['hydra:search'].@type").value("hydra:IriTemplate"))
                 .andExpect(jsonPath("$.['hydra:search'].['hydra:template']").value
                         ("http://localhost/events{?eventName}"))
@@ -309,7 +309,7 @@ public class HydraMessageConverterTest {
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
                 .andExpect(jsonPath("$.['ex:regex'].@type").value("hydra:IriTemplate"))
                 .andExpect(jsonPath("$.['ex:regex'].['hydra:template']").value
                         ("http://localhost/events/regex/{eventId}"))
@@ -328,7 +328,7 @@ public class HydraMessageConverterTest {
                 .accept(HypermediaTypes.APPLICATION_JSONLD))
                 .andExpect(MockMvcResultMatchers.status()
                         .isOk())
-                .andExpect(content().contentType("application/ld+json"))
+                .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
 
 
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:method']")

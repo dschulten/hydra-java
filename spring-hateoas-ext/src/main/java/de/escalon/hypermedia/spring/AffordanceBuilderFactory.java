@@ -31,6 +31,7 @@ import org.springframework.hateoas.core.AnnotationMappingDiscoverer;
 import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.hateoas.core.MappingDiscoverer;
 import org.springframework.hateoas.core.MethodParameters;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -112,6 +113,15 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     @Override
     public AffordanceBuilder linkTo(Class<?> target) {
         return linkTo(target, new Object[0]);
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.hateoas.LinkBuilderFactory#linkTo(java.lang.Class, java.util.Map)
+     */
+    @Override
+    public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
+        return AffordanceBuilder.linkTo(controller, parameters);
     }
 
     @Override

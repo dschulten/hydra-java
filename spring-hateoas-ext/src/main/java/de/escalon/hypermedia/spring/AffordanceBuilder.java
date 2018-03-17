@@ -36,6 +36,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.util.StringUtils.hasText;
+
 /**
  * Builder for hypermedia affordances, usable as rfc-5988 web links and optionally holding information about request
  * body requirements. Created by dschulten on 07.09.2014.
@@ -422,47 +424,30 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
     /**
-     * Returns a {@link UriComponentsBuilder} obtained from the current servlet mapping with the host tweaked in case
-     * the request contains an {@code X-Forwarded-Host} header and the scheme tweaked in case the request contains an
-     * {@code X-Forwarded-Ssl} header
+     * Returns a {@link UriComponentsBuilder} obtained from the current servlet mapping with scheme tweaked in case the
+     * request contains an {@code X-Forwarded-Ssl} header, which is not (yet) supported by the underlying
+     * {@link UriComponentsBuilder}. If no {@link RequestContextHolder} exists (you're outside a Spring Web call), fall
+     * back to relative URIs.
      *
-     * @return builder
+     * @return
      */
     static UriComponentsBuilder getBuilder() {
+        if (RequestContextHolder.getRequestAttributes() == null) {
+            return UriComponentsBuilder.fromPath("/");
+        }
 
         HttpServletRequest request = getCurrentRequest();
-        ServletUriComponentsBuilder builder = ServletUriComponentsBuilder.fromServletMapping(request);
+        UriComponentsBuilder builder = ServletUriComponentsBuilder.fromServletMapping(request);
+
+        // special case handling for X-Forwarded-Ssl:
+        // apply it, but only if X-Forwarded-Proto is unset.
 
         String forwardedSsl = request.getHeader("X-Forwarded-Ssl");
+        ForwardedHeader forwarded = ForwardedHeader.of(request.getHeader(ForwardedHeader.NAME));
+        String proto = hasText(forwarded.getProto()) ? forwarded.getProto() : request.getHeader("X-Forwarded-Proto");
 
-        if (StringUtils.hasText(forwardedSsl) && forwardedSsl.equalsIgnoreCase("on")) {
+        if (!hasText(proto) && hasText(forwardedSsl) && forwardedSsl.equalsIgnoreCase("on")) {
             builder.scheme("https");
-        }
-
-        String host = request.getHeader("X-Forwarded-Host");
-
-        if (!StringUtils.hasText(host)) {
-            return builder;
-        }
-
-        String[] hosts = StringUtils.commaDelimitedListToStringArray(host);
-        String hostToUse = hosts[0];
-
-        if (hostToUse.contains(":")) {
-
-            String[] hostAndPort = StringUtils.split(hostToUse, ":");
-
-            builder.host(hostAndPort[0]);
-            builder.port(Integer.parseInt(hostAndPort[1]));
-        } else {
-            builder.host(hostToUse);
-            builder.port(-1); // reset port if it was forwarded from default port
-        }
-
-        String port = request.getHeader("X-Forwarded-Port");
-
-        if (StringUtils.hasText(port)) {
-            builder.port(Integer.parseInt(port));
         }
 
         return builder;

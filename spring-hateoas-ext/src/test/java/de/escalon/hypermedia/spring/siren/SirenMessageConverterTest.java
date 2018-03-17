@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +39,8 @@ import java.util.List;
 import static com.jayway.jsonassert.JsonAssert.with;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.linkTo;
 import static de.escalon.hypermedia.spring.AffordanceBuilder.methodOn;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -236,6 +240,12 @@ public class SirenMessageConverterTest {
         String json = objectMapper.valueToTree(entity)
                 .toString();
 
+        System.out.println(json);
+
+        Object read = JsonPath.parse(json)
+                .read("$.entities[?(@.rel[0]=='customer')]");
+        System.out.println(read);
+
         with(json).assertThat("$.actions", hasSize(3));
         with(json).assertThat("$.actions[0].fields", hasSize(3));
         with(json).assertThat("$.actions[0].fields[0].name", equalTo("orderNumber"));
@@ -247,10 +257,11 @@ public class SirenMessageConverterTest {
         with(json).assertThat("$.actions[1].fields[0].name", equalTo("attr"),
                 "missing action for orders uri template");
         with(json).assertThat("$.actions[1].fields[0].type", equalTo("text"));
+        assertThat(json, JsonPathMatchers.hasJsonPath("$.entities[?(@.rel[0]=='foo')]", empty()));
 
         // non-query variables are not supported
-        with(json).assertNotDefined("$.entities[?(@.rel[0]=='foo')][0]");
-        with(json).assertNotDefined("$.entities[?(@.rel[0]=='foo-query')][0]");
+        assertThat(json, JsonPathMatchers.hasJsonPath("$.entities[?(@.rel[0]=='foo')]", empty()));
+        assertThat(json, JsonPathMatchers.hasJsonPath("$.entities[?(@.rel[0]=='foo-query')]", empty()));
 
         with(json).assertThat("$.actions[2].fields[0].name", equalTo("bar"),
                 "missing action for foo-query uri template");
