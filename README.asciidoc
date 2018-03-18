@@ -6,7 +6,7 @@ Annotate your Java beans and serialize them as http://www.w3.org/TR/json-ld/[jso
 
 Status: Testing. Since the Hydra Specification is still a draft, expect incompatible changes.
 
-Latest release: 0.3.1
+Latest release: 0.4.0
 
 == Problem
 
@@ -646,7 +646,7 @@ The latest Maven releases of hydra-java are in Maven central. These are the mave
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>hydra-spring</artifactId>
-  <version>0.3.1</version>
+  <version>0.4.0</version>
 </dependency>
 ----
 
@@ -657,7 +657,7 @@ If you only want to use `AffordanceBuilder` or the `XhtmlResourceMessageConverte
 <dependency>
   <groupId>de.escalon.hypermedia</groupId>
   <artifactId>spring-hateoas-ext</artifactId>
-  <version>0.3.1</version>
+  <version>0.4.0</version>
 </dependency>
 ----
 
@@ -668,6 +668,9 @@ http://lov.okfn.org/dataset/lov/[Linked Open Vocabularies] you can search for te
 If you are unsure which vocab to use, ask on the http://lists.w3.org/Archives/Public/public-hydra/[ hydra mailing list].
 
 == What's new
+=== 0.4.0
+- Updated to current spring-hateoas with Spring 4, no longer compatible with Spring 3. Please use 0.3.x if you need Spring 3.
+
 === 0.3.1
 - PartialUriTemplate no longer wrongly rearranges url having unexpanded simple string variables in the query
 
