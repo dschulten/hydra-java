@@ -20,7 +20,7 @@
         specified for component-scanning -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>de.escalon.hypermedia.sample.AppConfig</param-value>
+        <param-value>de.escalon.hypermedia.sample.Config</param-value>
     </context-param>
 
     <!-- Bootstrap the root application context as usual using ContextLoaderListener -->
