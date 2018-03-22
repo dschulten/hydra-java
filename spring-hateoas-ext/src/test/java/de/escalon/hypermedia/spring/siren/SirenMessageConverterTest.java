@@ -164,7 +164,7 @@ public class SirenMessageConverterTest {
         }
 
         @RequestMapping
-        public ResponseEntity<Resources<Order>> getOrders(@RequestParam List<String> attr) {
+        public ResponseEntity<Resources<Order>> getOrders(@RequestParam("a") List<String> attr) {
             return null;
         }
     }
@@ -254,7 +254,7 @@ public class SirenMessageConverterTest {
         with(json).assertThat("$.actions[0].method", equalTo("POST"));
 
         // TODO list query parameter: do something smarter
-        with(json).assertThat("$.actions[1].fields[0].name", equalTo("attr"),
+        with(json).assertThat("$.actions[1].fields[0].name", equalTo("a"),
                 "missing action for orders uri template");
         with(json).assertThat("$.actions[1].fields[0].type", equalTo("text"));
         assertThat(json, JsonPathMatchers.hasJsonPath("$.entities[?(@.rel[0]=='foo')]", empty()));

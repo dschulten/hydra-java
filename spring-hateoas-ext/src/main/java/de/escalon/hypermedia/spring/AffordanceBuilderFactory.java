@@ -458,7 +458,6 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             } else {
                 argument = null;
             }
-            //TODO: use action input parameter name as key here
             ActionInputParameter inputParameter = new SpringActionInputParameter(parameter, argument);
             result.put(inputParameter.getParameterName(), inputParameter);
         }
