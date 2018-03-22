@@ -117,10 +117,10 @@ public class DummyEventController {
         return resource;
     }
 
-    @RequestMapping(method = RequestMethod.GET, params = {"eventName"})
+    @RequestMapping(method = RequestMethod.GET, params = {"evtName"})
     public
     @ResponseBody
-    Resource<Event> findEventByName(@RequestParam String eventName) {
+    Resource<Event> findEventByName(@RequestParam("evtName") String eventName) {
         Resource<Event> ret = null;
         for (Event event : getEvents()) {
             if (event.getWorkPerformed()

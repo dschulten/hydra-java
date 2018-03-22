@@ -98,7 +98,7 @@ public class XhtmlResourceMessageConverterTest {
                 // TODO: form name
                 .andExpect(xpath("//h:form[@action='http://localhost/events' and @method='GET' and " +
                                 "@name='findEventByName']/h:div/h:input/@name",
-                        namespaces).string("eventName"))
+                        namespaces).string("evtName"))
                 .andReturn();
         LOG.debug(result.getResponse()
                 .getContentAsString());
