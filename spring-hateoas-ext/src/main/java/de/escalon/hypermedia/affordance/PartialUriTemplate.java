@@ -274,7 +274,9 @@ public class PartialUriTemplate {
         List<String> ret = new ArrayList<String>();
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
             Map<String, ActionInputParameter> required = actionDescriptor.getRequiredParameters();
-            ret.addAll(required.keySet());
+            for (ActionInputParameter actionInputParameter : required.values()) {
+                ret.add(actionInputParameter.getParameterName());
+            }
         }
         return ret;
     }

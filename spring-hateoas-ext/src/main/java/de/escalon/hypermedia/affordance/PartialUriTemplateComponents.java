@@ -126,6 +126,6 @@ public class PartialUriTemplateComponents {
     }
 
     public boolean hasVariables() {
-        return baseUri.contains("{") || !StringUtils.isEmpty(queryTail) || fragmentIdentifier.contains("{");
+        return !variableNames.isEmpty();
     }
 }

@@ -277,13 +277,6 @@ public class HydraMessageConverterTest {
                 .getContentAsString());
     }
 
-
-//    @Test
-//    public void usesInputInclude() {
-//
-//        throw new UnsupportedOperationException();
-//    }
-
     @Test
     public void convertsTemplatedLinkToMethodAsIriTemplate() throws Exception {
         final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/events")
@@ -293,8 +286,8 @@ public class HydraMessageConverterTest {
                 .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
                 .andExpect(jsonPath("$.['hydra:search'].@type").value("hydra:IriTemplate"))
                 .andExpect(jsonPath("$.['hydra:search'].['hydra:template']").value
-                        ("http://localhost/events{?eventName}"))
-                .andExpect(jsonPath("$.['hydra:search'].['hydra:mapping'][0].['hydra:variable']").value("eventName"))
+                        ("http://localhost/events{?evtName}"))
+                .andExpect(jsonPath("$.['hydra:search'].['hydra:mapping'][0].['hydra:variable']").value("evtName"))
                 .andExpect(jsonPath("$.['hydra:search'].['hydra:mapping'][0].['hydra:property']").value
                         ("http://schema.org/name"))
 
@@ -330,13 +323,14 @@ public class HydraMessageConverterTest {
                         .isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/ld+json"))
 
-
                 .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:method']")
+                        .value("GET"))
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:method']")
                         .value("PUT"))
-                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[0]['hydra:expects']" +
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:expects']" +
                         ".['@type']")
                         .value("Event"))
-                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[1]['hydra:method']")
+                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].[2]['hydra:method']")
                         .value("DELETE"))
 
 //                .andExpect(jsonPath("$.['hydra:member'][0]['hydra:operation'].['hydra:expects']

@@ -12,6 +12,7 @@
  */
 
 package de.escalon.hypermedia.affordance;
+
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -34,11 +35,14 @@ import static de.escalon.hypermedia.affordance.Affordance.LinkParam.*;
  * Represents an http affordance for purposes of a ReST service as described by <a
  * href="http://tools.ietf.org/html/rfc5988">Web Linking rfc-5988</a>. Additionally includes {@link ActionDescriptor}s
  * for http methods and expected request bodies. <p>Also supports templated affordances, in which case it is represented
- * as a <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a></p> <p>This
- * class can be created manually or via one of the {@link de.escalon.hypermedia.spring.AffordanceBuilder#linkTo}
+ * as a <a href="http://tools.ietf.org/html/draft-nottingham-link-template-01">Link-Template Header</a></p>
+ *
+ * <p>This class can be created manually or via one of the {@link de.escalon.hypermedia.spring.AffordanceBuilder#linkTo}
  * methods. In the latter case the affordance should be created with pre-expanded variables (using {@link
  * PartialUriTemplate#expand} on the given uri template). In the former case one may use {@link #expandPartially} to
- * expand the Affordance variables as far as possible, while keeping unsatisified variables.</p> <p>Created by dschulten
+ * expand the Affordance variables as far as possible, while keeping unsatisified variables.</p>
+ *
+ * <p>Created by dschulten
  * on 07.09.2014.</p>
  */
 public class Affordance extends Link {
@@ -77,10 +81,8 @@ public class Affordance extends Link {
     /**
      * Creates affordance. Action descriptors and link header params may be added later.
      *
-     * @param uriTemplate
-     *         uri or uritemplate of the affordance
-     * @param rels
-     *         describing the link relation type
+     * @param uriTemplate uri or uritemplate of the affordance
+     * @param rels        describing the link relation type
      */
     public Affordance(String uriTemplate, String... rels) {
         this(new PartialUriTemplate(uriTemplate), new ArrayList<ActionDescriptor>(), rels);
@@ -89,8 +91,7 @@ public class Affordance extends Link {
     /**
      * Creates affordance. Rels, action descriptors and link header params may be added later.
      *
-     * @param uriTemplate
-     *         uri or uritemplate of the affordance
+     * @param uriTemplate uri or uritemplate of the affordance
      */
     public Affordance(String uriTemplate) {
         this(uriTemplate, new String[]{});
@@ -98,15 +99,13 @@ public class Affordance extends Link {
 
     /**
      * Creates affordance, usually for a pre-expanded uriTemplate. Link header params may be added later. Optional
-     * variables will be stripped before passing it to the underlying link. Use {@link #getUriTemplateComponents()} to
+     * variables will be stripped before passing it to the underlying link for compatibility with the
+     * underlying {@link Link} class. Use {@link #getUriTemplateComponents()} to
      * access the base uri, query head, query tail with optional variables etc.
      *
-     * @param uriTemplate
-     *         pre-expanded uri or uritemplate of the affordance
-     * @param actionDescriptors
-     *         describing the possible http methods on the affordance
-     * @param rels
-     *         describing the link relation type
+     * @param uriTemplate       pre-expanded uri or uritemplate of the affordance
+     * @param actionDescriptors describing the possible http methods on the affordance
+     * @param rels              describing the link relation type
      * @see PartialUriTemplate#expand
      */
     public Affordance(PartialUriTemplate uriTemplate, List<ActionDescriptor> actionDescriptors, String... rels) {
@@ -150,8 +149,7 @@ public class Affordance extends Link {
     /**
      * The relation type of the link.
      *
-     * @param rel
-     *         IANA-registered type or extension relation type.
+     * @param rel IANA-registered type or extension relation type.
      */
     public void addRel(String rel) {
         Assert.hasLength(rel);
@@ -164,8 +162,7 @@ public class Affordance extends Link {
      * HTTP response obtained by actually following the link.  There MUST NOT be more than one type parameter in a link-
      * value.
      *
-     * @param mediaType
-     *         to set
+     * @param mediaType to set
      */
     public void setType(String mediaType) {
         if (mediaType != null)
@@ -180,8 +177,7 @@ public class Affordance extends Link {
      * a HTTP response obtained by actually following the link.  Multiple "hreflang" parameters on a single link- value
      * indicate that multiple languages are available from the indicated resource.
      *
-     * @param hreflang
-     *         to add
+     * @param hreflang to add
      */
     public void addHreflang(String hreflang) {
         Assert.hasLength(hreflang);
@@ -194,8 +190,7 @@ public class Affordance extends Link {
      * present).  The "title" parameter MUST NOT appear more than once in a given link-value; occurrences after the
      * first MUST be ignored by parsers.
      *
-     * @param title
-     *         to set
+     * @param title to set
      */
     public void setTitle(String title) {
         if (title != null)
@@ -224,12 +219,12 @@ public class Affordance extends Link {
 
     /**
      * Bean which allows to json-unwrap map-valued properties.
+     *
      * @see <a href="https://github.com/FasterXML/jackson-databind/issues/171">JsonUnwrapped not supported for Map-valued properties</a>
      * @see <a href="http://www.cowtowncoder.com/blog/archives/2011/07/entry_458.html">Jackson tips: using @JsonAnyGetter/@JsonAnySetter to create "dyna beans"</a>
      */
-    public class DynaBean
-    {
-        protected Map<String,Object> dynaProperties = new HashMap<String,Object>();
+    public class DynaBean {
+        protected Map<String, Object> dynaProperties = new HashMap<String, Object>();
 
         public Object get(String name) {
             return dynaProperties.get(name);
@@ -241,7 +236,7 @@ public class Affordance extends Link {
 
         // "any getter" needed for serialization
         @JsonAnyGetter
-        public Map<String,Object> any() {
+        public Map<String, Object> any() {
             return dynaProperties;
         }
 
@@ -283,7 +278,7 @@ public class Affordance extends Link {
      * language information as per <a href="https://tools.ietf.org/html/rfc5987">RFC-5987</a>.  The "title*" parameter MUST NOT appear more than once in a given
      * link-value; occurrences after the first MUST be ignored by parsers.  If the parameter does not contain language
      * information, its language is indicated by the Content-Language header (when present).
-     *
+     * <p>
      * If both the "title" and "title*" parameters appear in a link-value, processors SHOULD use the "title*"
      * parameter's value. <p>The example below shows an instance of the Link header encoding a link title using <a href="https://tools.ietf.org/html/rfc2231">RFC-2231</a>
      * encoding to encode both non-ASCII characters and language information.</p>
@@ -292,8 +287,7 @@ public class Affordance extends Link {
      *     rel="next"; title*=UTF-8'de'n%c3%a4chstes%20Kapitel
      * </pre>
      *
-     * @param titleStar
-     *         to set
+     * @param titleStar to set
      */
     public void setTitleStar(String titleStar) {
         if (titleStar != null)
@@ -308,8 +302,7 @@ public class Affordance extends Link {
      * [W3C.CR-css3-mediaqueries-20090915]).  Its value MUST be quoted if it contains a semicolon (";") or comma (","),
      * and there MUST NOT be more than one "media" parameter in a link-value.
      *
-     * @param mediaDesc
-     *         to set
+     * @param mediaDesc to set
      */
     public void setMedia(String mediaDesc) {
         if (mediaDesc != null)
@@ -324,8 +317,7 @@ public class Affordance extends Link {
      * A with REV="X". "rev" is deprecated by this specification because it often confuses authors and readers; in most
      * cases, using a separate relation type is preferable.
      *
-     * @param rev
-     *         to add
+     * @param rev to add
      */
     public void addRev(String rev) {
         Assert.hasLength(rev);
@@ -339,8 +331,7 @@ public class Affordance extends Link {
      * parsers MUST resolve it as per [RFC3986], Section 5.  Note that any base URI from the body's content is not
      * applied.
      *
-     * @param anchor
-     *         base uri to define
+     * @param anchor base uri to define
      */
     public void setAnchor(String anchor) {
         if (anchor != null)
@@ -352,10 +343,8 @@ public class Affordance extends Link {
     /**
      * Adds link-extension params, i.e. custom params which are not described in the web linking rfc.
      *
-     * @param paramName
-     *         of link-extension
-     * @param values
-     *         one or more values to add
+     * @param paramName of link-extension
+     * @param values    one or more values to add
      */
     public void addLinkParam(String paramName, String... values) {
         Assert.notEmpty(values);
@@ -462,8 +451,7 @@ public class Affordance extends Link {
      * Expands template variables, arguments must satisfy all required template variables, optional variables will be
      * removed.
      *
-     * @param arguments
-     *         to expansion in the order they appear in the template
+     * @param arguments to expansion in the order they appear in the template
      * @return expanded affordance
      */
     @Override
@@ -473,6 +461,17 @@ public class Affordance extends Link {
         String expanded = template.expand(arguments)
                 .toASCIIString();
         return new Affordance(expanded, linkParams, actionDescriptors);
+    }
+
+    /**
+     * Gets href of this link. Non-mandatory template variables will be removed for compatibility with the underlying {@link Link} class.
+     * To access the full uri template including optional variables, use {@link #getUriTemplateComponents()}
+     *
+     * @return
+     */
+    @Override
+    public String getHref() {
+        return super.getHref();
     }
 
     /**
@@ -489,8 +488,7 @@ public class Affordance extends Link {
      * Expands template variables, arguments must satisfy all required template variables, unsatisfied optional
      * arguments will be removed.
      *
-     * @param arguments
-     *         to expansion
+     * @param arguments to expansion
      * @return expanded affordance
      */
     @Override
@@ -507,8 +505,7 @@ public class Affordance extends Link {
      * manually created affordances. If the Affordance has been created with linkTo-methodOn, it should not be necessary
      * to expand the affordance again.
      *
-     * @param arguments
-     *         for expansion, in the order they appear in the template
+     * @param arguments for expansion, in the order they appear in the template
      * @return partially expanded affordance
      */
     public Affordance expandPartially(Object... arguments) {
@@ -521,8 +518,7 @@ public class Affordance extends Link {
      * manually created affordances. If the Affordance has been created with linkTo-methodOn, it should not be necessary
      * to expand the affordance again.
      *
-     * @param arguments
-     *         for expansion
+     * @param arguments for expansion
      * @return partially expanded affordance
      */
     public Affordance expandPartially(Map<String, ? extends Object> arguments) {
@@ -577,8 +573,7 @@ public class Affordance extends Link {
     /**
      * Sets action descriptors.
      *
-     * @param actionDescriptors
-     *         to set
+     * @param actionDescriptors to set
      */
     public void setActionDescriptors(List<ActionDescriptor> actionDescriptors) {
         if (this.actionDescriptors.isEmpty()) {

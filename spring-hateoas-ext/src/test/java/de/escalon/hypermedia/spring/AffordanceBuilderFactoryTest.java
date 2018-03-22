@@ -25,10 +25,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -93,6 +90,16 @@ public class AffordanceBuilderFactoryTest {
         Resources<Object> queryEvent(@Input EventQbe query) {
             return null;
         }
+
+        @RequestMapping(value = "/simplequery", method = RequestMethod.GET)
+        public
+        @ResponseBody
+        Resources<Object> simpleQueryEvent(@RequestParam("q") String query,
+                                           @RequestParam(value = "offset", defaultValue = "0") Long offset) {
+            return null;
+        }
+
+
 
         @RequestMapping(value = "/queryexcludes", method = RequestMethod.GET)
         public
@@ -208,6 +215,52 @@ public class AffordanceBuilderFactoryTest {
         assertEquals("http://example.com/events/query{?description,status}", affordance.getHref());
         assertEquals("foo", affordance.getRel());
     }
+
+    @Test
+    public void testLinkToMethodInvocationNamedRequestParam() throws Exception {
+
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .simpleQueryEvent(null, null))
+                .rel("foo")
+                .build();
+        // href strips optional variables
+        assertEquals("http://example.com/events/simplequery{?q}", affordance.getHref());
+        // full uritemplate
+        assertEquals("http://example.com/events/simplequery{?q,offset}",
+                affordance.getUriTemplateComponents().toString());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToMethodInvocationNamedRequestParamWithValue() throws Exception {
+
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .simpleQueryEvent("foo", null))
+                .rel("foo")
+                .build();
+        // href strips optional variables
+        assertEquals("http://example.com/events/simplequery?q=foo", affordance.getHref());
+        // full uritemplate
+        assertEquals("http://example.com/events/simplequery?q=foo{&offset}",
+                affordance.getUriTemplateComponents().toString());
+        assertEquals("foo", affordance.getRel());
+    }
+
+    @Test
+    public void testLinkToMethodInvocationNamedRequestParamWithAllValues() throws Exception {
+
+        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
+                .simpleQueryEvent("foo", 2L))
+                .rel("foo")
+                .build();
+        // href must not strip variables with values
+        assertEquals("http://example.com/events/simplequery?q=foo&offset=2", affordance.getHref());
+        // full uritemplate with all values
+        assertEquals("http://example.com/events/simplequery?q=foo&offset=2",
+                affordance.getUriTemplateComponents().toString());
+        assertEquals("foo", affordance.getRel());
+    }
+
 
     @Test
     public void testLinkToMethodInvocationBeanInputWithExcludes() throws Exception {

@@ -277,10 +277,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     private void writeActionDescriptors(JsonGenerator jgen, String currentVocab, List<ActionDescriptor>
             actionDescriptors) throws IOException, IntrospectionException {
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
-            if ("GET".equals(actionDescriptor.getHttpMethod())) {
-                continue;
-            }
-
             jgen.writeStartObject(); // begin a hydra:Operation
 
             final String semanticActionType = actionDescriptor.getSemanticActionType();
@@ -728,7 +724,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 if (annotatedParameter != null && annotatedParameter.getValue() == null) {
                     jgen.writeStartObject();
                     jgen.writeStringField("@type", "hydra:IriTemplateMapping");
-                    jgen.writeStringField("hydra:variable", variableName);
+                    jgen.writeStringField("hydra:variable", annotatedParameter.getParameterName());
                     jgen.writeBooleanField("hydra:required",
                             annotatedParameter
                                     .isRequired());

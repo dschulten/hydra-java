@@ -46,7 +46,7 @@ public interface ActionDescriptor {
     Collection<String> getRequestParamNames();
 
     /**
-     * Gets action parameter by name.
+     * Gets action parameter by method parameter name.
      *
      * @param name
      * @return parameter

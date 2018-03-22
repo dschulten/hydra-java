@@ -55,12 +55,9 @@ public class SpringActionInputParameter implements ActionInputParameter {
     /**
      * Creates action input parameter.
      *
-     * @param methodParameter
-     *         to describe
-     * @param value
-     *         used during sample invocation
-     * @param conversionService
-     *         to apply to value
+     * @param methodParameter   to describe
+     * @param value             used during sample invocation
+     * @param conversionService to apply to value
      */
     public SpringActionInputParameter(MethodParameter methodParameter, Object value, ConversionService
             conversionService) {
@@ -88,10 +85,8 @@ public class SpringActionInputParameter implements ActionInputParameter {
     /**
      * Creates new ActionInputParameter with default formatting conversion service.
      *
-     * @param methodParameter
-     *         holding metadata about the parameter
-     * @param value
-     *         during sample method invocation
+     * @param methodParameter holding metadata about the parameter
+     * @param value           during sample method invocation
      */
     public SpringActionInputParameter(MethodParameter methodParameter, Object value) {
         this(methodParameter, value, new DefaultFormattingConversionService());
@@ -199,8 +194,7 @@ public class SpringActionInputParameter implements ActionInputParameter {
     /**
      * Determines if request body input parameter has a hidden input property.
      *
-     * @param property
-     *         name or property path
+     * @param property name or property path
      * @return true if hidden
      */
     @Override
@@ -257,8 +251,7 @@ public class SpringActionInputParameter implements ActionInputParameter {
     /**
      * Determines if request body input parameter should be excluded, considering {@link Input#exclude}.
      *
-     * @param property
-     *         name or property path
+     * @param property name or property path
      * @return true if excluded, false if no include statement found or not excluded
      */
     @Override
@@ -398,8 +391,7 @@ public class SpringActionInputParameter implements ActionInputParameter {
      * Make sure to check {@link #isArrayOrCollection()} before calling this method.
      *
      * @return call values or empty array
-     * @throws UnsupportedOperationException
-     *         if this input parameter is not an array or collection
+     * @throws UnsupportedOperationException if this input parameter is not an array or collection
      */
     public Object[] getValues() {
         Object[] callValues;
@@ -430,18 +422,31 @@ public class SpringActionInputParameter implements ActionInputParameter {
     }
 
     /**
-     * Gets parameter name of this action input parameter.
+     * Gets request parameter name of this action input parameter.
      *
      * @return name
      */
+    @Override
     public String getParameterName() {
-        String ret;
-        String parameterName = methodParameter.getParameterName();
-        if (parameterName == null) {
-            methodParameter.initParameterNameDiscovery(new LocalVariableTableParameterNameDiscoverer());
-            ret = methodParameter.getParameterName();
-        } else {
-            ret = parameterName;
+        String ret = null;
+        if (requestParam != null) {
+            String requestParamName = requestParam.value();
+            if (!requestParamName.isEmpty())
+                ret = requestParamName;
+        }
+        if (pathVariable != null) {
+            String pathVariableName = pathVariable.value();
+            if (!pathVariableName.isEmpty())
+                ret = pathVariableName;
+        }
+        if (ret == null) {
+            String parameterName = methodParameter.getParameterName();
+            if (parameterName == null) {
+                methodParameter.initParameterNameDiscovery(new LocalVariableTableParameterNameDiscoverer());
+                ret = methodParameter.getParameterName();
+            } else {
+                ret = parameterName;
+            }
         }
         return ret;
     }

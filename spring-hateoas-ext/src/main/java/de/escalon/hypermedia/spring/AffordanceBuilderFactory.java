@@ -60,11 +60,12 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
 
         String pathMapping = MAPPING_DISCOVERER.getMapping(controller, method);
 
-        Set<String> requestParamNames = getRequestParamNames(method);
-        Set<String> inputBeanParamNames = getInputBeanParamNames(method);
+        Map<String, String> requestParamNames = getRequestParamNames(method);
+        Map<String, String> inputBeanParamNames = getInputBeanParamNames(method);
 
         String query = join(requestParamNames, inputBeanParamNames);
-        String mapping = StringUtils.isEmpty(query) ? pathMapping : pathMapping + "{?" + query + "}";
+        // explicitly write out params where variable name and param are different, rest as continuation
+        String mapping = StringUtils.isEmpty(query) ? pathMapping : pathMapping + query;
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(AffordanceBuilder.getBuilder()
                 .build()
@@ -87,7 +88,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 break;
             }
             String variableName = variableNames.next();
-            if (!inputBeanParamNames.contains(variableName)) {
+            if (!inputBeanParamNames.containsKey(variableName)) {
                 values.put(variableName, argument);
             }
         }
@@ -97,17 +98,24 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
     }
 
-    private String join(Set<String>... params) {
-        StringBuilder sb = new StringBuilder();
-        for (Set<String> paramSet : params) {
-            for (String param : paramSet) {
-                if (sb.length() > 0) {
-                    sb.append(',');
+    private String join(Map<String, String>... params) {
+        StringBuilder levelFourQuery = new StringBuilder();
+        for (Map<String, String> paramMap : params) {
+
+            for (Map.Entry<String, String> parameter : paramMap.entrySet()) {
+                if (levelFourQuery.length() > 0) {
+                    levelFourQuery.append(",");
                 }
-                sb.append(param);
+                levelFourQuery.append(parameter.getValue());
             }
         }
-        return sb.toString();
+        StringBuilder ret = new StringBuilder();
+        if (levelFourQuery.length() > 0) {
+            ret.append("{?")
+                    .append(levelFourQuery)
+                    .append("}");
+        }
+        return ret.toString();
     }
 
     @Override
@@ -115,14 +123,6 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return linkTo(target, new Object[0]);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.hateoas.LinkBuilderFactory#linkTo(java.lang.Class, java.util.Map)
-     */
-    @Override
-    public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
-        return AffordanceBuilder.linkTo(controller, parameters);
-    }
 
     @Override
     public AffordanceBuilder linkTo(Class<?> controller, Object... parameters) {
@@ -145,13 +145,12 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return new AffordanceBuilder().slash(partialUriTemplate.expand(values));
     }
 
-// not in Spring 3.x
-//	@Override
-//	public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
-//		String mapping = MAPPING_DISCOVERER.getMapping(controller);
-//		PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
-//		return new AffordanceBuilder().slash(partialUriTemplate.expand(parameters));
-//	}
+    @Override
+    public AffordanceBuilder linkTo(Class<?> controller, Map<String, ?> parameters) {
+        String mapping = MAPPING_DISCOVERER.getMapping(controller);
+        PartialUriTemplate partialUriTemplate = new PartialUriTemplate(mapping == null ? "/" : mapping);
+        return new AffordanceBuilder().slash(partialUriTemplate.expand(parameters));
+    }
 
     @Override
     public AffordanceBuilder linkTo(Object invocationValue) {
@@ -166,11 +165,11 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         String pathMapping = MAPPING_DISCOVERER.getMapping(invokedMethod);
         Iterator<Object> classMappingParameters = invocations.getObjectParameters();
 
-        Set<String> requestParamNames = getRequestParamNames(invokedMethod);
-        Set<String> inputBeanParamNames = getInputBeanParamNames(invokedMethod);
+        Map<String, String> requestParamNames = getRequestParamNames(invokedMethod);
+        Map<String, String> inputBeanParamNames = getInputBeanParamNames(invokedMethod);
 
         String query = join(requestParamNames, inputBeanParamNames);
-        String mapping = StringUtils.isEmpty(query) ? pathMapping : pathMapping + "{?" + query + "}";
+        String mapping = StringUtils.isEmpty(query) ? pathMapping : pathMapping + query;
 
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(AffordanceBuilder.getBuilder()
                 .build()
@@ -191,7 +190,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 break;
             }
             String variableName = variableNames.next();
-            if (!inputBeanParamNames.contains(variableName)) {
+            if (!inputBeanParamNames.containsKey(variableName)) {
                 values.put(variableName, argument);
             }
         }
@@ -201,12 +200,12 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         return new AffordanceBuilder(partialUriTemplate.expand(values), Collections.singletonList(actionDescriptor));
     }
 
-    private Set<String> getInputBeanParamNames(Method invokedMethod) {
+    private Map<String, String> getInputBeanParamNames(Method invokedMethod) {
         MethodParameters parameters = new MethodParameters(invokedMethod);
 
         final List<MethodParameter> inputParams = parameters.getParametersWith(Input.class);
 
-        Set<String> ret = new LinkedHashSet<String>(inputParams.size());
+        Map<String, String> ret = new LinkedHashMap<String, String>(inputParams.size());
         for (MethodParameter inputParam : inputParams) {
             Class<?> parameterType = inputParam.getParameterType();
             // only use @Input param which is a bean or map and has no other annotations
@@ -222,17 +221,22 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
                 Collections.addAll(explicitlyIncludedParams, inputAnnotation.readOnly());
 
                 if (Map.class.isAssignableFrom(parameterType)) {
-                    ret.addAll(explicitlyIncludedParams);
+                    for (String explicitlyIncludedParam : explicitlyIncludedParams) {
+                        ret.put(explicitlyIncludedParam, explicitlyIncludedParam);
+                    }
                 } else {
                     Set<String> inputBeanPropertyNames = getWritablePropertyNames(parameterType);
 
                     if (explicitlyIncludedParams.isEmpty()) {
-                        ret.addAll(inputBeanPropertyNames);
+                        for (String inputBeanPropertyName : inputBeanPropertyNames) {
+                            ret.put(inputBeanPropertyName, inputBeanPropertyName);
+                        }
                     } else {
                         for (String explicitlyIncludedParam : explicitlyIncludedParams) {
                             assertInputAnnotationConsistency(inputParam, inputBeanPropertyNames,
                                     explicitlyIncludedParam, "includes");
-                            ret.add(explicitlyIncludedParam);
+                            // TODO: have different Qbe property name and variable name?
+                            ret.put(explicitlyIncludedParam, explicitlyIncludedParam);
                         }
                     }
                     String[] excludedParams = inputAnnotation.exclude();
@@ -254,7 +258,7 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         Map<String, PropertyDescriptor> propertyDescriptors = PropertyUtils.getPropertyDescriptors
                 (parameterType);
         for (PropertyDescriptor propertyDescriptor : propertyDescriptors.values()) {
-            if(propertyDescriptor.getWriteMethod() != null) {
+            if (propertyDescriptor.getWriteMethod() != null) {
                 inputBeanPropertyNames.add(propertyDescriptor.getName());
             }
         }
@@ -275,12 +279,14 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
         }
     }
 
-    private Set<String> getRequestParamNames(Method invokedMethod) {
+    private Map<String, String> getRequestParamNames(Method invokedMethod) {
         MethodParameters parameters = new MethodParameters(invokedMethod);
         final List<MethodParameter> requestParams = parameters.getParametersWith(RequestParam.class);
-        Set<String> params = new LinkedHashSet<String>(requestParams.size());
+        Map<String, String> params = new LinkedHashMap<String, String>(requestParams.size());
         for (MethodParameter requestParam : requestParams) {
-            params.add(requestParam.getParameterName());
+            RequestParam requestParamAnnotation = requestParam.getParameterAnnotation(RequestParam.class);
+            params.put(requestParam.getParameterName(), requestParamAnnotation.value()
+                    .isEmpty() ? requestParam.getParameterName() : requestParamAnnotation.value());
         }
 
         return params;
@@ -430,12 +436,9 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
     /**
      * Returns {@link ActionInputParameter}s contained in the method link.
      *
-     * @param annotation
-     *         to inspect
-     * @param method
-     *         must not be {@literal null}.
-     * @param arguments
-     *         to the method link
+     * @param annotation to inspect
+     * @param method     must not be {@literal null}.
+     * @param arguments  to the method link
      * @return maps parameter names to parameter info
      */
     private static Map<String, ActionInputParameter> getActionInputParameters(Class<? extends Annotation> annotation,
@@ -455,7 +458,9 @@ public class AffordanceBuilderFactory implements MethodLinkBuilderFactory<Afford
             } else {
                 argument = null;
             }
-            result.put(parameter.getParameterName(), new SpringActionInputParameter(parameter, argument));
+            //TODO: use action input parameter name as key here
+            ActionInputParameter inputParameter = new SpringActionInputParameter(parameter, argument);
+            result.put(inputParameter.getParameterName(), inputParameter);
         }
 
         return result;

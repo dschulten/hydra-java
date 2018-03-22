@@ -204,7 +204,7 @@ public interface ActionInputParameter {
     boolean hasValue();
 
     /**
-     * Name of parameter.
+     * Name of request parameter.
      *
      * @return
      */
