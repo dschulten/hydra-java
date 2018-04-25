@@ -12,6 +12,8 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -112,6 +114,11 @@ public class LdContextFactory {
                         final Expose expose = method.getAnnotation(Expose.class);
                         if (Enum.class.isAssignableFrom(method.getReturnType())) {
                             addEnumTerms(termsMap, expose, propertyDescriptor.getName(), (Enum) method.invoke(bean));
+                        } else if ( returnsEnumCollection( method ) ) {
+							Collection<? extends Enum> coll = ( Collection<? extends Enum> ) method.invoke( bean );
+							for ( Enum item : coll ) {
+								addEnumTerms(termsMap, expose, propertyDescriptor.getName(), item);
+							}
                         } else {
                             if (expose != null) {
                                 termsMap.put(propertyDescriptor.getName(), expose.value());
@@ -126,8 +133,22 @@ public class LdContextFactory {
         }
     }
 
+	private boolean returnsEnumCollection( Method method ) {
+		if ( Collection.class.isAssignableFrom( method.getReturnType() ) ) {
+			Type t = method.getGenericReturnType();
+			if ( t instanceof ParameterizedType ) {
+				ParameterizedType pt = (ParameterizedType) t;
+				if ( pt.getActualTypeArguments().length == 1 ) {
+					Type arg = pt.getActualTypeArguments()[0];
+					return Class.class.isInstance( arg ) && Enum.class.isAssignableFrom( (Class) arg );
+				}
+			}
+		}
+		return false;
+    }
 
-    /**
+
+	/**
      * Gets explicitly defined terms, e.g. on package, class or mixin.
      *
      * @param annotatedElement
