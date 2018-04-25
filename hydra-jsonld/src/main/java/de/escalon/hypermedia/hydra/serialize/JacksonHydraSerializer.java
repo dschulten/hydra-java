@@ -28,6 +28,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static de.escalon.hypermedia.AnnotationUtils.findAnnotation;
 
@@ -64,18 +65,21 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     }
 
     public JacksonHydraSerializer(BeanSerializerBase source,
-                                  String[] toIgnore) {
+                                  Set<String> toIgnore) {
         super(source, toIgnore);
     }
 
     public BeanSerializerBase withObjectIdWriter(
             ObjectIdWriter objectIdWriter) {
-        return new JacksonHydraSerializer(this, objectIdWriter);
+        return new JacksonHydraSerializer(this, objectIdWriter)
+		        .withLdContextFactory( this.ldContextFactory );
     }
 
-    protected BeanSerializerBase withIgnorals(String[] toIgnore) {
-        return new JacksonHydraSerializer(this, toIgnore);
-    }
+	@Override
+	protected BeanSerializerBase withIgnorals( Set<String> toIgnore ) {
+		return new JacksonHydraSerializer(this, toIgnore)
+				.withLdContextFactory( this.ldContextFactory );
+	}
 
     @Override
     protected BeanSerializerBase asArraySerializer() {
@@ -99,7 +103,13 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     public BeanSerializerBase withFilterId(Object filterId) {
         final JacksonHydraSerializer ret = new JacksonHydraSerializer(this);
         ret.withFilterId(filterId);
+        ret.withLdContextFactory( this.ldContextFactory );
         return ret;
+    }
+
+    public JacksonHydraSerializer withLdContextFactory( LdContextFactory factory ) {
+    	this.ldContextFactory = factory;
+    	return this;
     }
 
     @Override
