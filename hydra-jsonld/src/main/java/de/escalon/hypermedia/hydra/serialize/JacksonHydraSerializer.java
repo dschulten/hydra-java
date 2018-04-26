@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
 import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
+import com.fasterxml.jackson.databind.ser.impl.WritableObjectId;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.fasterxml.jackson.databind.util.NameTransformer;
 import de.escalon.hypermedia.hydra.mapping.Expose;
@@ -115,9 +116,29 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     @Override
     public void serialize(Object bean, JsonGenerator jgen,
                           SerializerProvider serializerProvider) throws IOException {
-        if (!isUnwrappingSerializer()) {
-            jgen.writeStartObject();
-        }
+
+	    if (_objectIdWriter != null) {
+		    jgen.setCurrentValue(bean);
+
+		    final ObjectIdWriter w = _objectIdWriter;
+		    WritableObjectId objectId = serializerProvider.findObjectId( bean, w.generator );
+		    // If possible, write as id already
+		    if (objectId.writeAsId(jgen, serializerProvider, w)) {
+			    return;
+		    } else {
+			    if (!isUnwrappingSerializer()) {
+				    jgen.writeStartObject();
+			    }
+
+			    objectId.generateId( bean );
+			    objectId.writeAsField( jgen, serializerProvider, w );
+		    }
+	    } else {
+		    if (!isUnwrappingSerializer()) {
+			    jgen.writeStartObject();
+		    }
+	    }
+
         Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
         if (contextStack == null) {
             contextStack = new ArrayDeque<LdContext>();
@@ -160,7 +181,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         jgen.writeStringField(JsonLdKeywords.AT_TYPE, val);
     }
 
-    protected void serializeContext(Object bean, JsonGenerator jgen,
+	protected void serializeContext(Object bean, JsonGenerator jgen,
                                     SerializerProvider serializerProvider, Deque<LdContext> contextStack)
             throws IOException {
 

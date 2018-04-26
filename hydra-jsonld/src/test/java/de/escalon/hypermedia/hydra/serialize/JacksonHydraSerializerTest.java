@@ -13,8 +13,11 @@
 
 package de.escalon.hypermedia.hydra.serialize;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
@@ -39,6 +42,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 
 public class JacksonHydraSerializerTest {
@@ -398,4 +402,41 @@ public class JacksonHydraSerializerTest {
     }
 
 
+    @JsonIdentityInfo( generator = ObjectIdGenerators.UUIDGenerator.class )
+	public static class Car {
+		public Driver driver;
+		public int price = 42;
+	}
+
+	@JsonIdentityInfo( generator = ObjectIdGenerators.UUIDGenerator.class )
+	public static class Driver {
+		public Car driving;
+		public List<Car> driven;
+		public String license = "xyz";
+	}
+
+	@Test
+	public void testRoundTrip() throws IOException {
+    	Car c = new Car();
+    	Driver d = new Driver();
+		d.driving = c;
+		d.driven = Arrays.asList( c, c );
+		c.driver = d;
+
+		mapper.writeValue(w, d);
+		final String json = w.toString();
+
+		try {
+			Driver o = new ObjectMapper()
+					.configure( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false )
+					.readValue( json, Driver.class );
+			assertEquals( 2, o.driven.size() );
+			assertSame( o.driving, o.driven.get( 0 ) );
+			assertSame( o.driving, o.driven.get( 1 ) );
+			assertEquals( "xyz", o.license );
+			assertEquals( 42, o.driving.price );
+		} catch ( IOException e ) {
+			e.printStackTrace();
+		}
+	}
 }
