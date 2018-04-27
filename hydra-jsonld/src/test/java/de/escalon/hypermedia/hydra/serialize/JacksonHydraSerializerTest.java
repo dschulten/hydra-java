@@ -406,7 +406,7 @@ public class JacksonHydraSerializerTest {
 
 
     @JsonIdentityInfo( generator = ObjectIdGenerators.UUIDGenerator.class )
-	public static class Car {
+    public static class Car {
 		public Driver driver;
 		public int price = 42;
 	}

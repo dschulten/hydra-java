@@ -148,6 +148,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
 		// TODO FIXME The parent method _serializeWithObjectId is final: unable to put this code in an override
 		    objectId = serializerProvider.findObjectId( bean, _objectIdWriter.generator );
 		    // If possible, write as id already
+			objectId.generateId( bean );
 		    if (objectId.writeAsId(jgen, serializerProvider, _objectIdWriter)) {
 			    return;
 		    }
@@ -162,7 +163,6 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         }
 
 		if ( withId ) {
-			objectId.generateId( bean );
 			objectId.writeAsField( jgen, serializerProvider, _objectIdWriter );
 		}
 
