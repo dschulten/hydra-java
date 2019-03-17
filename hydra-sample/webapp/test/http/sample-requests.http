@@ -1,0 +1,9 @@
+### Get store as json
+http://localhost:8080/webapp/hypermedia-api/store
+Accept: application/json
+
+### Get store as json-ls
+http://localhost:8080/webapp/hypermedia-api/store
+Accept: application/ld+json
+
+###
