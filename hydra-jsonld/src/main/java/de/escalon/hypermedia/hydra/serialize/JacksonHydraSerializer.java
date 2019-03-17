@@ -13,21 +13,28 @@
 package de.escalon.hypermedia.hydra.serialize;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.WritableTypeId;
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+import com.fasterxml.jackson.databind.jsontype.impl.AsExistingPropertyTypeSerializer;
 import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
 import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
+import com.fasterxml.jackson.databind.ser.impl.WritableObjectId;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.fasterxml.jackson.databind.util.NameTransformer;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 
+import javax.xml.validation.TypeInfoProvider;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static de.escalon.hypermedia.AnnotationUtils.findAnnotation;
 
@@ -64,18 +71,21 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     }
 
     public JacksonHydraSerializer(BeanSerializerBase source,
-                                  String[] toIgnore) {
+                                  Set<String> toIgnore) {
         super(source, toIgnore);
     }
 
     public BeanSerializerBase withObjectIdWriter(
             ObjectIdWriter objectIdWriter) {
-        return new JacksonHydraSerializer(this, objectIdWriter);
+        return new JacksonHydraSerializer(this, objectIdWriter)
+		        .withLdContextFactory( this.ldContextFactory );
     }
 
-    protected BeanSerializerBase withIgnorals(String[] toIgnore) {
-        return new JacksonHydraSerializer(this, toIgnore);
-    }
+	@Override
+	protected BeanSerializerBase withIgnorals( Set<String> toIgnore ) {
+		return new JacksonHydraSerializer(this, toIgnore)
+				.withLdContextFactory( this.ldContextFactory );
+	}
 
     @Override
     protected BeanSerializerBase asArraySerializer() {
@@ -99,25 +109,69 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
     public BeanSerializerBase withFilterId(Object filterId) {
         final JacksonHydraSerializer ret = new JacksonHydraSerializer(this);
         ret.withFilterId(filterId);
+        ret.withLdContextFactory( this.ldContextFactory );
         return ret;
+    }
+
+    public JacksonHydraSerializer withLdContextFactory( LdContextFactory factory ) {
+    	this.ldContextFactory = factory;
+    	return this;
     }
 
     @Override
     public void serialize(Object bean, JsonGenerator jgen,
                           SerializerProvider serializerProvider) throws IOException {
-        if (!isUnwrappingSerializer()) {
-            jgen.writeStartObject();
-        }
-        Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
-        if (contextStack == null) {
-            contextStack = new ArrayDeque<LdContext>();
-            serializerProvider.setAttribute(KEY_LD_CONTEXT, contextStack);
+    	serialize( bean, jgen, serializerProvider, null );
+    }
+
+	public void serialize( Object bean, JsonGenerator jgen,
+	                       SerializerProvider serializerProvider,
+	                       TypeSerializer typeSerializer ) throws IOException {
+
+		boolean withJsonType = typeSerializer != null
+				&& ! ( typeSerializer instanceof AsExistingPropertyTypeSerializer
+				&& JsonLdKeywords.AT_TYPE.equals( typeSerializer.getPropertyName() ) );
+		boolean withId = _objectIdWriter != null;
+
+		WritableObjectId objectId = null;
+		WritableTypeId typeIdDef = null;
+
+		jgen.setCurrentValue(bean);
+
+		Deque<LdContext> contextStack = (Deque<LdContext>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
+		if (contextStack == null) {
+			contextStack = new ArrayDeque<LdContext>();
+			serializerProvider.setAttribute(KEY_LD_CONTEXT, contextStack);
+		}
+
+		if ( withId ) {
+		// TODO FIXME The parent method _serializeWithObjectId is final: unable to put this code in an override
+		    objectId = serializerProvider.findObjectId( bean, _objectIdWriter.generator );
+		    // If possible, write as id already
+			objectId.generateId( bean );
+		    if (objectId.writeAsId(jgen, serializerProvider, _objectIdWriter)) {
+			    return;
+		    }
+	    }
+		if (!isUnwrappingSerializer() && ! withJsonType) {
+			jgen.writeStartObject();
+		}
+
+        if ( withJsonType ) {
+        	typeIdDef = _typeIdDef(typeSerializer, bean, JsonToken.START_OBJECT);
+	        typeSerializer.writeTypePrefix(jgen, typeIdDef);
         }
 
-        serializeContext(bean, jgen, serializerProvider, contextStack);
-        serializeType(bean, jgen, serializerProvider);
-        serializeFields(bean, jgen, serializerProvider);
-        if (!isUnwrappingSerializer()) {
+		if ( withId ) {
+			objectId.writeAsField( jgen, serializerProvider, _objectIdWriter );
+		}
+
+		serializeContext(bean, jgen, serializerProvider, contextStack);
+	    serializeType(bean, jgen, serializerProvider);
+	    serializeFields(bean, jgen, serializerProvider);
+
+
+		if (!isUnwrappingSerializer()) {
             jgen.writeEndObject();
         }
         contextStack = (Deque<LdContext>) serializerProvider.getAttribute(KEY_LD_CONTEXT);
@@ -150,7 +204,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         jgen.writeStringField(JsonLdKeywords.AT_TYPE, val);
     }
 
-    protected void serializeContext(Object bean, JsonGenerator jgen,
+	protected void serializeContext(Object bean, JsonGenerator jgen,
                                     SerializerProvider serializerProvider, Deque<LdContext> contextStack)
             throws IOException {
 
@@ -214,6 +268,14 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
             // end context
         }
     }
+
+	@Override
+	public void serializeWithType(Object bean, JsonGenerator gen,
+	                              SerializerProvider provider, TypeSerializer typeSer )
+			throws IOException {
+    	// ensure type AND context information are serialized.
+    	serialize( bean, gen, provider, typeSer );
+	}
 
     @Override
     public JsonSerializer<Object> unwrappingSerializer(NameTransformer unwrapper) {

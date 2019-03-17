@@ -13,8 +13,13 @@
 
 package de.escalon.hypermedia.hydra.serialize;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
@@ -39,6 +44,8 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 
 public class JacksonHydraSerializerTest {
@@ -396,6 +403,125 @@ public class JacksonHydraSerializerTest {
                         "\"eligibleDuration\":{\"@type\":\"QuantitativeValue\",\"value\":\"30\",\"unitCode\":\"DAY\"}}",
                 w.toString());
     }
+
+
+    @JsonIdentityInfo( generator = ObjectIdGenerators.UUIDGenerator.class )
+    public static class Car {
+		public Driver driver;
+		public int price = 42;
+	}
+
+	@JsonIdentityInfo( generator = ObjectIdGenerators.UUIDGenerator.class )
+	public static class Driver {
+		public Car driving;
+		public List<Car> driven;
+		public String license = "xyz";
+	}
+
+	@Test
+	public void testRoundTrip() throws IOException {
+    	Car c = new Car();
+    	Driver d = new Driver();
+		d.driving = c;
+		d.driven = Arrays.asList( c, c );
+		c.driver = d;
+
+		mapper.writeValue(w, d);
+		final String json = w.toString();
+
+		try {
+			Driver o = new ObjectMapper()
+					.configure( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false )
+					.readValue( json, Driver.class );
+			assertEquals( 2, o.driven.size() );
+			assertSame( o.driving, o.driven.get( 0 ) );
+			assertSame( o.driving, o.driven.get( 1 ) );
+			assertEquals( "xyz", o.license );
+			assertEquals( 42, o.driving.price );
+		} catch ( IOException e ) {
+			e.printStackTrace();
+		}
+	}
+
+
+	@JsonTypeInfo(
+			use = JsonTypeInfo.Id.CLASS,
+			include = JsonTypeInfo.As.PROPERTY,
+			property = "@jtype")
+	public abstract static class Bean { }
+
+	public static class Dean extends Bean {
+		public Bean child;
+		public Dean withChild( Bean b ) {
+			this.child = b;
+			return this;
+		}
+	}
+
+	public static class Lean extends Bean {
+		public int x = 4000;
+	}
+
+
+	@Test
+	public void testRoundtripWithJavaSubClasses() throws IOException {
+		Bean b = new Dean().withChild( new Lean() );
+
+		mapper.writerWithDefaultPrettyPrinter().writeValue( w, b );
+		String json = w.toString();
+		System.out.println( json );
+
+		Bean x = new ObjectMapper()
+				.configure( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false )
+				.readValue( json, Bean.class );
+		assertTrue( x instanceof Dean );
+		assertTrue( ((Dean) x).child instanceof Lean );
+		assertEquals( 4000, ((Lean) ((Dean) x).child).x );
+	}
+
+
+
+	@JsonTypeInfo(
+			use = JsonTypeInfo.Id.NAME,
+			include = JsonTypeInfo.As.EXISTING_PROPERTY,
+			property = "@type")
+	@JsonSubTypes({
+			@JsonSubTypes.Type( name = "dean-ld", value = DeanLD.class ),
+			@JsonSubTypes.Type( name = "lean-ld", value = LeanLD.class )
+	})
+	@Expose( "bean-ld" )
+	public abstract static class BeanLD { }
+
+	@Expose( "dean-ld" )
+	public static class DeanLD extends BeanLD {
+		public BeanLD child;
+		public DeanLD withChild( BeanLD b ) {
+			this.child = b;
+			return this;
+		}
+	}
+
+	@Expose( "lean-ld" )
+	public static class LeanLD extends BeanLD {
+		public int x = 4000;
+	}
+
+
+	@Test
+	public void testRoundtripWithLDTypes() throws IOException {
+		BeanLD b = new DeanLD().withChild( new LeanLD() );
+
+		mapper.writerWithDefaultPrettyPrinter().writeValue( w, b );
+		String json = w.toString();
+		System.out.println( json );
+
+		BeanLD x = new ObjectMapper()
+				.configure( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false )
+				.readValue( json, BeanLD.class );
+		assertTrue( x instanceof DeanLD );
+		assertTrue( ((DeanLD) x).child instanceof LeanLD );
+		assertEquals( 4000, ((LeanLD) ((DeanLD) x).child).x );
+	}
 
 
 }
