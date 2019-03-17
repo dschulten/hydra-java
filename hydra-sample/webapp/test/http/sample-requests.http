@@ -2,8 +2,30 @@
 http://localhost:8080/webapp/hypermedia-api/store
 Accept: application/json
 
-### Get store as json-ls
+### Get store as json-ld
 http://localhost:8080/webapp/hypermedia-api/store
 Accept: application/ld+json
 
-###
+### Get store as siren
+http://localhost:8080/webapp/hypermedia-api/store
+Accept: application/vnd.siren+json
+
+### Get store as uber
+http://localhost:8080/webapp/hypermedia-api/store
+Accept: application/vnd.amundsen-uber+json
+
+### Get store as json
+http://localhost:8080/webapp/hypermedia-api/events
+Accept: application/json
+
+### Get store as json-ld
+http://localhost:8080/webapp/hypermedia-api/events
+Accept: application/ld+json
+
+### Get store as siren
+http://localhost:8080/webapp/hypermedia-api/events
+Accept: application/vnd.siren+json
+
+### Get store as uber
+http://localhost:8080/webapp/hypermedia-api/events
+Accept: application/vnd.amundsen-uber+json
