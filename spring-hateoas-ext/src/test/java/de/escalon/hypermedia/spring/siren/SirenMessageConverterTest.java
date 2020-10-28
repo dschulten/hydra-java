@@ -16,10 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.core.Relation;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.server.core.Relation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.test.context.ContextConfiguration;
@@ -77,7 +77,7 @@ public class SirenMessageConverterTest {
     static class DummyCustomersController {
 
         @RequestMapping("/{customerId}")
-        public ResponseEntity<Resource<Customer>> getCustomer(@PathVariable String customerId) {
+        public ResponseEntity<EntityModel<Customer>> getCustomer(@PathVariable String customerId) {
             return null;
         }
     }
@@ -111,14 +111,14 @@ public class SirenMessageConverterTest {
         }
     }
 
-    class Order extends ResourceSupport {
+    class Order extends RepresentationModel {
 
         private final int orderNumber = 42;
         private final int itemCount = 3;
         private final String status = "pending";
 
-        private final Resource<Customer> customer =
-                new Resource<Customer>(new Customer());
+        private final EntityModel<Customer> customer =
+                new EntityModel<Customer>(new Customer());
 
         public Order() {
             customer.add(linkTo(methodOn(DummyCustomersController.class)
@@ -139,7 +139,7 @@ public class SirenMessageConverterTest {
             return status;
         }
 
-        public Resource<Customer> getCustomer() {
+        public EntityModel<Customer> getCustomer() {
             return customer;
         }
     }
@@ -149,12 +149,12 @@ public class SirenMessageConverterTest {
     static class DummyOrderController {
 
         @RequestMapping("/{orderNumber}")
-        public ResponseEntity<Resource<Order>> getOrder(@PathVariable int orderNumber) {
+        public ResponseEntity<EntityModel<Order>> getOrder(@PathVariable int orderNumber) {
             return null;
         }
 
         @RequestMapping("/{orderNumber}/items")
-        public ResponseEntity<Resource<OrderItem>> getOrderItems(@PathVariable int orderNumber) {
+        public ResponseEntity<EntityModel<OrderItem>> getOrderItems(@PathVariable int orderNumber) {
             return null;
         }
 
@@ -164,7 +164,7 @@ public class SirenMessageConverterTest {
         }
 
         @RequestMapping
-        public ResponseEntity<Resources<Order>> getOrders(@RequestParam("a") List<String> attr) {
+        public ResponseEntity<CollectionModel<Order>> getOrders(@RequestParam("a") List<String> attr) {
             return null;
         }
     }

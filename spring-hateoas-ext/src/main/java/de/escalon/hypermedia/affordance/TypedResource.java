@@ -3,7 +3,7 @@ package de.escalon.hypermedia.affordance;
 import org.springframework.util.Assert;
 
 /**
- * Resource of a certain semantic type which may or may not be identifiable.
+ * EntityModel of a certain semantic type which may or may not be identifiable.
  */
 public class TypedResource {
 

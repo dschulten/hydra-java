@@ -21,21 +21,21 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.BeanSerializerFactory;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.util.NameTransformer;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 
 import java.io.IOException;
 
 /**
- * Serializer for json-ld representation of Resource. Created by dschulten on 15.09.2014.
+ * Serializer for json-ld representation of EntityModel. Created by dschulten on 15.09.2014.
  */
-public class ResourceSerializer extends StdSerializer<Resource> {
+public class ResourceSerializer extends StdSerializer<EntityModel> {
 
     public ResourceSerializer() {
-        super(Resource.class);
+        super(EntityModel.class);
     }
 
     @Override
-    public void serialize(Resource value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    public void serialize(EntityModel value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
 
         final SerializationConfig config = provider.getConfig();
         JavaType javaType = config.constructType(value.getClass());

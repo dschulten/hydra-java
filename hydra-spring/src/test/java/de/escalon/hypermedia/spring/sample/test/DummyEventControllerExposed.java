@@ -16,9 +16,9 @@ package de.escalon.hypermedia.spring.sample.test;
 import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -42,13 +42,13 @@ public class DummyEventControllerExposed extends DummyEventController {
     @RequestMapping(value = "/regex/{eventId:.+}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Resource<Event> getEventWithRegexPathVariableMapping(@PathVariable @Expose("ex:eventId") Integer eventId) {
-        Resource<Event> resource = new Resource<Event>(getEvents().get(eventId));
+    EntityModel<Event> getEventWithRegexPathVariableMapping(@PathVariable @Expose("ex:eventId") Integer eventId) {
+        EntityModel<Event> resource = new EntityModel<Event>(getEvents().get(eventId));
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
 
-    public static class FooResource extends ResourceSupport {
+    public static class FooResource extends RepresentationModel {
         private Pageable pageable;
 
         public FooResource(Pageable pageable) {
@@ -126,7 +126,7 @@ public class DummyEventControllerExposed extends DummyEventController {
     }
 
     @RequestMapping("/query")
-    public HttpEntity<Resources<FooResource>> findList(@Input(include = {"offset", "size"}) Pageable pageable,
+    public HttpEntity<CollectionModel<FooResource>> findList(@Input(include = {"offset", "size"}) Pageable pageable,
                                                        @RequestParam(required = false) Integer foo1,
                                                        @RequestParam(required = false) Integer foo2) {
 
@@ -135,19 +135,19 @@ public class DummyEventControllerExposed extends DummyEventController {
                 .linkTo(methodOn(this.getClass()).findList(null, null, null))
                 .withRel("template"));
 
-        return new HttpEntity<Resources<FooResource>>(new Resources<FooResource>(Collections.singleton(fooResource)));
+        return new HttpEntity<CollectionModel<FooResource>>(new CollectionModel<FooResource>(Collections.singleton(fooResource)));
 
     }
 
     @RequestMapping(method = RequestMethod.GET, params = {"evtName"})
     public
     @ResponseBody
-    Resource<Event> findEventByName(@RequestParam("evtName") @Expose("http://schema.org/name") String eventName) {
-        Resource<Event> ret = null;
+    EntityModel<Event> findEventByName(@RequestParam("evtName") @Expose("http://schema.org/name") String eventName) {
+        EntityModel<Event> ret = null;
         for (Event event : getEvents()) {
             if (event.getWorkPerformed()
                     .getContent().name.startsWith(eventName)) {
-                Resource<Event> resource = new Resource<Event>(event);
+                EntityModel<Event> resource = new EntityModel<Event>(event);
                 resource.add(linkTo(ReviewController.class).withRel("review"));
                 ret = resource;
                 break;

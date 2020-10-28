@@ -23,9 +23,9 @@ import de.escalon.hypermedia.spring.SpringActionDescriptor;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -63,13 +63,13 @@ public class UberUtils {
 
         try {
             // TODO: move all returns to else branch of property descriptor handling
-            if (object instanceof Resource) {
-                Resource<?> resource = (Resource<?>) object;
+            if (object instanceof EntityModel) {
+                EntityModel<?> resource = (EntityModel<?>) object;
                 objectNode.addLinks(resource.getLinks());
                 toUberData(objectNode, resource.getContent());
                 return;
-            } else if (object instanceof Resources) {
-                Resources<?> resources = (Resources<?>) object;
+            } else if (object instanceof CollectionModel) {
+                CollectionModel<?> resources = (CollectionModel<?>) object;
 
                 // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
 
@@ -78,8 +78,8 @@ public class UberUtils {
                 Collection<?> content = resources.getContent();
                 toUberData(objectNode, content);
                 return;
-            } else if (object instanceof ResourceSupport) {
-                ResourceSupport resource = (ResourceSupport) object;
+            } else if (object instanceof RepresentationModel) {
+                RepresentationModel resource = (RepresentationModel) object;
 
                 objectNode.addLinks(resource.getLinks());
 
@@ -231,15 +231,12 @@ public class UberUtils {
         Assert.notNull(actionDescriptor, "actionDescriptor must not be null");
         UberNode uberLink = new UberNode();
         uberLink.setRel(rels);
-        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(href).expand(Collections
-                .<String, Object>emptyMap());
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(href).expand(Collections.emptyMap());
         uberLink.setUrl(partialUriTemplateComponents.toString());
         uberLink.setTemplated(partialUriTemplateComponents.hasVariables() ? Boolean.TRUE : null);
         uberLink.setModel(getModelProperty(href, actionDescriptor));
-        if (actionDescriptor != null) {
-            RequestMethod requestMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
-            uberLink.setAction(UberAction.forRequestMethod(requestMethod));
-        }
+        RequestMethod requestMethod = RequestMethod.valueOf(actionDescriptor.getHttpMethod());
+        uberLink.setAction(UberAction.forRequestMethod(requestMethod));
         return uberLink;
     }
 
@@ -458,7 +455,7 @@ public class UberUtils {
         if (link instanceof Affordance) {
             rels = ((Affordance) link).getRels();
         } else {
-            rels = Arrays.asList(link.getRel());
+            rels = Arrays.asList(link.getRel().value());
         }
         return rels;
     }
@@ -486,8 +483,8 @@ public class UberUtils {
             }
         } else {
             Object callValueBean;
-            if (propertyValue instanceof Resource) {
-                callValueBean = ((Resource) propertyValue).getContent();
+            if (propertyValue instanceof EntityModel) {
+                callValueBean = ((EntityModel) propertyValue).getContent();
             } else {
                 callValueBean = propertyValue;
             }

@@ -6,12 +6,12 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.PagedResources.PageMetadata;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.core.EmbeddedWrapper;
-import org.springframework.hateoas.core.Relation;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.PagedModel.PageMetadata;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.server.core.EmbeddedWrapper;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.util.*;
 
@@ -119,9 +119,9 @@ public class SirenUtilsTest {
         private final String firstName;
         private final String lastName;
         @JsonUnwrapped
-        private final Resources<EmbeddedWrapper> embeddeds;
+        private final CollectionModel<EmbeddedWrapper> embeddeds;
 
-        public ProfileResource(String firstName, String lastName, Resources<EmbeddedWrapper> embeddeds) {
+        public ProfileResource(String firstName, String lastName, CollectionModel<EmbeddedWrapper> embeddeds) {
             this.firstName = firstName;
             this.lastName = lastName;
             this.embeddeds = embeddeds;
@@ -135,22 +135,22 @@ public class SirenUtilsTest {
             return lastName;
         }
 
-        public Resources<EmbeddedWrapper> getEmbeddeds() {
+        public CollectionModel<EmbeddedWrapper> getEmbeddeds() {
             return embeddeds;
         }
     }
 
 //    @Test
 //    public void testEmbeddedResource() {
-//        Resource<Email> primary = new Resource<Email>(new Email("neo@matrix.net", "primary"));
-//        Resource<Email> home = new Resource<Email>(new Email("t.anderson@matrix.net", "home"));
+//        EntityModel<Email> primary = new EntityModel<Email>(new Email("neo@matrix.net", "primary"));
+//        EntityModel<Email> home = new EntityModel<Email>(new Email("t.anderson@matrix.net", "home"));
 //
 //        EmbeddedWrappers wrappers = new EmbeddedWrappers(true);
 //
 //        List<EmbeddedWrapper> embeddeds = Arrays.asList(wrappers.wrap(primary), wrappers.wrap(home));
 //
-//        Resources<EmbeddedWrapper> embeddedEmails = new Resources(embeddeds, new Link("self"));
-//        // return ResponseEntity.ok(new Resource(new ProfileResource("Thomas", "Anderson", embeddedEmails), linkTo
+//        CollectionModel<EmbeddedWrapper> embeddedEmails = new CollectionModel(embeddeds, new Link("self"));
+//        // return ResponseEntity.ok(new EntityModel(new ProfileResource("Thomas", "Anderson", embeddedEmails), linkTo
 // (ProfileController.class).withSelfRel()));
 //    }
 
@@ -159,13 +159,13 @@ public class SirenUtilsTest {
         class Customer {
 
             private final String name = "Peter Joseph";
-            private final Resource<Address> address = new Resource<Address>(new Address());
+            private final EntityModel<Address> address = new EntityModel<Address>(new Address());
 
             public String getName() {
                 return name;
             }
 
-            public Resource<Address> getAddress() {
+            public EntityModel<Address> getAddress() {
                 address.add(new Link("http://example.com/customer/123/address/geolocation", "geolocation"));
                 return address;
             }
@@ -198,7 +198,7 @@ public class SirenUtilsTest {
                 return name;
             }
         }
-        Resource<Customer> customerResource = new Resource<Customer>(new Customer());
+        EntityModel<Customer> customerResource = new EntityModel<Customer>(new Customer());
         customerResource.add(new Link("http://api.example.com/customers/123/address", "address"));
 
         SirenEntity entity = new SirenEntity();
@@ -214,9 +214,9 @@ public class SirenUtilsTest {
 
     @Test
     public void testListOfResource() {
-        List<Resource<Address>> addresses = new ArrayList<Resource<Address>>();
+        List<EntityModel<Address>> addresses = new ArrayList<EntityModel<Address>>();
         for (int i = 0; i < 4; i++) {
-            addresses.add(new Resource<Address>(new Address()));
+            addresses.add(new EntityModel<Address>(new Address()));
         }
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, addresses);
@@ -235,7 +235,7 @@ public class SirenUtilsTest {
             addresses.add(new Address());
         }
 
-        Resources<Address> addressResources = new Resources<Address>(addresses);
+        CollectionModel<Address> addressResources = new CollectionModel<Address>(addresses);
         addressResources.add(new Link("http://example.com/addresses", "self"));
         SirenEntity entity = new SirenEntity();
         sirenUtils.toSirenEntity(entity, addressResources);
@@ -256,7 +256,7 @@ public class SirenUtilsTest {
         }
 
 
-        PagedResources<Address> addressResources = new PagedResources<Address>(addresses,
+        PagedModel<Address> addressResources = new PagedModel<Address>(addresses,
                 new PageMetadata(2, 0, addresses.size()));
         addressResources.add(new Link("http://example.com/addresses", "self"));
         SirenEntity entity = new SirenEntity();
@@ -422,7 +422,7 @@ public class SirenUtilsTest {
     public void testMapContainingResource() {
         Map<String, Object> map = new LinkedHashMap<String, Object>();
         map.put("name", "Joe");
-        Resource<Address> addressResource = new Resource<Address>(new Address());
+        EntityModel<Address> addressResource = new EntityModel<Address>(new Address());
         addressResource.add(new Link("http://example.com/addresses/1", "self"));
         map.put("address", addressResource);
 
@@ -443,14 +443,14 @@ public class SirenUtilsTest {
 
             private final String customerId = "pj123";
             private final String name = "Peter Joseph";
-            private Resources<Address> addresses;
+            private CollectionModel<Address> addresses;
 
             Customer() {
                 List<Address> content = new ArrayList<Address>();
                 for (int i = 0; i < 4; i++) {
                     content.add(new Address());
                 }
-                addresses = new Resources<Address>(content);
+                addresses = new CollectionModel<Address>(content);
             }
 
             public String getCustomerId() {
@@ -461,7 +461,7 @@ public class SirenUtilsTest {
                 return name;
             }
 
-            public Resources<Address> getAddresses() {
+            public CollectionModel<Address> getAddresses() {
                 return addresses;
             }
         }

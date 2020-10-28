@@ -13,23 +13,22 @@
 
 package de.escalon.hypermedia.spring.hydra;
 
+import org.springframework.hateoas.Links;
+import org.springframework.hateoas.RepresentationModel;
+
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.ResourceSupport;
-
-import java.util.List;
 
 /**
- * Mixin for json-ld serialization of ResourceSupport. Created by dschulten on 14.09.2014.
+ * Mixin for json-ld serialization of RepresentationModel. Created by dschulten on 14.09.2014.
  */
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 
-public class ResourceSupportMixin extends ResourceSupport {
+public class RepresentationModelMixin extends RepresentationModel {
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped
-    public List<Link> getLinks() {
+    public Links getLinks() {
         return super.getLinks();
     }
 

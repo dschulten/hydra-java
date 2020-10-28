@@ -28,7 +28,7 @@ public interface Options {
      * DetailOptions implementation which needs a personId for that:
      * <pre>
      * &#064;RequestMapping(&quot;/customer/{personId}/details&quot;)
-     * public HttpEntity&lt;Resource&lt;List&lt;String&gt;&gt; showDetails(
+     * public HttpEntity&lt;EntityModel&lt;List&lt;String&gt;&gt; showDetails(
      *     &#064;PathVariable Long personId,
      *     &#064;RequestParam(&quot;detail&quot;)
      *     &#064;Select(options = DetailOptions.class, args = &quot;personId&quot;)

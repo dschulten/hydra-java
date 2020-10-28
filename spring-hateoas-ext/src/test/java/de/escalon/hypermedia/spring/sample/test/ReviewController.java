@@ -15,7 +15,7 @@ package de.escalon.hypermedia.spring.sample.test;
 
 import de.escalon.hypermedia.action.Action;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,8 +39,8 @@ public class ReviewController {
 
     @RequestMapping(value = "/events/{eventId}", method = RequestMethod.GET)
     @ResponseBody
-    public Resources<Review> getReviews(@PathVariable int eventId, @RequestParam(required = false) String ratingValue) {
-        final Resources<Review> reviewResources = new Resources<Review>(reviews.get(eventId));
+    public CollectionModel<Review> getReviews(@PathVariable int eventId, @RequestParam(required = false) String ratingValue) {
+        final CollectionModel<Review> reviewResources = new CollectionModel<Review>(reviews.get(eventId));
         reviewResources.add(AffordanceBuilder.linkTo(AffordanceBuilder.methodOn(DummyEventController.class)
                 .getEvent((Integer) null)) // pass null to create template
                 .withRel("hydra:search"));

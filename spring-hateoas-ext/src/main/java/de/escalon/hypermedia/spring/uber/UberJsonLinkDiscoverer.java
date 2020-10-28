@@ -14,7 +14,7 @@
 package de.escalon.hypermedia.spring.uber;
 
 import de.escalon.hypermedia.spring.HypermediaTypes;
-import org.springframework.hateoas.core.JsonPathLinkDiscoverer;
+import org.springframework.hateoas.client.JsonPathLinkDiscoverer;
 
 public class UberJsonLinkDiscoverer extends JsonPathLinkDiscoverer {
 

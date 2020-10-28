@@ -15,8 +15,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.version>4.3.12.RELEASE</spring.version>
-        <jackson.version>2.9.8</jackson.version>
+        <spring.version>5.2.9.RELEASE</spring.version>
+        <spring.hateoas.version>1.1.2.RELEASE</spring.hateoas.version>
+        <jackson.version>2.10.5</jackson.version>
     </properties>
 
     <inceptionYear>2014</inceptionYear>
@@ -95,7 +96,7 @@
             <dependency>
                 <groupId>org.springframework.hateoas</groupId>
                 <artifactId>spring-hateoas</artifactId>
-                <version>0.24.0.RELEASE</version>
+                <version>${spring.hateoas.version}</version>
             </dependency>
             <dependency>
                 <groupId>de.escalon.hypermedia</groupId>
@@ -115,13 +116,13 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
-                <version>3.1</version>
+                <version>3.11</version>
             </dependency>
             <!-- test dependencies -->
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>4.13.1</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -180,7 +181,7 @@
             <dependency>
                 <groupId>com.github.jsonld-java</groupId>
                 <artifactId>jsonld-java</artifactId>
-                <version>0.11.1</version>
+                <version>0.13.2</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
@@ -191,19 +192,18 @@
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
-                <version>3.1.0</version>
+                <version>4.0.1</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>com.intellij</groupId>
+                <groupId>org.jetbrains</groupId>
                 <artifactId>annotations</artifactId>
-                <version>12.0</version>
-                <scope>provided</scope>
+                <version>20.1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.plugin</groupId>
                 <artifactId>spring-plugin-core</artifactId>
-                <version>1.2.0.RELEASE</version>
+                <version>2.0.0.RELEASE</version>
                 <optional>false</optional>
             </dependency>
 
@@ -218,8 +218,8 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
+                        <source>1.8</source>
+                        <target>1.8</target>
                     </configuration>
                 </plugin>
                 <plugin>

@@ -16,6 +16,7 @@ package de.escalon.hypermedia.affordance;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.hateoas.LinkRelation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +39,7 @@ public class AffordanceTest {
     public void testConstructorWithSingleRel() {
         final Affordance affordance = new Affordance("http://localhost/things/{id}", "thing");
         assertEquals("http://localhost/things/{id}", affordance.getHref());
-        assertEquals("thing", affordance.getRel());
+        assertEquals(LinkRelation.of("thing"), affordance.getRel());
         Assert.assertThat(affordance.getRels(), Matchers.contains("thing"));
     }
 
@@ -47,7 +48,7 @@ public class AffordanceTest {
         final Affordance affordance = new Affordance("http://localhost/things/{id}",
                 "start", "http://example.net/relation/other");
         assertEquals("http://localhost/things/{id}", affordance.getHref());
-        assertEquals("start", affordance.getRel());
+        assertEquals(LinkRelation.of("start"), affordance.getRel());
         Assert.assertThat(affordance.getRels(), Matchers.contains("start", "http://example.net/relation/other"));
     }
 
