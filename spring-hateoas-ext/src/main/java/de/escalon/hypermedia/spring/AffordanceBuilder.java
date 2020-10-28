@@ -14,10 +14,12 @@
 package de.escalon.hypermedia.spring;
 
 import de.escalon.hypermedia.affordance.*;
-import org.springframework.hateoas.Identifiable;
+
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.LinkBuilder;
-import org.springframework.hateoas.core.DummyInvocationUtils;
+import org.springframework.hateoas.LinkRelation;
+import org.springframework.hateoas.server.LinkBuilder;
+import org.springframework.hateoas.server.core.DummyInvocationUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -82,7 +84,7 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
     /**
-     * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Method, Object...)
+     * @see org.springframework.hateoas.server.MethodLinkBuilderFactory#linkTo(Method, Object...)
      */
     public static AffordanceBuilder linkTo(Method method, Object... parameters) {
         return linkTo(method.getDeclaringClass(), method, parameters);
@@ -105,7 +107,7 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
     /**
-     * @see org.springframework.hateoas.MethodLinkBuilderFactory#linkTo(Class, Method, Object...)
+     * @see org.springframework.hateoas.server.MethodLinkBuilderFactory#linkTo(Class, Method, Object...)
      */
     public static AffordanceBuilder linkTo(Class<?> controller, Method method, Object... parameters) {
         return FACTORY.linkTo(controller, method, parameters);
@@ -266,7 +268,7 @@ public class AffordanceBuilder implements LinkBuilder {
      * not belong to the product, but to an order. You can express that by saying:
      * <pre>
      * TypedResource order = new TypedResource("http://schema.org/Order"); // holds the ordered items
-     * Resource&lt;Product&gt; product = new Resource&lt;&gt;(); // has a loose relationship to ordered items
+     * EntityModel&lt;Product&gt; product = new EntityModel&lt;&gt;(); // has a loose relationship to ordered items
      * product.add(linkTo(methodOn(OrderController.class).postOrderedItem()
      *    .rel(order, "orderedItem")); // order has ordered items, not product has ordered items
      * </pre>
@@ -338,10 +340,6 @@ public class AffordanceBuilder implements LinkBuilder {
             return this;
         }
 
-        if (object instanceof Identifiable) {
-            return slash((Identifiable<?>) object);
-        }
-
         String urlPart = object.toString();
 
         // make sure one cannot delete the fragment
@@ -385,15 +383,6 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
     @Override
-    public AffordanceBuilder slash(Identifiable<?> identifiable) {
-        if (identifiable == null) {
-            return this;
-        }
-
-        return slash(identifiable.getId());
-    }
-
-    @Override
     public URI toUri() {
         PartialUriTemplate partialUriTemplate = new PartialUriTemplate(partialUriTemplateComponents.toString());
 
@@ -414,8 +403,13 @@ public class AffordanceBuilder implements LinkBuilder {
     }
 
     @Override
+    public Link withRel(final LinkRelation rel) {
+        return rel(rel.value()).build();
+    }
+
+    @Override
     public Affordance withSelfRel() {
-        return rel(Link.REL_SELF).build();
+        return rel(IanaLinkRelations.SELF.value()).build();
     }
 
     @Override

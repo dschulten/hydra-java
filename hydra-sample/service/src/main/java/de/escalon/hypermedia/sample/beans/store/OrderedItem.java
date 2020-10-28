@@ -1,11 +1,11 @@
 package de.escalon.hypermedia.sample.beans.store;
 
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.RepresentationModel;
 
 /**
  * Created by Dietrich on 02.11.2015.
  */
-public class OrderedItem extends ResourceSupport {
+public class OrderedItem extends RepresentationModel<OrderedItem> {
     private String orderItemNumber;
     private Product orderedItem;
 

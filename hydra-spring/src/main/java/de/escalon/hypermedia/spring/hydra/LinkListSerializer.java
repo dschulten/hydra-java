@@ -13,30 +13,21 @@
 
 package de.escalon.hypermedia.spring.hydra;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.action.Cardinality;
 import de.escalon.hypermedia.action.Input;
-import de.escalon.hypermedia.affordance.*;
+import de.escalon.hypermedia.affordance.ActionDescriptor;
+import de.escalon.hypermedia.affordance.ActionInputParameter;
+import de.escalon.hypermedia.affordance.Affordance;
+import de.escalon.hypermedia.affordance.DataType;
+import de.escalon.hypermedia.affordance.PartialUriTemplateComponents;
+import de.escalon.hypermedia.affordance.TypedResource;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.hydra.serialize.JsonLdKeywords;
 import de.escalon.hypermedia.hydra.serialize.LdContext;
 import de.escalon.hypermedia.hydra.serialize.LdContextFactory;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.MethodParameter;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.hateoas.IanaRels;
-import org.springframework.hateoas.Link;
-import org.springframework.util.Assert;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -48,12 +39,36 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.MethodParameter;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.LinkRelation;
+import org.springframework.hateoas.Links;
+import org.springframework.util.Assert;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
  * Serializer to convert Link to json-ld representation. Created by dschulten on 19.09.2014.
  */
-public class LinkListSerializer extends StdSerializer<List<Link>> {
+public class LinkListSerializer extends StdSerializer<Links> {
 
     Logger LOG = LoggerFactory.getLogger(LinkListSerializer.class);
 
@@ -65,7 +80,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
     }
 
     @Override
-    public void serialize(List<Link> links, JsonGenerator jgen,
+    public void serialize(Links links, JsonGenerator jgen,
                           SerializerProvider serializerProvider) throws IOException {
 
         try {
@@ -83,7 +98,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                         if (affordance.getUriTemplateComponents()
                                 .hasVariables()) {
                             // TODO resolve rel against context
-                            if ("hydra:search".equals(affordance.getRel())
+                            if ("hydra:search".equals(affordance.getRel().value())
                                     || Cardinality.SINGLE == affordance
                                     .getCardinality()) {
                                 templatedLinks.add(affordance);
@@ -111,7 +126,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 } else {
                     simpleLinks.add(link);
                 }
-                if ("self".equals(link.getRel())) {
+                if ("self".equals(link.getRel().value())) {
                     selfRel = link;
                 }
             }
@@ -121,8 +136,8 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 // only optional unsatisfied variables
                 ActionDescriptor actionDescriptorForHttpGet = getActionDescriptorForHttpGet(templatedLink);
                 // TODO handle rev here
-                String rel = templatedLink.getRel();
-                writeIriTemplate(rel, templatedLink.getHref(), templatedLink.getVariableNames(),
+                LinkRelation rel = templatedLink.getRel();
+                writeIriTemplate(rel.value(), templatedLink.getHref(), templatedLink.getVariableNames(),
                         actionDescriptorForHttpGet, jgen);
             }
             @SuppressWarnings("unchecked")
@@ -166,7 +181,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                             jgen.writeStringField("hydra:object", selfRel.getHref());
                         }
                     } else if (collectionAffordance.getRel() != null) {
-                        jgen.writeStringField("hydra:property", collectionAffordance.getRel());
+                        jgen.writeStringField("hydra:property", collectionAffordance.getRel().value());
                         if (collectionHolder != null) {
                             // can't use writeObjectField, it won't inherit the context stack
                             writeCollectionHolder("hydra:subject", collectionHolder, jgen);
@@ -193,12 +208,12 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
             }
 
             for (Affordance affordance : affordances) {
-                final String rel = affordance.getRel();
+                final LinkRelation rel = affordance.getRel();
                 List<ActionDescriptor> actionDescriptors = affordance.getActionDescriptors();
 
                 if (!actionDescriptors.isEmpty()) {
-                    if (!Link.REL_SELF.equals(rel)) {
-                        jgen.writeObjectFieldStart(rel); // begin rel
+                    if (!IanaLinkRelations.SELF.equals(rel)) {
+                        jgen.writeObjectFieldStart(rel.value()); // begin rel
                     }
                     jgen.writeStringField(JsonLdKeywords.AT_ID, affordance.getHref());
                     jgen.writeArrayFieldStart("hydra:operation");
@@ -210,18 +225,18 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
                 if (!actionDescriptors.isEmpty()) {
                     jgen.writeEndArray(); // end hydra:operation
 
-                    if (!Link.REL_SELF.equals(rel)) {
+                    if (!IanaLinkRelations.SELF.equals(rel)) {
                         jgen.writeEndObject(); // end rel
                     }
                 }
             }
 
             for (Link simpleLink : simpleLinks) {
-                final String rel = simpleLink.getRel();
-                if (Link.REL_SELF.equals(rel)) {
+                final LinkRelation rel = simpleLink.getRel();
+                if (IanaLinkRelations.SELF.isSameAs(rel)) {
                     jgen.writeStringField("@id", simpleLink.getHref());
                 } else {
-                    String linkAttributeName = IanaRels.isIanaRel(rel) ? IANA_REL_PREFIX + rel : rel;
+                    String linkAttributeName = IanaLinkRelations.isIanaRel(rel) ? IANA_REL_PREFIX + rel.value() : rel.value();
                     jgen.writeObjectFieldStart(linkAttributeName);
                     jgen.writeStringField("@id", simpleLink.getHref());
                     jgen.writeEndObject();
@@ -338,7 +353,6 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
         Map<String, ActionInputParameter> properties = new HashMap<String, ActionInputParameter>();
 
         // collect supported properties from ctor
-
         Constructor[] constructors = valueType.getConstructors();
         // find default ctor
         Constructor constructor = PropertyUtils.findDefaultCtor(constructors);
@@ -520,7 +534,7 @@ public class LinkListSerializer extends StdSerializer<List<Link>> {
 
     private String getPropertyOrClassNameInVocab(@Nullable String currentVocab, String propertyOrClassName, String
             vocabulary, String vocabularyPrefixWithColon) {
-        Assert.notNull(vocabulary);
+        Assert.notNull(vocabulary, "Vocabulary should be not null");
         String ret;
         if (vocabulary.equals(currentVocab)) {
             ret = propertyOrClassName;

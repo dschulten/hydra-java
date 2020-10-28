@@ -16,7 +16,7 @@ package de.escalon.hypermedia.spring.sample.test;
 import de.escalon.hypermedia.hydra.mapping.Expose;
 
 /**
- * Sample Event derived from ResourceSupport. Created by dschulten on 13.09.2014.
+ * Sample Event derived from RepresentationModel. Created by dschulten on 13.09.2014.
  */
 @Expose("Event")
 public class EventResourceExposed extends EventResource {

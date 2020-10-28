@@ -20,23 +20,23 @@ import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.BeanSerializerFactory;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.CollectionModel;
 
 import java.io.IOException;
 
 /**
- * Serializer for Resources. Created by dschulten on 15.09.2014.
+ * Serializer for CollectionModel. Created by dschulten on 15.09.2014.
  */
 @SuppressWarnings("unused")
-public class ResourcesSerializer extends StdSerializer<Resources> {
+public class ResourcesSerializer extends StdSerializer<CollectionModel> {
 
     @SuppressWarnings("unused")
     public ResourcesSerializer() {
-        super(Resources.class);
+        super(CollectionModel.class);
     }
 
     @Override
-    public void serialize(Resources value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
+    public void serialize(CollectionModel value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
 
         final SerializationConfig config = provider.getConfig();
         JavaType javaType = config.constructType(value.getClass());

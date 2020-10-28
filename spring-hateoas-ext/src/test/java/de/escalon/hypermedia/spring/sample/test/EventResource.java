@@ -13,12 +13,12 @@
 
 package de.escalon.hypermedia.spring.sample.test;
 
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.RepresentationModel;
 
 /**
- * Sample Event derived from ResourceSupport. Created by dschulten on 13.09.2014.
+ * Sample Event derived from RepresentationModel. Created by dschulten on 13.09.2014.
  */
-public class EventResource extends ResourceSupport {
+public class EventResource extends RepresentationModel {
 
     public int id;
     public String performer;

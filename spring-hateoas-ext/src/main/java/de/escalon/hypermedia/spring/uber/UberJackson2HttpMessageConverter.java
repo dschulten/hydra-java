@@ -19,7 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import de.escalon.hypermedia.spring.HypermediaTypes;
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -46,7 +46,7 @@ public class UberJackson2HttpMessageConverter extends AbstractHttpMessageConvert
     @Override
     protected boolean supports(Class<?> clazz) {
         final boolean ret;
-        if (ResourceSupport.class.isAssignableFrom(clazz)
+        if (RepresentationModel.class.isAssignableFrom(clazz)
                 || Collection.class.isAssignableFrom(clazz) || Map.class.isAssignableFrom(clazz)) {
             ret = true;
         } else {
@@ -93,8 +93,8 @@ public class UberJackson2HttpMessageConverter extends AbstractHttpMessageConvert
      * @return the JSON encoding to use (never {@code null})
      */
     protected JsonEncoding getJsonEncoding(MediaType contentType) {
-        if (contentType != null && contentType.getCharSet() != null) {
-            Charset charset = contentType.getCharSet();
+        if (contentType != null && contentType.getCharset() != null) {
+            Charset charset = contentType.getCharset();
             for (JsonEncoding encoding : JsonEncoding.values()) {
                 if (charset.name()
                         .equals(encoding.getJavaName())) {

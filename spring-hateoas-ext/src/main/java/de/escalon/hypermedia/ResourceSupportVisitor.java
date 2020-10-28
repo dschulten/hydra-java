@@ -1,15 +1,14 @@
 package de.escalon.hypermedia;
 
-import org.springframework.hateoas.Link;
-
 import java.util.Collection;
-import java.util.List;
+
+import org.springframework.hateoas.Links;
 
 /**
  * Created by Dietrich on 07.05.2016.
  */
 public interface ResourceSupportVisitor {
-    boolean visitLinks(List<Link> links);
+    boolean visitLinks(Links links);
 
     boolean visitEnterCollection(Collection<?> collection);
 

@@ -17,15 +17,16 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.escalon.hypermedia.hydra.mapping.ContextProvider;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Links;
 
 import java.util.List;
 
 /**
- * Mixin for json-ld serialization of Resource. Created by dschulten on 14.09.2014.
+ * Mixin for json-ld serialization of EntityModel. Created by dschulten on 14.09.2014.
  */
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
-public abstract class ResourceMixin<T> extends Resource<T> {
+public abstract class ResourceMixin<T> extends EntityModel<T> {
 
     @SuppressWarnings("unused")
     public ResourceMixin(T content, Link... links) {
@@ -40,7 +41,7 @@ public abstract class ResourceMixin<T> extends Resource<T> {
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped
-    public List<Link> getLinks() {
+    public Links getLinks() {
         return super.getLinks();
     }
 

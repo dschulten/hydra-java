@@ -1,17 +1,18 @@
 package de.escalon.hypermedia.spring.hydra;
 
+import de.escalon.hypermedia.hydra.mapping.ContextProvider;
+import de.escalon.hypermedia.hydra.mapping.Expose;
+import de.escalon.hypermedia.hydra.mapping.Term;
+
+import java.util.Collection;
+
+import org.springframework.hateoas.Links;
+import org.springframework.hateoas.PagedModel;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import de.escalon.hypermedia.hydra.mapping.ContextProvider;
-import de.escalon.hypermedia.hydra.mapping.Expose;
-import de.escalon.hypermedia.hydra.mapping.Term;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.PagedResources;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Mixin for json-ld serialization of PagedResources.
@@ -19,7 +20,7 @@ import java.util.List;
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 @Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")
 @Expose("hydra:Collection")
-public abstract class PagedResourcesMixin<T> extends PagedResources<T> {
+public abstract class PagedModelMixin<T> extends PagedModel<T> {
     @Override
     @JsonProperty("hydra:member")
     @ContextProvider
@@ -30,7 +31,7 @@ public abstract class PagedResourcesMixin<T> extends PagedResources<T> {
     @Override
     @JsonSerialize(using = LinkListSerializer.class)
     @JsonUnwrapped
-    public List<Link> getLinks() {
+    public Links getLinks() {
         return super.getLinks();
     }
 

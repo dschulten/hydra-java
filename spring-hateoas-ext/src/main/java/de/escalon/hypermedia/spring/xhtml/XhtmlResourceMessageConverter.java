@@ -19,9 +19,9 @@ import de.escalon.hypermedia.PropertyUtils;
 import de.escalon.hypermedia.affordance.DataType;
 import de.escalon.hypermedia.spring.DefaultDocumentationProvider;
 import de.escalon.hypermedia.spring.DocumentationProvider;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -46,7 +46,7 @@ import java.util.Map.Entry;
 
 /**
  * Message converter which represents a restful API as xhtml which can be used by the browser or a rest client. Converts
- * java beans and spring-hateoas Resources to xhtml and maps the body of x-www-form-urlencoded requests to RequestBody
+ * java beans and spring-hateoas CollectionModel to xhtml and maps the body of x-www-form-urlencoded requests to RequestBody
  * method parameters. The media-type xhtml does not officially support methods other than GET or POST, therefore we must
  * &quot;tunnel&quot; other methods when this converter is used with the browser. Spring's {@link
  * org.springframework.web.filter.HiddenHttpMethodFilter} allows to do that with relative ease.
@@ -106,7 +106,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             // TODO recognize this more safely or make the filter mandatory
             MediaType contentType = inputMessage.getHeaders()
                     .getContentType();
-            Charset charset = contentType.getCharSet() != null ? contentType.getCharSet() : this.charset;
+            Charset charset = contentType.getCharset() != null ? contentType.getCharset() : this.charset;
             ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) inputMessage;
             HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
             is = getBodyFromServletRequestParameters(servletRequest, charset.displayName(Locale.US));
@@ -284,16 +284,16 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
             return;
         }
         try {
-            if (object instanceof Resource) {
-                Resource<?> resource = (Resource<?>) object;
+            if (object instanceof EntityModel) {
+                EntityModel<?> resource = (EntityModel<?>) object;
                 writer.beginListItem();
 
                 writeResource(writer, resource.getContent());
                 writer.writeLinks(resource.getLinks());
 
                 writer.endListItem();
-            } else if (object instanceof Resources) {
-                Resources<?> resources = (Resources<?>) object;
+            } else if (object instanceof CollectionModel) {
+                CollectionModel<?> resources = (CollectionModel<?>) object;
                 // TODO set name using EVO see HypermediaSupportBeanDefinitionRegistrar
 
                 writer.beginListItem();
@@ -306,8 +306,8 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                 writer.writeLinks(resources.getLinks());
 
                 writer.endListItem();
-            } else if (object instanceof ResourceSupport) {
-                ResourceSupport resource = (ResourceSupport) object;
+            } else if (object instanceof RepresentationModel) {
+                RepresentationModel resource = (RepresentationModel) object;
                 writer.beginListItem();
 
                 writeObject(writer, resource);
@@ -319,7 +319,7 @@ public class XhtmlResourceMessageConverter extends AbstractHttpMessageConverter<
                 for (Object item : collection) {
                     writeResource(writer, item);
                 }
-            } else { // TODO: write li for simple objects in Resources Collection
+            } else { // TODO: write li for simple objects in CollectionModel Collection
                 writeObject(writer, object);
             }
         } catch (Exception ex) {

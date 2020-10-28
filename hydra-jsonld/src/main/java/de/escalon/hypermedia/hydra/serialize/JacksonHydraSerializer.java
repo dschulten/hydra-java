@@ -186,7 +186,7 @@ public class JacksonHydraSerializer extends BeanSerializerBase {
         }
         // adds @type attribute, reflecting the simple name of the class or the exposed annotation on the class.
         final Expose classExpose = findAnnotation(bean.getClass(), Expose.class);
-        // TODO allow to search up the hierarchy for ResourceSupport mixins and cache found result?
+        // TODO allow to search up the hierarchy for RepresentationModel mixins and cache found result?
         final Class<?> mixin = provider.getConfig()
                 .findMixInClassFor(bean.getClass());
         final Expose mixinExpose = findAnnotation(mixin, Expose.class);

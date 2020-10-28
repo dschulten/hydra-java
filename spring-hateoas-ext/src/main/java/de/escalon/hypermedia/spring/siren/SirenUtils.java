@@ -1,8 +1,5 @@
 package de.escalon.hypermedia.spring.siren;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -25,7 +22,8 @@ import de.escalon.hypermedia.spring.DocumentationProvider;
 import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.hateoas.*;
-import org.springframework.hateoas.core.DefaultRelProvider;
+import org.springframework.hateoas.server.LinkRelationProvider;
+import org.springframework.hateoas.server.core.DefaultLinkRelationProvider;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -38,9 +36,9 @@ public class SirenUtils {
             "id"));
     private String requestMediaType;
 
-    private Set<String> navigationalRels = new HashSet<String>(Arrays.asList("self", "next", "previous", "prev"));
+    private final Set<String> navigationalRels = new HashSet<>(Arrays.asList("self", "next", "previous", "prev"));
 
-    private RelProvider relProvider = new DefaultRelProvider();
+    private LinkRelationProvider relProvider = new DefaultLinkRelationProvider();
 
     private DocumentationProvider documentationProvider = new DefaultDocumentationProvider();
 
@@ -49,8 +47,8 @@ public class SirenUtils {
             return;
         }
         try {
-            if (object instanceof Resource) {
-                Resource<?> resource = (Resource<?>) object;
+            if (object instanceof EntityModel) {
+                EntityModel<?> resource = (EntityModel<?>) object;
                 objectNode.setLinks(this.toSirenLinks(
                         getNavigationalLinks(resource.getLinks())));
                 objectNode.setEmbeddedLinks(this.toSirenEmbeddedLinks(
@@ -58,25 +56,23 @@ public class SirenUtils {
                 objectNode.setActions(this.toSirenActions(getActions(resource.getLinks())));
                 toSirenEntity(objectNode, resource.getContent());
                 return;
-            } else if (object instanceof Resources) {
-                Resources<?> resources = (Resources<?>) object;
-
-                objectNode.setLinks(this.toSirenLinks(getNavigationalLinks(resources.getLinks())));
+            } else if (object instanceof CollectionModel) {
+                CollectionModel<?> resources = (CollectionModel<?>) object;
+                objectNode.setLinks(this.toSirenLinks(
+                        getNavigationalLinks(resources.getLinks())));
                 Collection<?> content = resources.getContent();
                 toSirenEntity(objectNode, content);
                 objectNode.setActions(this.toSirenActions(getActions(resources.getLinks())));
                 return;
-            } else if (object instanceof ResourceSupport) {
-                ResourceSupport resource = (ResourceSupport) object;
+            } else if (object instanceof RepresentationModel) {
+                RepresentationModel resource = (RepresentationModel) object;
                 objectNode.setLinks(this.toSirenLinks(
                         getNavigationalLinks(resource.getLinks())));
                 objectNode.setEmbeddedLinks(this.toSirenEmbeddedLinks(
                         getEmbeddedLinks(resource.getLinks())));
                 objectNode.setActions(this.toSirenActions(
                         getActions(resource.getLinks())));
-
                 // wrap object attributes below to avoid endless loop
-
             } else if (object instanceof Collection) {
                 Collection<?> collection = (Collection<?>) object;
                 for (Object item : collection) {
@@ -98,7 +94,7 @@ public class SirenUtils {
                     String docUrl = documentationProvider.getDocumentationUrl(key, content);
                     traverseAttribute(objectNode, propertiesNode, key, docUrl, content);
                 }
-            } else { // bean or ResourceSupport
+            } else { // bean or RepresentationModel
                 objectNode.setSirenClasses(getSirenClasses(object));
                 Map<String, Object> propertiesNode = new HashMap<String, Object>();
                 createRecursiveSirenEntitiesFromPropertiesAndFields(objectNode, propertiesNode, object);
@@ -111,7 +107,7 @@ public class SirenUtils {
 
     private List<String> getSirenClasses(Object object) {
         List<String> sirenClasses;
-        String sirenClass = relProvider.getItemResourceRelFor(object.getClass());
+        String sirenClass = relProvider.getItemResourceRelFor(object.getClass()).value();
         if (sirenClass != null) {
             sirenClasses = Collections.singletonList(sirenClass);
         } else {
@@ -120,8 +116,8 @@ public class SirenUtils {
         return sirenClasses;
     }
 
-    private List<Link> getEmbeddedLinks(List<Link> links) {
-        List<Link> ret = new ArrayList<Link>();
+    private List<Link> getEmbeddedLinks(Links links) {
+        List<Link> ret = new ArrayList<>();
         for (Link link : links) {
             if (!navigationalRels.contains(link.getRel())) {
                 if (link instanceof Affordance) {
@@ -143,17 +139,17 @@ public class SirenUtils {
         return ret;
     }
 
-    private List<Link> getNavigationalLinks(List<Link> links) {
-        List<Link> ret = new ArrayList<Link>();
+    private List<Link> getNavigationalLinks(Links links) {
+        List<Link> ret = new ArrayList<>();
         for (Link link : links) {
-            if (navigationalRels.contains(link.getRel())) {
+            if (navigationalRels.contains(link.getRel().value())) {
                 ret.add(link);
             }
         }
         return ret;
     }
 
-    private List<Link> getActions(List<Link> links) {
+    private List<Link> getActions(Links links) {
         List<Link> ret = new ArrayList<Link>();
         for (Link link : links) {
             if (link instanceof Affordance) {
@@ -221,9 +217,9 @@ public class SirenUtils {
                 // for each scalar property of a simple bean, add valuepair
                 propertiesNode.put(name, value);
             } else {
-                if (content instanceof Resources) {
+                if (content instanceof CollectionModel) {
                     toSirenEntity(objectNode, content);
-                } else if (content instanceof ResourceSupport) {
+                } else if (content instanceof RepresentationModel) {
                     traverseSingleSubEntity(objectNode, content, name, docUrl);
                 } else if (content instanceof Collection) {
                     Collection<?> collection = (Collection<?>) content;
@@ -262,16 +258,16 @@ public class SirenUtils {
             throws InvocationTargetException, IllegalAccessException {
 
         Object bean;
-        List<Link> links;
-        if (content instanceof Resource) {
-            bean = ((Resource) content).getContent();
-            links = ((Resource) content).getLinks();
-        } else if (content instanceof ResourceSupport) {
+        Links links;
+        if (content instanceof EntityModel) {
+            bean = ((EntityModel) content).getContent();
+            links = ((EntityModel) content).getLinks();
+        } else if (content instanceof RepresentationModel) {
             bean = content;
-            links = ((ResourceSupport) content).getLinks();
+            links = ((RepresentationModel) content).getLinks();
         } else {
             bean = content;
-            links = Collections.emptyList();
+            links = Links.NONE;
         }
 
         Map<String, Object> properties = new HashMap<String, Object>();
@@ -326,7 +322,7 @@ public class SirenUtils {
                 }
                 // no support for non-query fields in siren
                 if (queryOnly) {
-                    String baseUri = new UriTemplate(link.getHref()).expand()
+                    String baseUri = UriTemplate.of(link.getHref()).expand()
                             .toASCIIString();
                     SirenAction sirenAction = new SirenAction(null, null, null, "GET",
                             baseUri, null, fields);
@@ -483,8 +479,8 @@ public class SirenUtils {
             }
         } else {
             Object callValueBean;
-            if (propertyValue instanceof Resource) {
-                callValueBean = ((Resource) propertyValue).getContent();
+            if (propertyValue instanceof EntityModel) {
+                callValueBean = ((EntityModel) propertyValue).getContent();
             } else {
                 callValueBean = propertyValue;
             }
@@ -542,7 +538,7 @@ public class SirenUtils {
             if (link instanceof Affordance) {
                 ret.add(new SirenLink(null, ((Affordance) link).getRels(), link.getHref(), null, null));
             } else {
-                ret.add(new SirenLink(null, Collections.singletonList(link.getRel()), link.getHref(), null, null));
+                ret.add(new SirenLink(null, Collections.singletonList(link.getRel().value()), link.getHref(), null, null));
             }
         }
         return ret;
@@ -556,7 +552,7 @@ public class SirenUtils {
                 ret.add(new SirenEmbeddedLink(null, ((Affordance) link).getRels(), link
                         .getHref(), null, null));
             } else {
-                ret.add(new SirenEmbeddedLink(null, Collections.singletonList(link.getRel()), link
+                ret.add(new SirenEmbeddedLink(null, Collections.singletonList(link.getRel().value()), link
                         .getHref(), null, null));
             }
         }
@@ -585,7 +581,7 @@ public class SirenUtils {
         this.requestMediaType = requestMediaType;
     }
 
-    public void setRelProvider(RelProvider relProvider) {
+    public void setRelProvider(LinkRelationProvider relProvider) {
         this.relProvider = relProvider;
     }
 

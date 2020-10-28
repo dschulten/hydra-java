@@ -18,8 +18,10 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import de.escalon.hypermedia.action.Cardinality;
-import org.springframework.aop.DynamicIntroductionAdvice;
+
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.TemplateVariable;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.util.Assert;
@@ -441,8 +443,8 @@ public class Affordance extends Link {
     @Override
     public Affordance withSelfRel() {
         if (!linkParams.get(REL.paramName)
-                .contains(Link.REL_SELF)) {
-            linkParams.add(REL.paramName, Link.REL_SELF);
+                .contains(IanaLinkRelations.SELF.value())) {
+            linkParams.add(REL.paramName, IanaLinkRelations.SELF.value());
         }
         return new Affordance(this.getHref(), linkParams, actionDescriptors);
     }
@@ -456,7 +458,7 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Object... arguments) {
-        UriTemplate template = new UriTemplate(partialUriTemplate.asComponents()
+        UriTemplate template = UriTemplate.of(partialUriTemplate.asComponents()
                 .toString());
         String expanded = template.expand(arguments)
                 .toASCIIString();
@@ -493,7 +495,7 @@ public class Affordance extends Link {
      */
     @Override
     public Affordance expand(Map<String, ? extends Object> arguments) {
-        UriTemplate template = new UriTemplate(partialUriTemplate.asComponents()
+        UriTemplate template = UriTemplate.of(partialUriTemplate.asComponents()
                 .toString());
         String expanded = template.expand(arguments)
                 .toASCIIString();
@@ -544,8 +546,10 @@ public class Affordance extends Link {
      * @return first defined rel or null
      */
     @Override
-    public String getRel() {
-        return linkParams.getFirst(REL.paramName);
+    public LinkRelation getRel() {
+        if (linkParams.getFirst(REL.paramName) != null)
+            return LinkRelation.of(linkParams.getFirst(REL.paramName));
+        else return null;
     }
 
     /**

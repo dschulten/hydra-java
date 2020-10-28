@@ -19,4 +19,8 @@ public class ProductModel {
     public void addAccessory(ProductModel accessory) {
         accessories.add(accessory);
     }
+
+    public void removeAccessory(final int accessoryId) {
+        accessories.remove(accessoryId);
+    }
 }

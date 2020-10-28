@@ -15,7 +15,9 @@ package de.escalon.hypermedia.spring.uber;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.LinkRelation;
 
 import java.util.Arrays;
 
@@ -29,8 +31,8 @@ public class AbstractUberNodeTest {
     private UberNode foo = new UberNode();
     private UberNode bar = new UberNode();
     private UberNode baz = new UberNode();
-    private Link linkPrevious = new Link(URL_PREVIOUS, Link.REL_PREVIOUS);
-    private Link linkNext = new Link(URL_NEXT, Link.REL_NEXT);
+    private Link linkPrevious = new Link(URL_PREVIOUS, IanaLinkRelations.PREVIOUS);
+    private Link linkNext = new Link(URL_NEXT, IanaLinkRelations.NEXT);
 
     class DummyUberNode extends AbstractUberNode {
 
@@ -118,7 +120,7 @@ public class AbstractUberNodeTest {
         dummyUberNode.addData(bar);
         dummyUberNode.addLink(linkPrevious);
 
-        assertNotNull("rel previous not found", dummyUberNode.getFirstByRel(Link.REL_PREVIOUS));
+        assertNotNull("rel previous not found", dummyUberNode.getFirstByRel(IanaLinkRelations.PREVIOUS.value()));
     }
 
     @Test
@@ -135,10 +137,8 @@ public class AbstractUberNodeTest {
     @Test
     public void findsAddedLinks() throws Exception {
         dummyUberNode.addLinks(Arrays.asList(linkNext, linkPrevious));
-        assertEquals(URL_NEXT, dummyUberNode.getFirstByRel(Link.REL_NEXT)
-                .getUrl());
-        assertEquals(URL_PREVIOUS, dummyUberNode.getFirstByRel(Link.REL_PREVIOUS)
-                .getUrl());
+        assertEquals(URL_NEXT, dummyUberNode.getFirstByRel(IanaLinkRelations.NEXT.value()).getUrl());
+        assertEquals(URL_PREVIOUS, dummyUberNode.getFirstByRel(IanaLinkRelations.PREVIOUS.value()).getUrl());
         assertNull(dummyUberNode.getFirstByRel("noSuchRel"));
     }
 }

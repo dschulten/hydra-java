@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * Allows to explicitly qualify a method handler as resource with defined cardinality. Normally a Collection or a
- * Resources return type (optionally wrapped into an HttpEntity) or the presence of a POST method implicitly qualifies a
+ * CollectionModel return type (optionally wrapped into an HttpEntity) or the presence of a POST method implicitly qualifies a
  * resource a collection. Created by Dietrich on 02.05.2015.
  */
 @Retention(RetentionPolicy.RUNTIME)

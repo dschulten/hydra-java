@@ -2,7 +2,7 @@ package de.escalon.hypermedia.sample.store;
 
 import de.escalon.hypermedia.sample.beans.store.Product;
 import de.escalon.hypermedia.sample.model.store.ProductModel;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,13 +35,13 @@ public class ProductController {
     @RequestMapping
     public
     @ResponseBody
-    Resources<Product> getProducts() {
+    CollectionModel<Product> getProducts() {
         List<Product> resources = new ArrayList<Product>();
         for (ProductModel productModel : productModels) {
-            Product product = assembler.toResource(productModel);
+            Product product = assembler.toModel(productModel);
             resources.add(product);
         }
-        return new Resources<Product>(resources);
+        return new CollectionModel<Product>(resources);
     }
 
 
@@ -51,7 +51,7 @@ public class ProductController {
     Product getProduct(@PathVariable String productID) {
         for (ProductModel productModel : productModels) {
             if (productID.equals(productModel.productId)) {
-                return assembler.toResource(productModel);
+                return assembler.toModel(productModel);
             }
         }
         return null;

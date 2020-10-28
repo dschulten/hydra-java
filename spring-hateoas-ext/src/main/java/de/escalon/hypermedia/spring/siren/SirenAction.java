@@ -1,22 +1,22 @@
 package de.escalon.hypermedia.spring.siren;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.List;
 
 /**
  * Created by Dietrich on 17.04.2016.
  */
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude
 @JsonPropertyOrder({"name", "title", "method", "href", "type", "fields"})
 public class SirenAction extends AbstractSirenEntity {
 
-    private String name;
-    private String method;
-    private String href;
-    private String type;
-    private List<SirenField> fields;
+    private final String name;
+    private final String method;
+    private final String href;
+    private final String type;
+    private final List<SirenField> fields;
 
     /**
      * @param sirenClasses

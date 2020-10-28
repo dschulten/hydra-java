@@ -14,8 +14,8 @@
 package de.escalon.hypermedia.spring.sample.test;
 
 import de.escalon.hypermedia.affordance.Affordance;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -47,11 +47,11 @@ public class DummyEventController {
     @RequestMapping(method = RequestMethod.GET)
     public
     @ResponseBody
-    Resources<Resource<Event>> getResourcesOfResourceOfEvent() {
-        List<Resource<Event>> eventResourcesList = new ArrayList<Resource<Event>>();
+    CollectionModel<EntityModel<Event>> getResourcesOfResourceOfEvent() {
+        List<EntityModel<Event>> eventResourcesList = new ArrayList<EntityModel<Event>>();
         // each resource has links
         for (Event event : getEvents()) {
-            Resource<Event> eventResource = new Resource<Event>(event);
+            EntityModel<Event> eventResource = new EntityModel<Event>(event);
             eventResource.add(linkTo(methodOn(this.getClass())
                     .getEvent(event.id))
                     .and(linkTo(methodOn(this.getClass())
@@ -75,7 +75,7 @@ public class DummyEventController {
                 methodOn(this.getClass()).getEventWithRegexPathVariableMapping(null)).withRel("ex:regex");
         final Affordance postEventAffordance = linkTo(methodOn(this.getClass()).addEvent(null)).withSelfRel();
 
-        return new Resources<Resource<Event>>(eventResourcesList,
+        return new CollectionModel<EntityModel<Event>>(eventResourcesList,
                 eventByNameAffordance, eventWithRegexAffordance, postEventAffordance);
     }
 
@@ -83,10 +83,10 @@ public class DummyEventController {
     @RequestMapping("/list")
     public
     @ResponseBody
-    List<Resource<Event>> getListOfResourceOfEvent() {
-        List<Resource<Event>> eventResourcesList = new ArrayList<Resource<Event>>();
+    List<EntityModel<Event>> getListOfResourceOfEvent() {
+        List<EntityModel<Event>> eventResourcesList = new ArrayList<EntityModel<Event>>();
         for (Event event : getEvents()) {
-            Resource<Event> eventResource = new Resource<Event>(event);
+            EntityModel<Event> eventResource = new EntityModel<Event>(event);
             eventResource.add(linkTo(this.getClass()).slash(event.id)
                     .withSelfRel());
             eventResource.add(linkTo(methodOn(ReviewController.class)
@@ -102,8 +102,8 @@ public class DummyEventController {
     @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Resource<Event> getEvent(@PathVariable Integer eventId) {
-        Resource<Event> resource = new Resource<Event>(getEvents().get(eventId));
+    EntityModel<Event> getEvent(@PathVariable Integer eventId) {
+        EntityModel<Event> resource = new EntityModel<Event>(getEvents().get(eventId));
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
@@ -111,8 +111,8 @@ public class DummyEventController {
     @RequestMapping(value = "/regex/{eventId:.+}", method = RequestMethod.GET)
     public
     @ResponseBody
-    Resource<Event> getEventWithRegexPathVariableMapping(@PathVariable Integer eventId) {
-        Resource<Event> resource = new Resource<Event>(getEvents().get(eventId));
+    EntityModel<Event> getEventWithRegexPathVariableMapping(@PathVariable Integer eventId) {
+        EntityModel<Event> resource = new EntityModel<Event>(getEvents().get(eventId));
         resource.add(linkTo(ReviewController.class).withRel("review"));
         return resource;
     }
@@ -120,12 +120,12 @@ public class DummyEventController {
     @RequestMapping(method = RequestMethod.GET, params = {"evtName"})
     public
     @ResponseBody
-    Resource<Event> findEventByName(@RequestParam("evtName") String eventName) {
-        Resource<Event> ret = null;
+    EntityModel<Event> findEventByName(@RequestParam("evtName") String eventName) {
+        EntityModel<Event> ret = null;
         for (Event event : getEvents()) {
             if (event.getWorkPerformed()
                     .getContent().name.startsWith(eventName)) {
-                Resource<Event> resource = new Resource<Event>(event);
+                EntityModel<Event> resource = new EntityModel<Event>(event);
                 resource.add(linkTo(ReviewController.class).withRel("review"));
                 ret = resource;
                 break;

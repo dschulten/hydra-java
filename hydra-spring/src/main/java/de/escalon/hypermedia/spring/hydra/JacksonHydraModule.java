@@ -23,10 +23,10 @@ import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import de.escalon.hypermedia.affordance.TypedResource;
 import de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer;
 import de.escalon.hypermedia.hydra.serialize.ProxyUnwrapper;
-import org.springframework.hateoas.PagedResources;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 
 
 /**
@@ -43,13 +43,13 @@ public class JacksonHydraModule extends SimpleModule {
     public JacksonHydraModule(ProxyUnwrapper proxyUnwrapper) {
         super("json-hydra-module", new Version(1, 0, 0, null, "de.escalon.hypermedia", "hydra-spring"));
         this.proxyUnwrapper = proxyUnwrapper;
-        setMixInAnnotation(ResourceSupport.class, ResourceSupportMixin.class);
-        setMixInAnnotation(Resources.class, ResourcesMixin.class);
-        setMixInAnnotation(PagedResources.class, PagedResourcesMixin.class);
-        setMixInAnnotation(Resource.class, ResourceMixin.class);
+        setMixInAnnotation(RepresentationModel.class, RepresentationModelMixin.class);
+        setMixInAnnotation(CollectionModel.class, CollectionModelMixin.class);
+        setMixInAnnotation(PagedModel.class, PagedModelMixin.class);
+        setMixInAnnotation(EntityModel.class, ResourceMixin.class);
         setMixInAnnotation(TypedResource.class, TypedResourceMixin.class);
-        addSerializer(Resource.class, new ResourceSerializer());
-        addSerializer(PagedResources.class, new PagedResourcesSerializer(proxyUnwrapper));
+        addSerializer(EntityModel.class, new ResourceSerializer());
+        addSerializer(PagedModel.class, new PagedResourcesSerializer(proxyUnwrapper));
 
     }
 

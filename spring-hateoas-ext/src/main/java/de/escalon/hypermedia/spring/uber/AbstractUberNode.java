@@ -27,7 +27,7 @@ import java.util.List;
 
 public abstract class AbstractUberNode implements Iterable<UberNode> {
 
-    protected List<UberNode> data = new ArrayList<UberNode>();
+    protected List<UberNode> data = new ArrayList<>();
 
     public AbstractUberNode() {
         super();
@@ -45,8 +45,8 @@ public abstract class AbstractUberNode implements Iterable<UberNode> {
     public void addLink(Link link) {
         List<ActionDescriptor> actionDescriptors = UberUtils.getActionDescriptors(link);
         List<String> rels = UberUtils.getRels(link);
-        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(link.getHref()).expand
-                (Collections.<String, Object>emptyMap());
+        PartialUriTemplateComponents partialUriTemplateComponents = new PartialUriTemplate(link.getHref())
+            .expand(Collections.emptyMap());
         for (ActionDescriptor actionDescriptor : actionDescriptors) {
             UberNode uberLink = UberUtils.toUberLink(link.getHref(), actionDescriptor, rels);
             data.add(uberLink);

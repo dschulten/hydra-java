@@ -16,7 +16,7 @@ package de.escalon.hypermedia.spring.sample.test;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.action.Select;
-import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.EntityModel;
 
 /**
  * Sample Event. Created by dschulten on 11.09.2014.
@@ -28,13 +28,13 @@ public class Event {
     public final String location;
 
     private EventStatusType eventStatus;
-    private final Resource<CreativeWork> workPerformed;
+    private final EntityModel<CreativeWork> workPerformed;
     private String typicalAgeRange;
 
     public Event(int id, String performer, CreativeWork workPerformed, String location, EventStatusType eventStatus) {
         this.id = id;
         this.performer = performer;
-        this.workPerformed = new Resource<CreativeWork>(workPerformed);
+        this.workPerformed = new EntityModel<CreativeWork>(workPerformed);
         this.location = location;
         this.eventStatus = eventStatus;
     }
@@ -48,7 +48,7 @@ public class Event {
         this.id = 0;
         this.performer = performer;
         this.location = location;
-        this.workPerformed = new Resource<CreativeWork>(workPerformed);
+        this.workPerformed = new EntityModel<CreativeWork>(workPerformed);
         this.eventStatus = eventStatus;
         this.typicalAgeRange = typicalAgeRange;
     }
@@ -57,7 +57,7 @@ public class Event {
         this.eventStatus = eventStatus;
     }
 
-    public Resource<CreativeWork> getWorkPerformed() {
+    public EntityModel<CreativeWork> getWorkPerformed() {
         return workPerformed;
     }
 

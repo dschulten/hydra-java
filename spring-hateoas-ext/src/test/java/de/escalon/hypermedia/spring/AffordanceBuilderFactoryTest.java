@@ -17,8 +17,8 @@ import de.escalon.hypermedia.action.Input;
 import de.escalon.hypermedia.affordance.Affordance;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.stereotype.Controller;
@@ -32,6 +32,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -55,8 +56,8 @@ public class AffordanceBuilderFactoryTest {
     static class EventControllerSample {
 
         static class EventQbe {
-            List<String> description = Arrays.asList("concert");
-            List<EventStatus> status = Arrays.asList(EventStatus.SCHEDULED);
+            List<String> description = Collections.singletonList("concert");
+            List<EventStatus> status = Collections.singletonList(EventStatus.SCHEDULED);
 
             public void setStatus(List<EventStatus> status) {
                 this.status = status;
@@ -80,38 +81,37 @@ public class AffordanceBuilderFactoryTest {
         @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
         public
         @ResponseBody
-        Resource<Object> getEvent(@PathVariable String eventId) {
+        EntityModel<Object> getEvent(@PathVariable String eventId) {
             return null;
         }
 
         @RequestMapping(value = "/query", method = RequestMethod.GET)
         public
         @ResponseBody
-        Resources<Object> queryEvent(@Input EventQbe query) {
+        CollectionModel<Object> queryEvent(@Input EventQbe query) {
             return null;
         }
 
         @RequestMapping(value = "/simplequery", method = RequestMethod.GET)
         public
         @ResponseBody
-        Resources<Object> simpleQueryEvent(@RequestParam("q") String query,
-                                           @RequestParam(value = "offset", defaultValue = "0") Long offset) {
+        CollectionModel<Object> simpleQueryEvent(
+            @RequestParam("q") String query,
+            @RequestParam(value = "offset", defaultValue = "0") Long offset) {
             return null;
         }
-
-
 
         @RequestMapping(value = "/queryexcludes", method = RequestMethod.GET)
         public
         @ResponseBody
-        Resources<Object> queryEventWithExcludes(@Input(exclude = "status") EventQbe query) {
+        CollectionModel<Object> queryEventWithExcludes(@Input(exclude = "status") EventQbe query) {
             return null;
         }
 
         @RequestMapping(value = "/queryincludes", method = RequestMethod.GET)
         public
         @ResponseBody
-        Resources<Object> queryEventWithIncludes(@Input(include = "status") EventQbe query) {
+        CollectionModel<Object> queryEventWithIncludes(@Input(include = "status") EventQbe query) {
             return null;
         }
 
@@ -119,7 +119,7 @@ public class AffordanceBuilderFactoryTest {
         @RequestMapping(value = "/querymap", method = RequestMethod.GET)
         public
         @ResponseBody
-        Resources<Object> queryEventByMap(@Input(include = "description", hidden = "status", readOnly = "donttouch")
+        CollectionModel<Object> queryEventByMap(@Input(include = "description", hidden = "status", readOnly = "donttouch")
                                           MultiValueMap<String, String> query) {
             return null;
         }
@@ -128,14 +128,14 @@ public class AffordanceBuilderFactoryTest {
         @RequestMapping(value = "/wrongqueryinclude", method = RequestMethod.GET)
         public
         @ResponseBody
-        Resources<Object> queryEventWithWrongInclude(@Input(include = "foo") EventQbe query) {
+        CollectionModel<Object> queryEventWithWrongInclude(@Input(include = "foo") EventQbe query) {
             return null;
         }
 
         @RequestMapping(value = "/wrongqueryexclude", method = RequestMethod.GET)
         public
         @ResponseBody
-        Resources<Object> queryEventWithWrongExclude(@Input(exclude = "foo") EventQbe query) {
+        CollectionModel<Object> queryEventWithWrongExclude(@Input(exclude = "foo") EventQbe query) {
             return null;
         }
     }
@@ -169,8 +169,9 @@ public class AffordanceBuilderFactoryTest {
 
     @Test
     public void testLinkToMethodInvocation() throws Exception {
-        final Affordance affordance = factory.linkTo(AffordanceBuilder.methodOn(EventControllerSample.class)
-                .getEvent((String) null))
+        final Affordance affordance = factory.linkTo(
+            AffordanceBuilder.methodOn(EventControllerSample.class)
+                .getEvent(null))
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events/{eventId}", affordance.getHref());
@@ -187,11 +188,12 @@ public class AffordanceBuilderFactoryTest {
     @Test
     public void testLinkToMethodNoArgsBuild() throws Exception {
         final Method getEventMethod = ReflectionUtils.findMethod(EventControllerSample.class, "getEvent", String.class);
+        assert getEventMethod != null;
         final Affordance affordance = factory.linkTo(getEventMethod, new Object[0])
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events/{eventId}", affordance.getHref());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test
@@ -202,7 +204,7 @@ public class AffordanceBuilderFactoryTest {
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events/{eventId}", affordance.getHref());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test
@@ -213,7 +215,7 @@ public class AffordanceBuilderFactoryTest {
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events/query{?description,status}", affordance.getHref());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test
@@ -228,7 +230,7 @@ public class AffordanceBuilderFactoryTest {
         // full uritemplate
         assertEquals("http://example.com/events/simplequery{?q,offset}",
                 affordance.getUriTemplateComponents().toString());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test
@@ -243,7 +245,7 @@ public class AffordanceBuilderFactoryTest {
         // full uritemplate
         assertEquals("http://example.com/events/simplequery?q=foo{&offset}",
                 affordance.getUriTemplateComponents().toString());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test
@@ -258,7 +260,7 @@ public class AffordanceBuilderFactoryTest {
         // full uritemplate with all values
         assertEquals("http://example.com/events/simplequery?q=foo&offset=2",
                 affordance.getUriTemplateComponents().toString());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
 
@@ -270,7 +272,7 @@ public class AffordanceBuilderFactoryTest {
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events/queryexcludes{?description}", affordance.getHref());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test
@@ -281,7 +283,7 @@ public class AffordanceBuilderFactoryTest {
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events/queryincludes{?status}", affordance.getHref());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test
@@ -292,7 +294,7 @@ public class AffordanceBuilderFactoryTest {
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events/querymap{?description,status,donttouch}", affordance.getHref());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test(expected = IllegalStateException.class)
@@ -321,7 +323,7 @@ public class AffordanceBuilderFactoryTest {
                 .rel("foo")
                 .build();
         assertEquals("http://example.com/events", affordance.getHref());
-        assertEquals("foo", affordance.getRel());
+        assertEquals("foo", affordance.getRel().value());
     }
 
     @Test
@@ -333,6 +335,6 @@ public class AffordanceBuilderFactoryTest {
                 .build();
         assertEquals("http://example.com/events/{eventId}", affordance.getHref());
         assertEquals("schema:parent", affordance.getRev());
-        assertEquals("ex:children", affordance.getRel());
+        assertEquals("ex:children", affordance.getRel().value());
     }
 }

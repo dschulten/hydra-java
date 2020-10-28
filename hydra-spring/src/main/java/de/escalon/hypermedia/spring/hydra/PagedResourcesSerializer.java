@@ -22,8 +22,12 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerFactory;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.util.NameTransformer;
 import de.escalon.hypermedia.hydra.serialize.*;
+
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
-import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.LinkRelation;
+import org.springframework.hateoas.Links;
+import org.springframework.hateoas.PagedModel;
 
 import java.io.IOException;
 import java.util.*;
@@ -31,16 +35,21 @@ import java.util.*;
 import static de.escalon.hypermedia.hydra.serialize.JacksonHydraSerializer.KEY_LD_CONTEXT;
 
 /**
- * Serializer for Resources. Created by dschulten on 15.09.2014.
+ * Serializer for CollectionModel. Created by dschulten on 15.09.2014.
  */
 @SuppressWarnings("unused")
-public class PagedResourcesSerializer extends StdSerializer<PagedResources> {
+public class PagedResourcesSerializer extends StdSerializer<PagedModel> {
 
     private final static Set<String> navigationRels = new HashSet<String>();
 
 
     static {
-        Collections.addAll(navigationRels, Link.REL_FIRST, Link.REL_NEXT, Link.REL_PREVIOUS, Link.REL_LAST);
+        Collections.addAll(
+            navigationRels,
+            IanaLinkRelations.FIRST.value(),
+            IanaLinkRelations.NEXT.value(),
+            IanaLinkRelations.PREVIOUS.value(),
+            IanaLinkRelations.LAST.value());
     }
 
     private final LdContextFactory ldContextFactory;
@@ -48,14 +57,14 @@ public class PagedResourcesSerializer extends StdSerializer<PagedResources> {
 
     @SuppressWarnings("unused")
     public PagedResourcesSerializer(ProxyUnwrapper proxyUnwrapper) {
-        super(PagedResources.class);
+        super(PagedModel.class);
         this.ldContextFactory = new LdContextFactory();
         this.proxyUnwrapper = proxyUnwrapper;
         ldContextFactory.setProxyUnwrapper(proxyUnwrapper);
     }
 
     @Override
-    public void serialize(PagedResources pagedResources, JsonGenerator jgen, SerializerProvider serializerProvider)
+    public void serialize(PagedModel pagedResources, JsonGenerator jgen, SerializerProvider serializerProvider)
             throws
             IOException {
 
@@ -76,10 +85,10 @@ public class PagedResourcesSerializer extends StdSerializer<PagedResources> {
         }
 
         // TODO: filter next/previous/first/last from link list - maybe create new PagedResources without them?
-        List<Link> links = pagedResources.getLinks();
+        Links links = pagedResources.getLinks();
         List<Link> filteredLinks = new ArrayList<Link>();
         for (Link link : links) {
-            String rel = link.getRel();
+            String rel = link.getRel().value();
             if (navigationRels.contains(rel)) {
                 continue;
             } else {
@@ -87,7 +96,7 @@ public class PagedResourcesSerializer extends StdSerializer<PagedResources> {
             }
         }
 
-        PagedResources toRender = new PagedResources(pagedResources.getContent(), pagedResources.getMetadata(),
+        PagedModel toRender = new PagedModel(pagedResources.getContent(), pagedResources.getMetadata(),
                 filteredLinks);
 
         jgen.writeStartObject();
@@ -101,18 +110,18 @@ public class PagedResourcesSerializer extends StdSerializer<PagedResources> {
         serializer.unwrappingSerializer(NameTransformer.NOP)
                 .serialize(toRender, jgen, serializerProvider);
 
-        PagedResources.PageMetadata metadata = pagedResources.getMetadata();
+        PagedModel.PageMetadata metadata = pagedResources.getMetadata();
         jgen.writeNumberField("hydra:totalItems", metadata.getTotalElements());
 
         // begin hydra:view
         jgen.writeObjectFieldStart("hydra:view");
         jgen.writeStringField(JsonLdKeywords.AT_TYPE, "hydra:PartialCollectionView");
-        writeRelLink(pagedResources, jgen, Link.REL_NEXT);
-        writeRelLink(pagedResources, jgen, "previous");
+        writeRelLink(pagedResources, jgen, IanaLinkRelations.NEXT);
+        writeRelLink(pagedResources, jgen, IanaLinkRelations.PREV);
         // must also translate prev to its synonym previous
-        writeRelLink(pagedResources, jgen, Link.REL_PREVIOUS, "previous");
-        writeRelLink(pagedResources, jgen, Link.REL_FIRST);
-        writeRelLink(pagedResources, jgen, Link.REL_LAST);
+        writeRelLink(pagedResources, jgen, IanaLinkRelations.PREVIOUS, "previous");
+        writeRelLink(pagedResources, jgen, IanaLinkRelations.FIRST);
+        writeRelLink(pagedResources, jgen, IanaLinkRelations.LAST);
         jgen.writeEndObject();
         // end hydra:view
 
@@ -173,15 +182,14 @@ public class PagedResourcesSerializer extends StdSerializer<PagedResources> {
         }
     }
 
-    private void writeRelLink(PagedResources value, JsonGenerator jgen, String rel) throws IOException {
-        writeRelLink(value, jgen, rel, rel);
+    private void writeRelLink(PagedModel value, JsonGenerator jgen, LinkRelation rel) throws IOException {
+        writeRelLink(value, jgen, rel, rel.value());
     }
 
-    private void writeRelLink(PagedResources value, JsonGenerator jgen, String rel, String hydraPredicate) throws
+    private void writeRelLink(PagedModel value, JsonGenerator jgen, LinkRelation rel, String hydraPredicate) throws
             IOException {
-        Link link = value.getLink(rel);
-        if (link != null) {
-            jgen.writeStringField("hydra:" + hydraPredicate, link.getHref());
+        if (rel != null) {
+            jgen.writeStringField("hydra:" + hydraPredicate, rel.value());
         }
     }
 

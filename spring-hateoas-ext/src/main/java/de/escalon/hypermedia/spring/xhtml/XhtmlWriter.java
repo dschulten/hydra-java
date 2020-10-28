@@ -15,6 +15,7 @@ import de.escalon.hypermedia.spring.SpringActionInputParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.Property;
 import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Links;
 import org.springframework.hateoas.TemplateVariable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -246,7 +247,7 @@ public class XhtmlWriter extends Writer {
     }
 
 
-    public void writeLinks(List<Link> links) throws IOException {
+    public void writeLinks(Links links) throws IOException {
         for (Link link : links) {
 
             if (link instanceof Affordance) {
@@ -279,7 +280,7 @@ public class XhtmlWriter extends Writer {
                                 // GET without params is simple <a href>
                                 writeAnchor(OptionalAttributes.attr("href", affordance.expand()
                                         .getHref())
-                                        .and("rel", affordance.getRel()), affordance.getRel());
+                                        .and("rel", affordance.getRel().value()), affordance.getRel().value());
                                 endDiv();
                             } else {
                                 appendForm(affordance, actionDescriptor);
@@ -384,11 +385,11 @@ public class XhtmlWriter extends Writer {
                 input(variableName, Type.TEXT);
             }
         } else {
-            String rel = link.getRel();
+            String rel = link.getRel().value();
             String title = (rel != null ? rel : link.getHref());
             // TODO: write html <link> instead of anchor  <a> here?
             writeAnchor(OptionalAttributes.attr("href", link.getHref())
-                    .and("rel", link.getRel()), title);
+                    .and("rel", link.getRel().value()), title);
         }
     }
 

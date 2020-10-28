@@ -31,10 +31,9 @@ public class LdContextFactory {
     /**
      * Gets vocab for given bean.
      *
-     * @param bean
-     *         to inspect for vocab
-     * @param mixInClass
-     *         for bean which might define a vocab or has a context provider
+     * @param mixinSource to inspect from
+     * @param bean to inspect for vocab
+     * @param mixInClass for bean which might define a vocab or has a context provider
      * @return explicitly defined vocab or http://schema.org
      */
     public String getVocab(MixinSource mixinSource, Object bean, Class<?> mixInClass) {
@@ -74,7 +73,7 @@ public class LdContextFactory {
                 bean = proxyUnwrapper.unwrapProxy(bean);
             }
 
-            Map<String, Object> termsMap = new LinkedHashMap<String, Object>();
+            Map<String, Object> termsMap = new LinkedHashMap<>();
             if (bean != null) {
                 final Class<?> beanClass = bean.getClass();
                 termsMap.putAll(termsFromClass(beanClass));
@@ -140,7 +139,7 @@ public class LdContextFactory {
 				ParameterizedType pt = (ParameterizedType) t;
 				if ( pt.getActualTypeArguments().length == 1 ) {
 					Type arg = pt.getActualTypeArguments()[0];
-					return Class.class.isInstance( arg ) && Enum.class.isAssignableFrom( (Class) arg );
+					return arg instanceof Class && Enum.class.isAssignableFrom( (Class) arg);
 				}
 			}
 		}
@@ -164,7 +163,7 @@ public class LdContextFactory {
         if (annotatedTerms != null && annotatedTerm != null) {
             throw new IllegalStateException("found both @Terms and @Term in " + name + ", use either one or the other");
         }
-        Map<String, Object> annotatedTermsMap = new LinkedHashMap<String, Object>();
+        Map<String, Object> annotatedTermsMap = new LinkedHashMap<>();
         if (annotatedTerms != null) {
             final Term[] terms = annotatedTerms.value();
             for (Term term : terms) {
@@ -186,17 +185,17 @@ public class LdContextFactory {
         if (!reverse) {
             annotatedTermsMap.put(define, as);
         } else {
-            Map<String, String> reverseTerm = new LinkedHashMap<String, String>();
+            Map<String, String> reverseTerm = new LinkedHashMap<>();
             reverseTerm.put(JsonLdKeywords.AT_REVERSE, as);
             annotatedTermsMap.put(define, reverseTerm);
         }
     }
 
     private Object getNestedContextProviderFromMixin(MixinSource mixinSource, Object bean, Class<?> mixinClass) {
-        // TODO does not consider Collection<Resource> or Collection<PersistentEntityResource> to find mixin of
+        // TODO does not consider Collection<EntityModel> or Collection<PersistentEntityResource> to find mixin of
         // object wrapped in resource
         // TODO does not consider package of object wrapped in resource
-        // TODO: we do not know Resources here
+        // TODO: we do not know CollectionModel here
         if (mixinClass == null) {
             return null;
         }
@@ -256,7 +255,7 @@ public class LdContextFactory {
     private void addEnumTerms(Map<String, Object> termsMap, Expose expose, String name,
                               Enum value) throws NoSuchFieldException {
         if (value != null) {
-            Map<String, String> map = new LinkedHashMap<String, String>();
+            Map<String, String> map = new LinkedHashMap<>();
             if (expose != null) {
                 map.put(JsonLdKeywords.AT_ID, expose.value());
             }
@@ -269,7 +268,7 @@ public class LdContextFactory {
                 termsMap.put(value.toString(), enumValueExpose.value());
             } else {
                 // might use upperToCamelCase if nothing is exposed
-                final String camelCaseEnumValue = WordUtils.capitalizeFully(value.toString(), new char[]{'_'})
+                final String camelCaseEnumValue = WordUtils.capitalizeFully(value.toString(), '_')
                         .replaceAll("_", "");
                 termsMap.put(value.toString(), camelCaseEnumValue);
             }

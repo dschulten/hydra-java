@@ -106,10 +106,10 @@ Look into the https://github.com/dschulten/hydra-java/blob/master/hydra-sample/s
 The tests in https://github.com/dschulten/hydra-java/blob/master/hydra-jsonld/src/test/java/de/escalon/hypermedia/hydra/serialize/JacksonHydraSerializerTest.java[JacksonHydraSerializerTest] demonstrate the usage of `@Vocab`, `@Expose` and `@Term`.
 
 == Features of hydra-spring
-The conversion of a spring-hateoas Resource to hydra does the following:
+The conversion of a spring-hateoas EntityModel to hydra does the following:
 
-- renders a spring-hateoas `List<Link>` in a `Resource<T>` in json-ld style
-- renders spring-hateoas `Resources<T>` as `hydra:Collection`. If you use this feature, make sure you have a `@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")` annotation in your context.
+- renders a spring-hateoas `List<Link>` in a `EntityModel<T>` in json-ld style
+- renders spring-hateoas `CollectionModel<T>` as `hydra:Collection`. If you use this feature, make sure you have a `@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")` annotation in your context.
 - renders spring-hateoas `PagedResources<T>` as `hydra:Collection` with a `hydra:PartialCollectionView`. If you use this feature, make sure you have a `@Term(define = "hydra", as = "http://www.w3.org/ns/hydra/core#")` annotation in your context.
 - renders response with `"@vocab" : "http://schema.org/"` by default, a different `@vocab` can be defined on a class or package using the `@Vocab` annotation.
 - supports vocabularies in addition to the default vocabulary via terms in the `@context`. Use `@Term` in conjunction with `@Terms` on a class or package for this.
@@ -219,7 +219,7 @@ AffordanceBuilder.linkTo(methodOn(Foo.class).getBars()).rel("bars") // rel() ins
 
 
 In the following we use `AffordanceBuilder` to add a `self` rel that can be used with GET, PUT and DELETE to an event bean.
-First we wrap the event into a `Resource` so we can add affordances to it. Then we use the `linkTo-methodOn` technique three times to describe that the self rel can be used to get, update and delete the event.
+First we wrap the event into a `EntityModel` so we can add affordances to it. Then we use the `linkTo-methodOn` technique three times to describe that the self rel can be used to get, update and delete the event.
 
 [source, Java]
 ----
@@ -232,9 +232,9 @@ First we wrap the event into a `Resource` so we can add affordances to it. Then 
     public class EventController {
 
         @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
-        public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
+        public @ResponseBody EntityModel<Event> getEvent(@PathVariable Integer eventId) {
             // get the event from some backend, then:
-            Resource<Event> eventResource = new Resource<Event>(event);
+            EntityModel<Event> eventResource = new EntityModel<Event>(event);
 
             // using AffordanceBuilder.linkTo and AffordanceBuilder.methodOn
             // instead of ControllerLinkBuilder methods
@@ -249,7 +249,7 @@ First we wrap the event into a `Resource` so we can add affordances to it. Then 
         }
 
         @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
-        public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
+        public @ResponseBody EntityModel<Event> getEvent(@PathVariable Integer eventId) {
             ...
         }
 
@@ -328,15 +328,15 @@ When rendered with the `HydraMessageConverter`, the resulting json-ld event obje
 
 === Specifying Property Value Requirements (from V. 0.2.0)
 
-Now let us tell the client a range of possible values for a property. We want to allow clients to add reviews for the work performed at an event. For this, we add a `Resource<CreativeWork>` to the `Event`, so that we can define an affordance on the creative work which allows clients to send reviews.
+Now let us tell the client a range of possible values for a property. We want to allow clients to add reviews for the work performed at an event. For this, we add a `EntityModel<CreativeWork>` to the `Event`, so that we can define an affordance on the creative work which allows clients to send reviews.
 
 [source, Java]
 ----
   public class Event {
       ...
-      private final Resource<CreativeWork> workPerformed;
+      private final EntityModel<CreativeWork> workPerformed;
 
-      public Resource<CreativeWork> getWorkPerformed() {
+      public EntityModel<CreativeWork> getWorkPerformed() {
           return workPerformed;
       }
       ...
@@ -344,11 +344,11 @@ Now let us tell the client a range of possible values for a property. We want to
 
   // in EventController:
   @RequestMapping(value = "/{eventId}", method = RequestMethod.GET)
-  public @ResponseBody Resource<Event> getEvent(@PathVariable Integer eventId) {
+  public @ResponseBody EntityModel<Event> getEvent(@PathVariable Integer eventId) {
 
       // with an event from backend do this:
 
-      event.getWorkPerformed() //  <-- must be a Resource<CreativeWork>
+      event.getWorkPerformed() //  <-- must be a EntityModel<CreativeWork>
           .add(linkTo(methodOn(ReviewController.class) // <-- must use AffordanceBuilder.linkTo here
               .addReview(event.id, new Review(null, new Rating(3)))) // <-- default ratingValue 3
               .withRel("review"));
@@ -538,7 +538,7 @@ The `SirenMessageConverter` renders Spring Hateoas Responses as https://github.c
 * in order to produce more expressive Siren actions, use the `linkTo-methodOn` idiom of `AffordanceBuilder` to point to your methods, as shown above for the sample `EventController` in the section AffordanceBuilder.
 * possible values found by `AffordanceBuilder` are treated as checkbox or radio button fields, following the technique discussed in the https://groups.google.com/forum/#!topic/siren-hypermedia/8mbOX44gguU[Siren group].
 * field types can be defined via the value of the `@Input` annotation on method parameters (e.g. `@Input(Type.DATE)`).
-* nested `Resource` objects are shown as embedded representations
+* nested `EntityModel` objects are shown as embedded representations
 * distinguishes navigational and embedded links by a default list of navigational rels. This list can be customized via `SirenMessageConverter.addNavigationalRels`.
 * for sub-entities the property name is used as relation name. The Siren class name is derived from the Java class name. The rel names can be customized using a `DocumentationProvider` implementation, e.g. the `JsonLdDocumentationProvider` from hydra-jsonld will make use of `@Expose` and `@Vocab` annotations on your response bean packages.
 * relies on `XhtmlMessageConverter` to process incoming form-urlencoded requests and on `MappingJackson2HttpMessageConverter` for json requests.
