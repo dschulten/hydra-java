@@ -3,8 +3,8 @@ package de.escalon.hypermedia.sample.beans.store;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.hydra.mapping.Term;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.core.Relation;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +14,11 @@ import java.util.List;
  */
 @Term(define = "accessories", as = "isAccessoryOrSparePartFor", reverse = true)
 @Relation("product")
-public class Product extends ResourceSupport {
+public class Product extends RepresentationModel<Product> {
     public final String name;
     public final String productID;
     private Offer offer;
-    public List<Product> accessories = new ArrayList<Product>();
+    public List<Product> accessories = new ArrayList<>();
 
     public Offer getOffers() {
         return offer;
@@ -35,14 +35,31 @@ public class Product extends ResourceSupport {
     }
 
     public boolean hasExtra(String accessoryId) {
-        boolean ret = false;
         for (Product accessory : accessories) {
             if (accessory.productID.equals(accessoryId)) {
-                ret = true;
-                break;
+                return true;
             }
         }
-        return ret;
+        return false;
+    }
+
+    public Product getExtra(String accessoryId) {
+        for (Product accessory : accessories) {
+            if (accessory.productID.equals(accessoryId)) {
+                return accessory;
+            }
+        }
+        return null;
+    }
+
+    public int getExtraId(String accessoryId) {
+        int index = 0;
+        for (Product accessory : accessories) {
+            if (accessory.productID.equals(accessoryId)) {
+                return index;
+            }
+        }
+        return -1;
     }
 
     public void addAccessory(Product product) {

@@ -1,7 +1,7 @@
 package de.escalon.hypermedia.sample.beans.store;
 
 import de.escalon.hypermedia.hydra.mapping.Expose;
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
  * Created by Dietrich on 17.02.2015.
  */
 @Expose("CafeOrCoffeeShop")
-public class Store extends ResourceSupport {
+public class Store extends RepresentationModel {
 
     public String name = "Kaffeehaus Hagen";
 

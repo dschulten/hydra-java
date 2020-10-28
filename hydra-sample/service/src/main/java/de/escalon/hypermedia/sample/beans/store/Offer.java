@@ -2,8 +2,8 @@ package de.escalon.hypermedia.sample.beans.store;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.core.Relation;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import java.util.List;
  */
 @JsonPropertyOrder({"itemOffered", "price", "priceCurrency", "addOns"})
 @Relation("offer")
-public class Offer extends ResourceSupport {
+public class Offer extends RepresentationModel {
     private Product itemOffered;
     private BigDecimal price;
     private List<Offer> addOns = new ArrayList<Offer>();

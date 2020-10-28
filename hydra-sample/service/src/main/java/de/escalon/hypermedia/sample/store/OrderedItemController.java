@@ -41,7 +41,7 @@ public class OrderedItemController {
         }
         Product product = null;
         if (found != null) {
-            product = productAssembler.instantiateResource(found.orderedItem);
+            product = productAssembler.instantiateModel(found.orderedItem);
             product.add(linkTo(methodOn(this.getClass())
                     .getOrderedItem(orderId, orderedItemId))
                     .withSelfRel());

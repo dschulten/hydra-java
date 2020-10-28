@@ -16,7 +16,7 @@ import java.util.List;
 public class OrderBackend {
     public static int orderCounter;
     public static int orderedItemCounter;
-    public List<OrderModel> orderModels = new ArrayList<OrderModel>();
+    public List<OrderModel> orderModels = new ArrayList<>();
 
     public OrderModel createOrder() {
         OrderModel orderModel = new OrderModel();
@@ -60,7 +60,19 @@ public class OrderBackend {
 
     public void deleteOrderedItem(int orderId, int orderedItemId) {
         OrderModel order = getOrder(orderId);
-        order.getOrderedItems()
-                .remove(orderedItemId);
+        order.getOrderedItems().remove(orderedItemId);
+    }
+
+    public void payOrder(int orderId) {
+        OrderModel order = getOrder(orderId);
+        order.setOrderStatus(OrderStatus.ORDER_PAID);
+    }
+
+    public OrderModel removeAccessoryForOrderedItem(final int orderId, final int orderedItemId, final int accessoryId) {
+        OrderModel orderModel = orderModels.get(orderId);
+        List<OrderedItemModel> products = orderModel.getOrderedItems();
+        OrderedItemModel orderedItem = products.get(orderedItemId);
+        orderedItem.orderedItem.removeAccessory(accessoryId);
+        return orderModel;
     }
 }

@@ -6,7 +6,7 @@ import de.escalon.hypermedia.sample.beans.store.Product;
 import de.escalon.hypermedia.sample.beans.store.Store;
 import de.escalon.hypermedia.spring.AffordanceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,10 +49,10 @@ public class StoreController {
         return store;
     }
 
-    public HttpEntity<Resources<Offer>> getOffers() {
-        Resources<Offer> offers = new Resources<Offer>(
+    public HttpEntity<CollectionModel<Offer>> getOffers() {
+        CollectionModel<Offer> offers = new CollectionModel<Offer>(
                 mockOffers());
-        return new HttpEntity<Resources<Offer>>(offers);
+        return new HttpEntity<CollectionModel<Offer>>(offers);
     }
 
     private List<Offer> mockOffers() {

@@ -5,18 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import de.escalon.hypermedia.action.Select;
 import de.escalon.hypermedia.sample.model.event.CreativeWork;
 import de.escalon.hypermedia.sample.model.event.EventStatusType;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
 
 /**
- * Sample Event Resource, represents an Event with links. Created by dschulten on 11.09.2014.
+ * Sample Event EntityModel, represents an Event with links. Created by dschulten on 11.09.2014.
  */
-public class Event extends ResourceSupport {
+public class Event extends RepresentationModel<Event> {
     public final int id;
     public final String performer;
     public final String location;
     private EventStatusType eventStatus;
-    public final Resource<CreativeWork> workPerformed;
+    public final EntityModel<CreativeWork> workPerformed;
 
     @JsonCreator
     public Event(@JsonProperty("performer") String performer,
@@ -26,14 +26,14 @@ public class Event extends ResourceSupport {
         this.id = 0;
         this.performer = performer;
         this.location = location;
-        this.workPerformed = new Resource<CreativeWork>(workPerformed);
+        this.workPerformed = new EntityModel<CreativeWork>(workPerformed);
         this.eventStatus = eventStatus;
     }
 
     public Event(int id, String performer, CreativeWork workPerformed, String location, EventStatusType eventStatus) {
         this.id = id;
         this.performer = performer;
-        this.workPerformed = new Resource<CreativeWork>(workPerformed);
+        this.workPerformed = new EntityModel<CreativeWork>(workPerformed);
         this.location = location;
         this.eventStatus = eventStatus;
     }

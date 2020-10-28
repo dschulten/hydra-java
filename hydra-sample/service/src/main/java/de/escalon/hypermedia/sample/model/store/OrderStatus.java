@@ -6,6 +6,7 @@ package de.escalon.hypermedia.sample.model.store;
 public enum OrderStatus {
     ORDER_CANCELLED,
     ORDER_PROCESSING,
+    ORDER_PAID,
     ORDER_DELIVERED,
     ORDER_PAYMENT_DUE,
     ORDER_PICKUP_AVAILABLE,
